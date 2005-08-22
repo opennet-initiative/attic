@@ -228,7 +228,7 @@ cat<<EOF
 <TR>
 <TD>
 
-<H1 CLASS="color">erweitert</H1></TD>
+<H1 CLASS="color">Erweitert</H1></TD>
 </TR>
 EOF
 

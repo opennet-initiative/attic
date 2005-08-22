@@ -59,13 +59,13 @@ cat<<EOF
 
 <FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
-TITLE="Wähle eine zum Gerät passende Firmware-Datei. Die Freifunk-Firmware kann wahlweise eine der *.bin-Dateien oder die *.trx-Datei geladen werden. Für andere Firmware wähle besser die passende *.bin-Datei aus.">
+TITLE="Wähle eine Firmware-Datei. Die Opennet-Firmware kann nur als *.trx-Datei geladen werden.">
 <TBODY>
 <TR>
-<TD>Firmware-Datei:</TD>
+<TD>Firmware-Datei (*.trx):</TD>
 </TR>
 <TR>
-<TD><INPUT NAME="firmfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+<TD><INPUT NAME="firmfile" SIZE="60" TYPE="FILE" VALUE="Durchsuchen..."></TD>
 </TR>
 <TR>
 <TD> </TD>
@@ -74,6 +74,7 @@ TITLE="Wähle eine zum Gerät passende Firmware-Datei. Die Freifunk-Firmware kann 
 <TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Firmware laden" CLASS="note">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen.
 
 EOF
 fi

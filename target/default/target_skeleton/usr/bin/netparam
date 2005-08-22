@@ -85,6 +85,16 @@ BEGIN {
 
 	wdev = ENVIRON["NVRAM_wl0_ifname"]
 	if ("" == wdev) "nvram get wl0_ifname"|getline wdev
+	if ("" == wdev) {
+		while("iwconfig 2>/dev/null"|getline) {
+			if ($2 == "IEEE") {
+				wdev = $1
+				system("nvram set wl0_ifname="wdev)
+				break
+				}
+		}
+	}
+	
 	printdev(wdev, wdev, "", "WIFI")
 
 	printdev("lo", "lo", "", "LO")

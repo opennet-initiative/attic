@@ -39,7 +39,7 @@ echo "</tr><tr>"
 if [ -f  /etc/openvpn/on_aps.csr ];then
 	echo "<td>Zertifikatanfrage (CSR) vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.csr">herunterladen</a></td>"
 else
-	echo "<td>Zertifikatanfrage (CSR) fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+	echo "<td>Zertifikatanfrage (CSR) fehlt </td><td></td>"
 fi
 echo "</tr><tr>"
 if [ -f  /etc/openvpn/on_aps.key ];then
@@ -111,7 +111,7 @@ cat<<EOF
 <tr></tr>
 <TR
 TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
-<TD colspan="2">Geheimer Schlüssel und Anfrage zur Zertifizierung generieren:</TD>
+<TD colspan="2">Geheimen Schlüssel und Anfrage zur Zertifizierung (CSR) generieren:</TD>
 <TD><INPUT NAME="gen_csr" TITLE="Secret Key und Request jetzt generieren" TYPE="SUBMIT" VALUE="generieren"></TD>
 </TR>
 <TR></TBODY>
@@ -265,7 +265,7 @@ setTimeout("location.href=('on_vpn.html')", 40000);
 EOF
 echo -n "<PRE>"
 
-/etc/init.d/S60ntpclient start
+/etc/init.d/S60ntpclient start >/dev/null
 /etc/init.d/S80openvpn restart
 echo "</PRE>"
 

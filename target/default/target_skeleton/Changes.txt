@@ -1,3 +1,31 @@
+since 0.6:
+
+*in firstboot initialisierung*
+if [ ssid != "olsr.opennet-forum.de" ] ; then
+	nvram set wl0_mode=sta
+	nvram set wl0_infra=0
+	nvram set wl0_channel=1
+	nvram set wl0_ssid=olsr.opennet-forum.de
+	nvram set wl0_wds=
+	nvram set wl0_lazywds=0
+	nvram set wl0_wep=on
+	nvram set wl0_wep_bit=128
+	nvram set wl0_key=0
+	nvram set wl0_frag=512
+	nvram set wl0_rts=250
+	nvram set wl0_gmode_protection=auto
+fi
+lan_ip=$(nvram get lan_ipaddr)
+if [ lan_ip = "192.168.1.1" ] ; then
+	nvram set lan_ipaddr=172.16.0.1
+	nvram set lan_netmask=255.240.0.0
+fi
+/usr/bin/netparam >/dev/null
+
+*in netparam wird jetzt wl0_ifname aus iwconfig gesetzt, allerdings nicht gespeichert.
+
+
+
 since 0.5:
 
 added

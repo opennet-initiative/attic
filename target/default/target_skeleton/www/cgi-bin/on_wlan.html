@@ -44,18 +44,6 @@ C=$(unescape $C)
 if [ "$C" != "$(nvram get $V)" ]; then
 DIRTY=1
 nvram set $V="$C"
-ssid=$(nvram get wl0_ssid)
-	if [ $V = wl0_key1 ] && [ ssid != "olsr.opennet-forum.de" ] ; then
-		nvram set wl0_mode=sta
-		nvram set wl0_infra=0
-		nvram set wl0_channel=1
-		nvram set wl0_ssid=olsr.opennet-forum.de
-		nvram set wl0_wds=
-		nvram set wl0_lazywds=0
-		nvram set wl0_wep=on
-		nvram set wl0_wep_bit=128
-		nvram set wl0_key=1
-	fi
 fi
 done
 fi
