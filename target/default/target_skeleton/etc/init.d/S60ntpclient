@@ -1,2 +1,3 @@
 #!/bin/sh
+sleep 15 # wait a while till olsrd has some routes
 /usr/sbin/ntpclient -c 1 -s -h titan.on

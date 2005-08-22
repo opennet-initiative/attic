@@ -50,8 +50,52 @@ do {
 } done
 echo "done"
 
-touch /tmp/resolv.conf
-ln -s /tmp/resolv.conf /etc/resolv.conf
+echo -n "setting up dropbear (takes a while)..."
+mkdir -p etc/dropbear
+if [ ! -f etc/dropbear/dropbear_dss_host_key ]; then
+	dsskey=$(/rom/usr/sbin/nvram get ff_dsskey)
+	if [ -n "$dsskey" ] && [ -f /rom/www/cgi-bin/freifunk-upload ]; then
+		echo -n $dsskey|/rom/www/cgi-bin/freifunk-upload -a2b>etc/dropbear/dropbear_dss_host_key
+		chmod 0600 etc/dropbear/dropbear_dss_host_key
+	else
+		dropbearkey -t dss -f etc/dropbear/dropbear_dss_host_key
+	fi
+fi
+
+for link in etc/passwd etc/group etc/shells; do
+	test -e $link && rm $link
+done
+echo "root:*:0:">etc/group
+echo "/bin/ash">etc/shells
+
+test -f etc/dropbear/dropbear_dss_host_key && rm etc/init.d/S*telnet
+tar cC /rom usr/lib/ipkg|tar x
+
+export ff_pw="$(/rom/usr/sbin/nvram get ff_pw)"
+test -n "$ff_pw" || export ff_pw=admin
+if [ -n "${ff_pw##\$1\$*}" ]; then
+	# Clear pw. The passwd cmd has /etc/passwd hard wired...
+	mkdir /tmp/setpass
+	mkdir /tmp/setpass/bin
+	mkdir /tmp/setpass/etc
+	cp -a /rom/lib /tmp/setpass
+	echo "root::0:0:root:/tmp:/bin/ash">/tmp/setpass/etc/passwd
+	cp /rom/bin/busybox /tmp/setpass/bin
+	ln -s busybox /tmp/setpass/bin/sh
+	ln -s busybox /tmp/setpass/bin/echo
+	ln -s busybox /tmp/setpass/bin/sleep
+	ln -s busybox /tmp/setpass/bin/passwd
+	/rom/usr/sbin/chroot /tmp/setpass sh -c 'sh -c "echo \"$ff_pw\";sleep 1;echo \"$ff_pw\""|passwd'
+	cp /tmp/setpass/etc/passwd etc/passwd
+	rm -r /tmp/setpass
+else
+	echo "root:$ff_pw:0:0:root:/tmp:/bin/ash">etc/passwd
+fi
+export ff_pw=
+echo "done"
+
+#touch /tmp/resolv.conf
+#ln -s /tmp/resolv.conf /etc/resolv.conf
 
 umount /rom
 mount none /jffs/proc -t proc
