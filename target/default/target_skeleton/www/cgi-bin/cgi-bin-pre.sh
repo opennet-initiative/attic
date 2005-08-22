@@ -205,9 +205,34 @@ document.onkeypress = help;
 
 <H1 CLASS="color">Verwalten</H1></TD>
 </TR>
+</TBODY>
+</TABLE>
+<DIV CLASS="white"></DIV>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TBODY>
+<TR>
+<TD>
+
+<H1 CLASS="color">Opennet</H1></TD>
+</TR>
 EOF
 
-for inc in /www/cgi-bin/[0-9][0-9]-*;do cat $inc;done
+for inc in /www/cgi-bin/0[0-9]-*;do cat $inc;done
+
+cat<<EOF
+</TBODY>
+</TABLE>
+<DIV CLASS="white"></DIV>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TBODY>
+<TR>
+<TD>
+
+<H1 CLASS="color">erweitert</H1></TD>
+</TR>
+EOF
+
+for inc in /www/cgi-bin/[1-9][0-9]-*;do cat $inc;done
 
 cat<<EOF
 </TBODY>

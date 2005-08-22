@@ -11,6 +11,7 @@ DAEMON=/usr/sbin/openvpn
 CONFIG_DIR=/etc/openvpn
 test -x $DAEMON || exit 0
 test -d $CONFIG_DIR || exit 0
+test -d /var/run || mkdir -p /var/run
 
 start_vpn () {
     $DAEMON --daemon --writepid /var/run/openvpn.$NAME.pid \

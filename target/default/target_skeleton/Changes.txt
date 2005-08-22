@@ -1,3 +1,21 @@
+since 0.5:
+
+added
+ip route add throw $WIFINET/$WIFIPRE table 3
+to local.fw to enable access top other opennet accesspoints
+
+install package http://openwrt.org/downloads/experimental/bin/packages/openssl-util_0.9.7g-1_mipsel.ipk
+usr/bin/openssl
+/etc/ssl/certs/
+/etc/ssl/openssl.cnf   ## angepasst, variablen hinzugefügt, option prompt=no gesetzt
+/etc/ssl/private/
+
+
+on_XX in on_aps umbenannt.
+
+
+
+
 Added / Replaced following files:
 
 ./www/...
