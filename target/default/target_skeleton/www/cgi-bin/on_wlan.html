@@ -1,0 +1,90 @@
+#!/bin/sh
+
+export DATE="15.8.2005"
+export TITLE="Verwaltung: Opennet"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: Opennet</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+cat<<EOF
+Hier müssen die Angaben eingegeben werden, die ihr bekommen habt, als ihr euch bei 'ichwill - AT - opennet-initiative.de' per email gemeldet habt. Wenn nicht, schaut mal unter <a href="http://wiki.opennet-initiative.de/index.php/Mitmachen">http://wiki.opennet-initiative.de/...</a><br>
+
+<FORM ACTION="on_wlan.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR
+TITLE="Gib eine gültige IP-Adresse ein. In einem Netzwerk darf diese Adresse nur einmal verwendet werden. Beispiele: 172.16.1.1 oder 104.255.255.254">
+<TD>IP-Adresse:</TD>
+<TD><INPUT NAME="wifi_ipaddr" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr)"$(if [ "$(nvram get wifi_proto)" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="WEP-Key">
+<TD>WEP-Key:</TD>
+<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key1)"$(if [ "$(nvram get wifi_proto)" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_on_wlan" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<b>Achtung:</b> Wenn der Accesspoint noch nicht weitergehend konfiguriert wurde (die SSID nicht bereits olsr.opennet-forum.de gesetzt ist), werden einige weitere Werte auf opennet-interne defaults gesetzt. (vgl. <a href="http://wiki.opennet-initiative.de/index.php/Komplette_Konfiguration#Putty">http://wiki.opennet-initiative.de/...</a>.
+EOF
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$post_on_wlan" ]; then
+for V in wifi_ipaddr wl0_key1; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+ssid=$(nvram get wl0_ssid)
+	if [ $V = wl0_key1 ] && [ ssid != "olsr.opennet-forum.de" ] ; then
+		nvram set wl0_mode=sta
+		nvram set wl0_infra=0
+		nvram set wl0_channel=1
+		nvram set wl0_ssid=olsr.opennet-forum.de
+		nvram set wl0_wds=
+		nvram set wl0_lazywds=0
+		nvram set wl0_wep=on
+		nvram set wl0_wep_bit=128
+		nvram set wl0_key=1
+	fi
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
+aktiv.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${0%/*}/cgi-bin-post.sh
