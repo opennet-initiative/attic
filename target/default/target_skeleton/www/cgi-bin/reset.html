@@ -52,43 +52,6 @@ TITLE="Das Gerät neu starten um neue Einstellungen zu aktivieren. Dieser Neustar
 <TD><INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="normal"></TD>
 <TD>Einfacher Neustart</TD>
 </TR>
-<TR
-TITLE="Das Gerät startet im Failsafe-Modus. Es ist danach nur mit dem Programm 'telnet' ansprechbar. Notfalls kann dieser Modus auch durch ziehen und wiedereinstecken des Netzteils beendet werden. Der Failsafe-Modus wird nach spätestens einer Stunde beendet.">
-<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="failsafe$ff_firmware"></TD>
-<TD>Neustart im Failsafe-Modus</TD>
-</TR>
-<TR
-TITLE="Beim Start des Geräts wird das Haupt-Dateisystem schreibgeschützt eingehängt. In diesem Modus können Dateien nur im Verzeichnis /tmp geändert werden.">
-<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="readonly$ff_firmware"></TD>
-<TD>Neustart im ReadOnly-Modus (f&uuml;r
-Firmware-Update)</TD>
-</TR>
-<TR
-TITLE="Bei diesem Neustart wird die JFFS-Partition (die 'Festplatte') neu formatiert. Danach wird der Partitions-Inhalt mit den Vorgaben der Firmware initialisiert. Benutzermodifikationen und zusätzlich installierte Software gehen verloren. NVRAM-Einstellungen wie IP-Adresse oder Kontaktinformationen bleiben aber erhalten. ">
-<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="format$ff_firmware"></TD>
-<TD>Neustart mit Initialisierung (&quot;Festplatte
-formatieren&quot;, Dauer: 2 Minuten)
-EOF
-
-if [ $(cat /proc/mtd|awk '/^mtd3:/{print $4}') = '"nvram"' ]; then
-
-cat<<EOF
-</TD>
-</TR>
-
-<TR
-TITLE="Bei diesem Neustart werden sämtliche NVRAM-Einstellungen gelöscht! Das Gerät startet neu mit den minimalen Voreinstellungen des Bootladers (CFE). Dadurch wird beim nächsten Neustart auch die Initialisierung der JFFS-Partition ausgelöst. Falls das Gerät nicht von alleine neu startet, nach einigen Minuten den Neustart durch ziehen des Netzsteckers erzwingen! ">
-<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="killnvram"></TD>
-<TD>Neustart mit den Grundeinstellungen des
-Bootladers. Diese Option ist nur f&uuml;r diese Ger&auml;te getestet:
-Linksys WRT54G + WRT54GS!
-EOF
-
-fi
-
-cat<<EOF
-</TD>
-</TR>
 
 <TR>
 <TD COLSPAN="2"> <INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on"></TD>

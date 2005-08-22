@@ -181,20 +181,20 @@ document.onkeypress = help;
 <TR>
 <TD HEIGHT="33" WIDTH="150"></TD>
 <TD HEIGHT="33" WIDTH="5"></TD>
-<TD ALIGN="right" HEIGHT="33"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1l.gif" WIDTH="106"></A></TD>
-<TD ALIGN="right" HEIGHT="33" WIDTH="5"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1m.gif" WIDTH="5"></A></TD>
-<TD HEIGHT="33" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
+<TD ALIGN="right" HEIGHT="33"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1l.gif" WIDTH="106"></A></TD>
+<TD ALIGN="right" HEIGHT="33" WIDTH="5"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1m.gif" WIDTH="5"></A></TD>
+<TD HEIGHT="33" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
 <TD CLASS="magenta" COLSPAN="4" HEIGHT="19"> </TD>
-<TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="../images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
+<TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="../images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
 <TD HEIGHT="5" WIDTH="150"></TD>
 <TD HEIGHT="5" WIDTH="5"></TD>
 <TD HEIGHT="5"></TD>
 <TD HEIGHT="5" WIDTH="5"></TD>
-<TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="../images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
+<TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="../images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
 <TD CLASS="color" VALIGN="top" WIDTH="150">

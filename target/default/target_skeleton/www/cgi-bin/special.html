@@ -1,0 +1,147 @@
+#!/bin/sh
+
+export DATE="13.8.2005"
+export TITLE="Verwaltung: OpenNet"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: OpenNet</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wifi_proto="$(nvram get wifi_proto)"
+wl0_antdiv="$(nvram get wl0_antdiv)"
+ff_txant="$(nvram get ff_txant)"
+wl0_gmode="$(nvram get wl0_gmode)"
+wl0_rateset="$(nvram get wl0_rateset)"
+wl0_rate="$(nvram get wl0_rate)"
+wl0_closed="$(nvram get wl0_closed)"
+if [ "$(nvram get wl0_mode)" = "ap" ]; then
+wmode=master
+elif [ "$(nvram get wl0_infra)" = "1" ]; then
+wmode=client
+else
+wmode=ad-hoc
+fi
+
+cat<<EOF
+<FORM ACTION="special.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR
+TITLE="Gib eine gültige IP-Adresse ein. In einem Netzwerk darf diese Adresse nur einmal verwendet werden. Beispiele: 172.16.1.1 oder 104.255.255.254">
+<TD>IP-Adresse des Accesspoints:</TD>
+<TD><INPUT NAME="wifi_ipaddr" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr)"$(if [ "$wifi_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Der Wireless-Netzwerkverkehr wird mit einem 128 Bit Key verschlüsselt. Diesen hast du per email bekommen.">
+<TD>WEP Key 128 Bit:</TD>
+<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key1)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_wifi" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+
+<FORM ACTION="special.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle den von dir erstellten geheimen Schlüssel: bspw. ap_46.key">
+<TBODY>
+<TR>
+<TD>geheimer Schlüssel (*.key):</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="key" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+<TD><INPUT NAME="post_key" TITLE="Schlüssel übertragen und im Verzeichnis /etc/openvpn ablegen." TYPE="SUBMIT" VALUE="Schlüssel übertragen"></TD>
+</TR>
+<TR>
+<TD>Zertifikat (*.crt):</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="crt" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+<TD><INPUT NAME="post_crt" TITLE="Schlüssel übertragen und im Verzeichnis /etc/openvpn ablegen." TYPE="SUBMIT" VALUE="Schlüssel übertragen"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+
+EOF
+
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Webseiten-Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+
+cat<<EOF
+<P>Die Datei wird heraufgeladen.</P>
+EOF
+
+echo "<PRE>"
+if [ -z "${ffout##*.key}" ] ; then
+	mv "$ffout" /etc/openvpn/ap_XX.key
+elif [ -z "${ffout##*.crt}" ]
+	mv "$ffout" /etc/openvpn/ap_XX.crt
+fi
+echo "</PRE>"
+
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$post_wifi" ]; then
+for V in wifi_ipaddr wl0_key1; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+if checkbridge; then
+DIRTY=1
+fi
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
+aktiv.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${0%/*}/cgi-bin-post.sh

@@ -133,7 +133,7 @@ document.onkeypress = help;
 //--></SCRIPT>
 EOF
 
-WLDEV=$(awk 'sub(":","") {print $1}' /proc/net/wireless)
+WLDEV=$(nvram get wl0_ifname)
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
@@ -447,6 +447,24 @@ EOF
 
 wl -i $WLDEV status 2>&1
 
+cat<<EOF
+</TD>
+</TR>
+
+<TR>
+<TD>OpenVPN-Status:</TD>
+<TD>
+EOF
+
+if [ -f  /tmp/openvpn_msg.txt ];then
+cat<<EOF
+vpn-tunnel active
+EOF
+else
+cat<<EOF
+inactive, Details im System-Log  <img src="images/no.gif" alt="no" align="absmiddle">
+EOF
+fi
 cat<<EOF
 </TD>
 </TR>

@@ -1,0 +1,208 @@
+#!/bin/sh
+
+test -n "$FAILSAFE" && exit
+#test -z "$(awk 'sub(":","") {print $1}' /proc/net/wireless)" && exit
+
+. /etc/functions.sh
+
+set_wireless()
+{
+	OLSRDEV=$WIFIDEV
+	OLSRDEVLIST=$WIFIDEV
+
+	if [ -n "$WIFIADR" ] && [ "$LANADR" != "$WIFIADR" ]; then
+		if [ -n "$LANOLSR" ]; then
+			OLSRDEVLIST="$OLSRDEVLIST $LANDEV"
+		fi
+	else
+		OLSRDEV=$LANDEV
+		OLSRDEVLIST=$LANDEV
+	fi
+
+	if [ -n "$WANOLSR" ]; then
+		OLSRDEVLIST="$OLSRDEVLIST $WANDEV"
+	fi
+
+	test -n "$(nvram get ff_txant)" && wl -i $WIFIDEV txant $(nvram get ff_txant)
+	test -n "$(nvram get ff_txpwr)" && wl -i $WIFIDEV txpwr $(nvram get ff_txpwr)
+	FFMTU=$(nvram get ff_mtu)
+	if [ -n "$FFMTU" ] && [ 1500 -gt $FFMTU ]; then
+		ifconfig $OLSRDEV mtu $FFMTU
+		for i in D I; do
+			iptables -$i FORWARD -o $OLSRDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
+		done
+	fi
+}
+
+write_config()
+{
+	test -d /var/etc || mkdir -p /var/etc
+
+	HNA4=$(nvram get ff_hna4)
+	DMZS=$(nvram get ff_dmz)
+	IFS=\;
+	for DMZ in $DMZS; do
+		SRCIP=${DMZ%[:,]*}
+		if [ -n "$HNA4" ]; then
+			HNA4="$HNA4;$SRCIP/32"
+		else
+			HNA4="$SRCIP/32"
+		fi
+	done
+	unset IFS
+
+	cat>/var/etc/olsrd.conf<<EOM
+DebugLevel		0
+IpVersion		4
+AllowNoInt		yes
+Pollrate		0.25
+TcRedundancy		2
+MprCoverage		9
+LinkQualityWinSize	20
+EOM
+
+	if [ "$(nvram get ff_dyngw)" != "0" ]; then
+		cat>>/var/etc/olsrd.conf<<EOM
+LoadPlugin "olsrd_dyn_gw_plain.so.0.3"
+{
+}
+EOM
+	fi
+
+	WAN_HOSTNAME=$(nvram get wan_hostname)
+	if [ -n "$WAN_HOSTNAME" ] && [ "$(nvram get ff_nameservice)" != "0" ]; then
+		cat>>/var/etc/olsrd.conf<<EOM
+LoadPlugin "olsrd_nameservice.so.0.2"
+{
+	PlParam	"name"		"$WAN_HOSTNAME"
+	PlParam	"hosts-file"	"/var/etc/hosts"
+	PlParam	"suffix"	".olsr"
+}
+EOM
+	fi
+
+	if [ "$(nvram get ff_httpinfo)" != "0" ]; then
+		HTTPINFO_PARA=
+		if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
+			# Allow httpinfo on LAN
+			HTTPINFO_PARA="PlParam \"Net\" \"$LANNET $LANMSK\""
+		fi
+		cat>>/var/etc/olsrd.conf<<EOM
+LoadPlugin "olsrd_httpinfo.so.0.1"
+{
+	PlParam	"port"	"8080"
+	PlParam	"Host"	"127.0.0.1"
+	$HTTPINFO_PARA
+}
+EOM
+	fi
+
+	if [ -n "$HNA4" ]; then
+		IFS=\;
+		echo "Hna4">>/var/etc/olsrd.conf
+		echo "{">>/var/etc/olsrd.conf
+		for ENT in $HNA4; do
+			echo "	$(ipcalc -n $ENT|cut -d'=' -f2) $(ipcalc -m $ENT|cut -d'=' -f2)">>/var/etc/olsrd.conf
+		done
+		echo "}">>/var/etc/olsrd.conf
+		unset IFS
+	fi
+
+	IPC_PARA=
+	if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
+		# Allow Ipc on LAN
+		IPC_PARA="Net $LANNET $LANMSK"
+	fi
+	cat>>/var/etc/olsrd.conf<<EOM
+IpcConnect
+{
+	MaxConnections	1
+	Host		127.0.0.1
+	$IPC_PARA
+}
+EOM
+
+	ff_qos=2
+	ff_qoslev=$(nvram get ff_qoslev)
+	case "$ff_qoslev" in
+		0|1|2)
+			ff_qos=$ff_qoslev
+		;;
+	esac
+	echo "LinkQualityLevel $ff_qos">>/var/etc/olsrd.conf
+	if [ -z "$ff_qos" ] || [ "$ff_qos" = "0" ]; then
+		ff_hyst=$(nvram get ff_hyst)
+		test -n "$ff_hyst" && echo "UseHysteresis $ff_hyst">>/var/etc/olsrd.conf
+		ff_scale=$(nvram get ff_scale)
+		test -n "$ff_scale" && echo "HystScaling $ff_scale">>/var/etc/olsrd.conf
+		ff_thrh=$(nvram get ff_thrh)
+		test -n "$ff_thrh" && echo "HystThrHigh $ff_thrh">>/var/etc/olsrd.conf
+		ff_thrl=$(nvram get ff_thrl)
+		test -n "$ff_thrl" && echo "HystThrLow $ff_thrl">>/var/etc/olsrd.conf
+	else
+		echo "UseHysteresis no">>/var/etc/olsrd.conf
+	fi
+
+	ff_lqmult=
+	LQMS=$(nvram get ff_lqmult)
+	IFS=\;
+	for LQM in $LQMS; do
+		SRCIP=${LQM%[:,]*}
+		LQVAL=${LQM#*[:,]}
+		if [ -n "$SRCIP" ] && [ -n "$LQVAL" ]; then
+			ff_lqmults="$ff_lqmults
+	LinkQualityMult	$SRCIP $LQVAL"
+		fi
+	done
+	unset IFS
+
+	ff_will=$(nvram get ff_will)
+	test -n "$ff_will" && echo "Willingness $ff_will">>/var/etc/olsrd.conf
+
+	ff_ip4broad=$(nvram get ff_ip4broad)
+	test -n "$ff_ip4broad" && ff_ip4broad="Ip4Broadcast $(nvram get ff_ip4broad)"
+
+	test -f /etc/local.olsrd.conf && cat>>/var/etc/olsrd.conf</etc/local.olsrd.conf
+
+	for DEV in $OLSRDEVLIST; do
+		cat>>/var/etc/olsrd.conf<<EOM
+Interface "$DEV"
+{
+	HelloInterval		3.0
+	HelloValidityTime	60.0
+	TcInterval		5.0
+	TcValidityTime		20.0
+	MidInterval		10.0
+	MidValidityTime		30.0
+	HnaInterval		10.0
+	HnaValidityTime		30.0
+	$ff_ip4broad
+	$ff_lqmults
+	$(test -f /etc/local.olsrd.conf.$DEV && cat /etc/local.olsrd.conf.$DEV)
+}
+EOM
+	done
+}
+
+case $1 in
+	start)
+		echo "Starting olsrd..."
+		eval $(/usr/bin/netparam)
+		set_wireless
+		write_config
+		# olsrd will disable per iface, but on wrt that is not enough
+		echo 0 >/proc/sys/net/ipv4/conf/all/send_redirects
+		olsrd -f /var/etc/olsrd.conf -d 0
+	;;
+	stop)
+		echo "Stopping olsrd..."
+		killall olsrd>/dev/null 2>&1
+	;;
+	restart)
+		$0 stop
+		$0 start
+	;;
+	*)
+		echo "Usage: $0 start|stop|restart"
+	;;
+esac

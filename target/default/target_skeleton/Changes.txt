@@ -1,0 +1,23 @@
+Added / Replaced following files:
+
+./www/...
+./usr/sbin/ntpclient
+./usr/sbin/wl
+./usr/bin/netparam
+./etc/init.d/S60ntpclient
+./etc/init.d/S53olsrd
+./etc/init.d/S80openvpn
+./etc/init.d/S45firewall
+./etc/olsrd.conf                ########## symbolischen link anlegen /var/etc/olsrd.conf
+./etc/banner
+./etc/openvpn/opennet.conf
+./etc/openvpn/opennet_down.sh
+./etc/openvpn/opennet_up.sh
+./etc/openvpn/opennet-ca.crt
+./etc/local.fw
+
+rm link and save new file
+./etc/resolv.conf
+
+Removed following files (not needed anymore)
+firewall.user 
