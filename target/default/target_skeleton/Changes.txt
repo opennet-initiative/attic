@@ -10,6 +10,7 @@ Added / Replaced following files:
 ./usr/sbin/olsrd-clearroutes
 ./usr/bin/netparam
 ./etc/init.d/S60ntpclient
+./etc/init.d/S50httpd
 ./etc/init.d/S53olsrd
 ./etc/init.d/S80openvpn
 ./etc/init.d/S45firewall
