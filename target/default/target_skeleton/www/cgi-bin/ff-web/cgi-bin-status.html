@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN"
+ "hmpro4.dtd">
+
+<HTML>
+  
+  <HEAD>
+    <TITLE></TITLE>
+    <LINK HREF="images/power0.gif">
+    <LINK HREF="images/power1.gif">
+    <LINK HREF="images/power2.gif">
+    <LINK HREF="images/power3.gif">
+    <LINK HREF="images/power4.gif">
+    <LINK HREF="images/power5.gif">
+    <LINK HREF="images/no.gif">
+    <LINK HREF="images/yes.gif">
+  </HEAD>
+  
+  <BODY>
+
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function help(e) {
+  if (!e) e = event;
+  // (virt)KeyVal is Konqueror, charCode is Moz/Firefox, else MSIE, Netscape, Opera
+  if (26 == e.virtKeyVal || !e.keyVal && !e.charCode && 112 == (e.which || e.keyCode)) {
+    var o = null;
+    if (e.preventDefault) {
+      if (e.cancelable) e.preventDefault();
+      o = e.target;
+    }
+    else {
+      e.cancelBubble = true;
+      o = e.srcElement;
+    }
+    while(o && '' == o.title) o = o.parentNode;
+    if (o) alert(o.title);
+  }
+}
+if (document.all) {
+  document.onkeydown = help;
+  document.onhelp = function(){return false;}
+}
+else {
+  document.onkeypress = help;
+}
+//--></SCRIPT>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+WLDEV=$(awk 'sub(":","") {print $1}' /proc/net/wireless)
+if [ "$REQUEST_METHOD" = "POST" ]; then
+  read QUERY_STRING
+fi
+if [ -n "$QUERY_STRING" ]; then
+  eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+fi
+if [ -n "$post_olsr" ]; then
+</SCRIPT>
+    
+    <H1><SPAN LANG="de">Status: OLSR</SPAN><SPAN LANG="en">Status: OLSR</SPAN><SPAN LANG="es">Estado:
+    OLSR</SPAN><SPAN LANG="fr">Status&#160;: OLSR</SPAN></H1>
+    
+    <FORM ACTION="cgi-bin-status.html" METHOD="POST">
+    <TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="form">
+      <TBODY>
+      <TR>
+        <TD><INPUT NAME="post_overview" TITLE="!de:Allgemeine Eigenschaften des Gerätes in einer Übersicht anzeigen!en:Show generic properties of this devices in an overview!es:Muestra un resumen de las propriedades generales del aparato!fr:Affiche un aperçu des propriétés générales du point d'accès" TYPE="SUBMIT" VALUE="!de:Übersicht!en:Overview!es:Resumen!fr:Aperçu">&#160;&#160;&#160;<INPUT NAME="post_route" TITLE="!de:Die aktuelle Routingtabelle des Gerätes anzeigen!en:Show the current routing table of this device!es:Muestra la tabla de enrutamiento actual del aparato!fr:Affiche la table de routage courante du point d'accès" TYPE="SUBMIT" VALUE="!de:Routen!en:Routes!es:Rutas!fr:Routes">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  if [ "$(nvram get wl0_mode)" != "ap" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_scan" TITLE="!de:Scan nach empfangbaren WLAN-Stationen ausführen!en:Scan for nearby WLAN stations!es:Busca estaciones WLAN cercanas!fr:Détection des stations sans fil du voisinage" TYPE="SUBMIT" VALUE="!de:WLAN Scan!en:WLAN Scan!es:Búsqueda WLAN!fr:Balayage du WLAN">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+  if [ "$(nvram get ff_httpinfo)" != "0" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_olsr" TITLE="!de:OLSR Statusseite anzeigen!en:Show OLSR status page!es:Muestra la página del estado OLSR!fr:Affiche la page d'état d'OLSR" TYPE="SUBMIT" VALUE="!de:OLSR-Info!en:OLSR Info!es:Estado OLSR!fr:Informations OLSR">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+</SCRIPT></TD>
+      </TR>
+      
+      <TR>
+        <TD>&#160;</TD>
+      </TR>
+      <TR>
+        <TD>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+wget -O - http://127.0.0.1:8080/all|awk '
+/<h2>/, /<\/div>/ {
+  gsub("border=0", "border=1 cellspacing=0 cellpadding=0")
+  gsub("BORDER=0", "BORDER=1")
+  gsub("<select", "<select name=none")
+  print
+}'
+</SCRIPT> </TD>
+      </TR>
+      
+      </TBODY>
+    </TABLE></FORM>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+elif [ -n "$post_route" ]; then
+</SCRIPT>
+    
+    <H1><SPAN LANG="de">Status: Routen</SPAN><SPAN LANG="en">Status: Routes</SPAN><SPAN LANG="es">Estado:
+    Rutas</SPAN><SPAN LANG="fr">Status&#160;: Routes</SPAN></H1>
+    
+    <FORM ACTION="cgi-bin-status.html" METHOD="POST">
+    <TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="form">
+      <TBODY>
+      <TR>
+        <TD><INPUT NAME="post_overview" TITLE="!de:Allgemeine Eigenschaften des Gerätes in einer Übersicht anzeigen!en:Show generic properties of this devices in an overview!es:Muestra un resumen de las propriedades generales del aparato!fr:Affiche un aperçu des propriétés générales du point d'accès" TYPE="SUBMIT" VALUE="!de:Übersicht!en:Overview!es:Resumen!fr:Aperçu">&#160;&#160;&#160;<INPUT NAME="post_route" TITLE="!de:Die aktuelle Routingtabelle des Gerätes anzeigen!en:Show the current routing table of this device!es:Muestra la tabla de enrutamiento actual del aparato!fr:Affiche la table de routage courante du point d'accès" TYPE="SUBMIT" VALUE="!de:Routen!en:Routes!es:Rutas!fr:Routes">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  if [ "$(nvram get wl0_mode)" != "ap" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_scan" TITLE="!de:Scan nach empfangbaren WLAN-Stationen ausführen!en:Scan for nearby WLAN stations!es:Busca estaciones WLAN cercanas!fr:Détection des stations sans fil du voisinage" TYPE="SUBMIT" VALUE="!de:WLAN Scan!en:WLAN Scan!es:Búsqueda WLAN!fr:Balayage du WLAN">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+  if [ "$(nvram get ff_httpinfo)" != "0" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_olsr" TITLE="!de:OLSR Statusseite anzeigen!en:Show OLSR status page!es:Muestra la página del estado OLSR!fr:Affiche la page d'état d'OLSR" TYPE="SUBMIT" VALUE="!de:OLSR-Info!en:OLSR Info!es:Estado OLSR!fr:Informations OLSR">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+</SCRIPT></TD>
+      </TR>
+      
+      <TR>
+        <TD>&#160;</TD>
+      </TR>
+      <TR>
+        <TD>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+route -n|awk '
+function td(s) {
+  printf("<TD STYLE=\"padding:0 2 0 2;font-size:9px;\">%s</TD>", s);
+}
+function ip(s) {
+  if(s!~/\.0$/) {
+    td(sprintf("<A HREF=\"http://%s/\">%s</A>", s, s));
+  }
+  else {
+    td(s);
+  }
+}
+BEGIN {
+  print "<""TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\">";
+}
+/^[0-9]/ {
+  printf "<TR>";
+  ip($1);
+  ip($2);
+  for(i=3;i<=NF;i++) td($i);
+  printf "</TR>\n";
+}
+/^Destination/ {
+  printf "<TR>";
+  for(i=1;i<=NF;i++) printf("<TH STYLE=\"padding:0 2 0 2;\">%s</TH>", $i);
+  printf "</TR>\n";
+}
+END {
+  print "<""/TABLE>";
+}'
+</SCRIPT> </TD>
+      </TR>
+      
+      </TBODY>
+    </TABLE></FORM>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+elif [ -n "$post_scan" ]; then
+</SCRIPT>
+    
+    <H1><SPAN LANG="de">Status: WLAN Scan</SPAN><SPAN LANG="en">Status: WLAN
+    Scan</SPAN><SPAN LANG="es">Estado: B&uacute;squeda WLAN </SPAN><SPAN LANG="fr">Status&#160;:
+    D&eacute;tection Sans Fil</SPAN></H1>
+    
+    <FORM ACTION="cgi-bin-status.html" METHOD="POST">
+    <TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="form">
+      <TBODY>
+      <TR>
+        <TD COLSPAN="7"><INPUT NAME="post_overview" TITLE="!de:Allgemeine Eigenschaften des Gerätes in einer Übersicht anzeigen!en:Show generic properties of this devices in an overview!es:Muestra un resumen de las propriedades generales del aparato!fr:Affiche un aperçu des propriétés générales du point d'accès" TYPE="SUBMIT" VALUE="!de:Übersicht!en:Overview!es:Resumen!fr:Aperçu">&#160;&#160;&#160;<INPUT NAME="post_route" TITLE="!de:Die aktuelle Routingtabelle des Gerätes anzeigen!en:Show the current routing table of this device!es:Muestra la tabla de enrutamiento actual del aparato!fr:Affiche la table de routage courante du point d'accès" TYPE="SUBMIT" VALUE="!de:Routen!en:Routes!es:Rutas!fr:Routes">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  if [ "$(nvram get wl0_mode)" != "ap" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_scan" TITLE="!de:Scan nach empfangbaren WLAN-Stationen ausführen!en:Scan for nearby WLAN stations!es:Busca estaciones WLAN cercanas!fr:Détection des stations sans fil du voisinage" TYPE="SUBMIT" VALUE="!de:WLAN Scan!en:WLAN Scan!es:Búsqueda WLAN!fr:Balayage du WLAN">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+  if [ "$(nvram get ff_httpinfo)" != "0" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_olsr" TITLE="!de:OLSR Statusseite anzeigen!en:Show OLSR status page!es:Muestra la página del estado OLSR!fr:Affiche la page d'état d'OLSR" TYPE="SUBMIT" VALUE="!de:OLSR-Info!en:OLSR Info!es:Estado OLSR!fr:Informations OLSR">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+</SCRIPT></TD>
+      </TR>
+      
+      <TR>
+        <TD COLSPAN="7">&#160;</TD>
+      </TR>
+      <TR>
+        <TH>SSID</TH>
+        <TH><SPAN LANG="de">Kanal</SPAN><SPAN LANG="en">Channel</SPAN><SPAN LANG="es">Canal</SPAN><SPAN LANG="fr">Canal</SPAN></TH>
+        <TH>Ad Hoc</TH>
+        <TH>Signal</TH>
+        <TH>WEP</TH>
+        <TH>Max.</TH>
+        <TH>BSSID</TH>
+      </TR>
+      <TR>
+        <TD COLSPAN="7">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  wl -i $WLDEV scan
+  sleep 2
+  wl -i $WLDEV scanresults|awk '
+  BEGIN {
+    print "</td></tr>";
+  }
+  /^SSID:/ {
+    ssid=substr($2, 2, length($2) - 2);
+    chan="&nbsp;";
+    adhoc="no";
+    rssi="0";
+    titl=" ";
+    wep="no";
+    rate="&nbsp;";
+    bssid="&nbsp;";
+    do {
+      if(!(getline))break;
+      if (/Channel:/) {
+        chan=$NF;
+      }
+      if (/Mode:/) {
+        adhoc=($2~/Managed/?"no":"yes");
+      }
+      if (/RSSI:/) {
+        rssi=int(($(4+($3~/Hoc/))-$(7+($3~/Hoc/)))/4);
+        for(i=3; i<=8; i++) {
+          titl=titl$(i+($3~/Hoc/))" ";
+        }
+        if (0 > rssi) rssi = 0;
+        if (5 < rssi) rssi = 5;
+      }
+      if (/Capability:/) {
+        for(i = 4; i <= NF; i++) {
+          if ($i~/^WEP/) wep="yes";
+        }
+      }
+      if (/Supported Rates:/) {
+        rate=$(NF - 1);
+      }
+      if (/BSSID:/) {
+        bssid=$2;
+      }
+    } while(/\S/);
+    print "<tr>"
+    print "<td>"ssid"</td>"
+    print "<td>"chan"</td>"
+    print "<td><img src=\"images/"adhoc".gif\" alt=\""adhoc"\" align=\"absmiddle\"></td>"
+    print "<td><img src=\"images/power"rssi".gif\" title=\""titl"\" align=\"absmiddle\"></td>"
+    print "<td><img src=\"images/"wep".gif\" alt=\""wep"\" align=\"absmiddle\"></td>"
+    print "<td>"rate"</td>"
+    print "<td>"bssid"</td>"
+    print "</tr>";
+  }
+  END {
+    print "<tr><td colspan=\"7\">&nbsp;"
+  }'
+</SCRIPT> </TD>
+      </TR>
+      
+      </TBODY>
+    </TABLE></FORM>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+else
+</SCRIPT>
+    
+    <H1><SPAN LANG="de">Status: &Uuml;bersicht</SPAN><SPAN LANG="en">Status:
+    Overview</SPAN><SPAN LANG="es">Estado: Resumen</SPAN><SPAN LANG="fr">Status&#160;:
+    Configuration G&eacute;n&eacute;rale</SPAN></H1>
+
+<SCRIPT LANGUAGE="JavaScript"><!--
+function fold(id) {
+  obj = document.getElementById(id);
+  obj.style.display = ('none'==obj.style.display?'block':'none');
+  return false;
+}
+//--></SCRIPT>
+    
+    <FORM ACTION="cgi-bin-status.html" METHOD="POST">
+    <TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="formfixwidth">
+      <TBODY>
+      <TR>
+        <TD COLSPAN="2"><INPUT NAME="post_overview" TITLE="!de:Allgemeine Eigenschaften des Gerätes in einer Übersicht anzeigen!en:Show generic properties of this devices in an overview!es:Muestra un resumen de las propriedades generales del aparato!fr:Affiche un aperçu des propriétés générales du point d'accès" TYPE="SUBMIT" VALUE="!de:Übersicht!en:Overview!es:Resumen!fr:Aperçu">&#160;&#160;&#160;<INPUT NAME="post_route" TITLE="!de:Die aktuelle Routingtabelle des Gerätes anzeigen!en:Show the current routing table of this device!es:Muestra la tabla de enrutamiento actual del aparato!fr:Affiche la table de routage courante du point d'accès" TYPE="SUBMIT" VALUE="!de:Routen!en:Routes!es:Rutas!fr:Routes">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  if [ "$(nvram get wl0_mode)" != "ap" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_scan" TITLE="!de:Scan nach empfangbaren WLAN-Stationen ausführen!en:Scan for nearby WLAN stations!es:Busca estaciones WLAN cercanas!fr:Détection des stations sans fil du voisinage" TYPE="SUBMIT" VALUE="!de:WLAN Scan!en:WLAN Scan!es:Búsqueda WLAN!fr:Balayage du WLAN">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+  if [ "$(nvram get ff_httpinfo)" != "0" ];then
+</SCRIPT>&#160;
+        <INPUT NAME="post_olsr" TITLE="!de:OLSR Statusseite anzeigen!en:Show OLSR status page!es:Muestra la página del estado OLSR!fr:Affiche la page d'état d'OLSR" TYPE="SUBMIT" VALUE="!de:OLSR-Info!en:OLSR Info!es:Estado OLSR!fr:Informations OLSR">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+  fi
+</SCRIPT></TD>
+      </TR>
+      
+      <TR>
+        <TD COLSPAN="2">&#160;</TD>
+      </TR>
+      <TR>
+        <TD><SPAN LANG="de">IP Adresse</SPAN><SPAN LANG="en">IP Address</SPAN><SPAN LANG="es">Direcci&oacute;n
+        IP </SPAN><SPAN LANG="fr">Adresse IP</SPAN>:</TD>
+        <TD>IP:&#160;
+
+<SCRIPT LANGUAGE="inline" TYPE="text/plain">$(ifconfig $WLDEV|awk 'sub("inet addr:","") {print $1}')</SCRIPT>,
+        <SPAN LANG="de">Maske</SPAN><SPAN LANG="en">Mask</SPAN><SPAN LANG="es">M&aacute;scara</SPAN><SPAN LANG="fr">Masque
+        sous r&eacute;seau</SPAN>:&#160;
+
+<SCRIPT LANGUAGE="inline" TYPE="text/plain">$(ifconfig $WLDEV|awk 'sub("Mask:","") {print $4}')</SCRIPT>,
+        MAC:&#160;
+
+<SCRIPT LANGUAGE="inline" TYPE="text/plain">$(ifconfig $WLDEV|awk 'sub("HWaddr","") {print $4}')</SCRIPT></TD>
+      </TR>
+      
+      <TR>
+        <TD><SPAN LANG="de">WLAN-Status</SPAN><SPAN LANG="en">WLAN Status</SPAN><SPAN LANG="es">Estado
+        WLAN</SPAN><SPAN LANG="fr">Etat sans fil</SPAN>:</TD>
+        <TD>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+wl -i $WLDEV status 2>&1
+</SCRIPT> </TD>
+      </TR>
+      
+      <TR>
+        <TD><SPAN LANG="de">Ger&auml;telaufzeit</SPAN><SPAN LANG="en">Uptime</SPAN><SPAN LANG="es">Tiempo
+        funcionando</SPAN><SPAN LANG="fr">Temps de fonctionnement</SPAN>:</TD>
+        <TD>$(uptime)</TD>
+      </TR>
+      <TR>
+        <TD><SPAN LANG="de">Ger&auml;teinfo</SPAN><SPAN LANG="en">Device Info</SPAN><SPAN LANG="es">Informaci&oacute;n
+        aparato </SPAN><SPAN LANG="fr">Informations sur l'AP</SPAN>:</TD>
+        <TD>Boardtype: $(nvram get boardtype), Boardnum: $(nvram get boardnum)</TD>
+      </TR>
+      <TR>
+        <TD><SPAN LANG="de">Kernel-Log:</SPAN><SPAN LANG="en">Kernel Log:</SPAN><SPAN LANG="es">Log
+        del Kernel:</SPAN><SPAN LANG="fr">Kernel Log&#160;:</SPAN> </TD>
+        <TD><A HREF="#" ONCLICK="return fold('dmesg')"><SPAN LANG="de">Ein- /
+          Ausblenden</SPAN><SPAN LANG="en">Show / Hide</SPAN><SPAN LANG="es">Muestra
+          / Esconde</SPAN><SPAN LANG="fr">Afficher / Masquer </SPAN></A></TD>
+      </TR>
+      <TR>
+        <TD COLSPAN="2">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+echo -n '<PRE STYLE="display:none" ID="dmesg">'
+dmesg 2>&1
+echo '</PRE>'
+</SCRIPT> </TD>
+      </TR>
+      
+      <TR>
+        <TD><SPAN LANG="de">System-Log:</SPAN><SPAN LANG="en">System Log:</SPAN><SPAN LANG="es">Log
+        de sistema:</SPAN><SPAN LANG="fr">Syst&egrave;me Log&#160;:</SPAN>
+        </TD>
+        <TD><A HREF="#" ONCLICK="return fold('logread')"><SPAN LANG="de">Ein-
+          / Ausblenden</SPAN><SPAN LANG="en">Show / Hide</SPAN><SPAN LANG="es">Muestra
+          / Esconde</SPAN><SPAN LANG="fr">Afficher / Masquer</SPAN></A></TD>
+      </TR>
+      <TR>
+        <TD COLSPAN="2">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+echo -n '<PRE STYLE="display:none" ID="logread">'
+logread 2>&1
+echo '</PRE>'
+</SCRIPT> </TD>
+      </TR>
+      
+      <TR>
+        <TD><SPAN LANG="de">IP-NAT:</SPAN><SPAN LANG="en">IP NAT:</SPAN><SPAN LANG="es">IP
+        NAT:</SPAN><SPAN LANG="fr">IP NAT&#160;:</SPAN> </TD>
+        <TD><A HREF="#" ONCLICK="return fold('nat')"><SPAN LANG="de">Ein- /
+          Ausblenden</SPAN><SPAN LANG="en">Show / Hide</SPAN><SPAN LANG="es">Muestra
+          / Esconde</SPAN><SPAN LANG="fr">Afficher / Masquer</SPAN></A></TD>
+      </TR>
+      <TR>
+        <TD COLSPAN="2">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+echo -n '<PRE STYLE="display:none" ID="nat">'
+iptables -t nat -L -n 2>&1
+echo '</PRE>'
+</SCRIPT> </TD>
+      </TR>
+      
+      <TR>
+        <TD><SPAN LANG="de">Schnittstellen-Konfiguration:</SPAN><SPAN LANG="en">Interface
+        Config:</SPAN><SPAN LANG="es">Configuraci&oacute;n de Interfaz:</SPAN><SPAN LANG="fr">Interface
+        de Configuration&#160;:</SPAN> </TD>
+        <TD><A HREF="#" ONCLICK="return fold('ifconfig')"><SPAN LANG="de">Ein-
+          / Ausblenden</SPAN><SPAN LANG="en">Show / Hide</SPAN><SPAN LANG="es">Muestra
+          / Esconde</SPAN><SPAN LANG="fr">Afficher / Masquer</SPAN></A></TD>
+      </TR>
+      <TR>
+        <TD COLSPAN="2">
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+echo -n '<PRE STYLE="display:none" ID="ifconfig">'
+echo "lan_ifnames=$(nvram get lan_ifnames)"
+echo "lan_ifname=$(nvram get lan_ifname)"
+echo "wl0_ifname=$(nvram get wl0_ifname)"
+echo "wifi_ifname=$(nvram get wifi_ifname)"
+echo "wan_ifname=$(nvram get wan_ifname)"
+echo
+brctl show 2>&1
+echo
+ifconfig 2>&1
+echo '</PRE>'
+</SCRIPT> </TD>
+      </TR>
+      
+      </TBODY>
+    </TABLE></FORM>
+
+<SCRIPT LANGUAGE="shell" TYPE="text/plain">
+fi
+</SCRIPT>
+  </BODY>
+</HTML>

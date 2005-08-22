@@ -1,0 +1,128 @@
+#!/bin/sh
+
+export DATE="28.5.2005"
+export TITLE="Verwaltung: WAN"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: WAN</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wan_proto="$(nvram get wan_proto)"
+
+cat<<EOF
+<FORM ACTION="wan.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR
+TITLE="Bestimmt die Betriebsart des Internet-Anschlusses (einzelne RJ45-Buchse). Ist PPPoE-Paket installiert, wird in der Betriebsart 'PPPoE' wird der PPPoE-Daemon automatisch gestartet.">
+<TD>WAN-Protokoll:</TD>
+<TD><SELECT NAME="wan_proto" ONCHANGE="this.form.wan_ipaddr.disabled=(0 != this.value.indexOf('static'));this.form.wan_netmask.disabled=(0 != this.value.indexOf('static'));this.form.wan_gateway.disabled=(0 != this.value.indexOf('static'));">
+<OPTION
+VALUE='dhcp' $(test "$wan_proto" = "dhcp" && echo "selected=selected")>DHCP</OPTION>
+<OPTION
+VALUE='static' $(test "$wan_proto" = "static" && echo "selected=selected")>Statisch</OPTION>
+<OPTION
+VALUE='pppoe' $(test "$wan_proto" = "pppoe" && echo "selected=selected")>PPPoE</OPTION>
+<OPTION
+VALUE='disabled' $(test "$wan_proto" = "disabled" && echo "selected=selected")>Ausschalten</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Dies ist die IP-Adresse des Internet-Anschlusses (RJ45).">
+<TD>WAN-IP:</TD>
+<TD><INPUT NAME="wan_ipaddr" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_ipaddr)"$(if [ "$wan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Die Netzmaske bestimmt, welche drahtgebundenen IP-Adressen am Internet-Anschluss direkt erreicht werden können.">
+<TD>WAN-Netzmaske:</TD>
+<TD><INPUT NAME="wan_netmask" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_netmask)"$(if [ "$wan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Default-Route für den Internet-Anschluss.">
+<TD>WAN Default-Route:</TD>
+<TD><INPUT NAME="wan_gateway" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_gateway)"$(if [ "$wan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen. Ist das Eingabefeld leer, wird eine voreingestellte Standard-Adresse verwendet.">
+<TD>DNS-Server:</TD>
+<TD><INPUT NAME="wan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_dns)"></TD>
+</TR>
+<TR
+TITLE="Unter diesem Namen kann das Gerät angesprochen werden. Dieser Name wird auch auf der Kommandozeile angezeigt.">
+<TD>Rechnername:</TD>
+<TD><INPUT NAME="wan_hostname" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_hostname)"></TD>
+</TR>
+<TR
+TITLE="Internet-Namen in dieser Domain werden als lokale Rechner gewertet. Bitte eine Namen wählen, der nicht im Internet benutzt wird.">
+<TD>Domain:</TD>
+<TD><INPUT NAME="wan_domain" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_domain)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2"> </TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_wan" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<P><B>Tipp</B>: F&uuml;r einen bequemen Netzzugriff
+sollte der <B>Rechnername</B> (einfacher Name ohne Punkte) und die
+interne <B>Domain</B> (mehrfacher Name mit Punkten getrennt) angegeben
+sein. Beispiel: Setze <B>Rechnername</B> auf &quot;meinwrt&quot; und <B>Domain</B>
+auf &quot;meinnetz.freifunk.net&quot; um die Seiten des Ger&auml;tes mit
+<A HREF="http://meinwrt.meinnetz.freifunk.net/">http://meinwrt.meinnetz.freifunk.net/</A>
+oder sogar nur mit <A HREF="http://meinwrt/">http://meinwrt/</A>
+aufzurufen.</P>
+EOF
+
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$post_wan" ]; then
+for V in wan_proto wan_ipaddr wan_netmask wan_gateway wan_dns wan_hostname wan_domain; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
+aktiv.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${0%/*}/cgi-bin-post.sh

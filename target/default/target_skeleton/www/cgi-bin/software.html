@@ -1,0 +1,161 @@
+#!/bin/sh
+
+export DATE="28.5.2005"
+export TITLE="Verwaltung: Software"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: Software</H1>
+EOF
+
+if [ "$(mount|awk '/ \/ / {print $6}')" != "(ro)" ]; then
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="software.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle eine zum Gerät passende Firmware-Datei. Für die Freifunk-Firmware kann wahlweise eine der *.bin-Dateien oder die *.trx-Datei geladen werden. Für andere Firmware wähle besser die passende *.bin-Datei aus.">
+<TBODY>
+<TR>
+<TD>Software-Datei (*.ipk):</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="ipkfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+</TR>
+<TR>
+<TD><INPUT CHECKED="CHECKED" NAME="install" TYPE="RADIO" VALUE="1">Automatisch
+installieren <INPUT NAME="install" TYPE="RADIO" VALUE="0">Manuell
+installieren</TD>
+</TR>
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+<TD><INPUT NAME="post_ipk" TITLE="Die ausgewählte Software-Datei übertragen und im Verzeichnis /tmp ablegen." TYPE="SUBMIT" VALUE="Software laden">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<H2>Manuell Installieren</H2>
+
+<P>Eine Software-Datei muss m&ouml;glicherweise manuell
+installiert und konfiguriert werden. Lade dazu zun&auml;chst die
+Software-Datei. Die Installation erfolgt dann mit der SSH-Kommandozeile
+(neudeutsch: Shell) des Linux-Betriebssystems. Starte ein SSH-Programm und
+verbinde mit <SAMP>root@$(nvram get lan_ipaddr)</SAMP>. Gib als Kennwort
+das Web-Admin-Kennwort ein. <B>Tipp</B>: Windows-Benutzer k&ouml;nnen die
+Freeware <A HREF="http://www.chiark.greenend.org.uk/%7Esgtatham/putty/">PuTTY</A>
+f&uuml;r SSH verwenden.</P>
+
+<P><B>Beispiel</B>: Es soll die Software-Datei <SAMP>beispiel_1.0_mipsel.ipk</SAMP>
+installiert werden. Nach dem Laden der IPK-Datei erfolgt auf der
+SSH-Kommandozeile die Installation mit dieser Eingabe: <CODE>ipkg install /tmp/beispiel_1.0_mipsel.ipk</CODE>
+[Eingabe-Taste].</P>
+
+<P>Ist ein Internet-Verbindung vorhanden, k&ouml;nnen auch
+folgende Befehle verwendet werden:</P>
+<UL>
+<LI><CODE>ipkg update</CODE>: Aktualisiert Paketlisten
+von den in /etc/ipkg.conf eingetragenen Servern.</LI>
+<LI><CODE>ipkg list|less</CODE>: Zeigt Informationen &uuml;ber
+verf&uuml;gbare Software-Pakete an.</LI>
+<LI><CODE>ipkg install name</CODE>: Installiert ein
+Software-Paket via Internet.</LI>
+</UL>
+
+<P>Auf der Kommandozeile werden Befehle eingegeben und mit
+der Eingabe-Taste best&auml;tigt. Die wichtigsten Befehle sind: <CODE>ls</CODE>,
+<CODE>cd</CODE>, <CODE>cp</CODE>, <CODE>rm</CODE> und <CODE>vi</CODE>.
+Viele Befehle geben eine Kurzhilfe aus. Beispiel: <CODE>cp -h</CODE>. Um
+eine Konfigurations-Datei (z.B. die Datei <SAMP>/etc/local.dnsmasq.conf</SAMP>)
+zu &auml;ndern, folgendes ausf&uuml;hren:</P>
+<OL>
+<LI>Den Befehl <CODE>cd /etc</CODE> eingeben und mit
+[Eingabe] best&auml;tigen.</LI>
+<LI>Den Befehl <CODE>ls -l loc*</CODE> eingeben, um den
+Verzeichnisinhalt anzuzeigen.</LI>
+<LI>Den Befehl <CODE>vi local.dnsmasq.conf</CODE>
+eingeben. Abk&uuml;rzung: nur einige Buchstaben des Dateinamens z.B.
+<CODE>vi local.d</CODE> eingeben und mit [Tab] vervollst&auml;ndigen
+lassen.</LI>
+<LI>In dem Text-Editor die gew&uuml;nschte Stelle mit
+den Cursortasten aufsuchen.</LI>
+<LI>Mit [i] in den Insert-Modus wechseln. Nun Text einf&uuml;gen
+oder &auml;ndern. Mit [Esc] den Insert-Modus verlassen.</LI>
+<LI>Mit [d] [d] eine Zeile l&ouml;schen.</LI>
+<LI>Mit [:] [w] [q] [Eingabe] speichern und den Editor
+verlassen. </LI>
+<LI>Mit [:] [q] [!] [Eingabe] den Editor ohne Speichern
+abbrechen.</LI>
+</OL>
+
+<P><B>Hinweis</B>: Viele Konfigurations-Dateien sind
+Links in die schreibgesch&uuml;tzte ROM-Partition. Um diese Dateien zu &auml;ndern,
+muss zun&auml;chst der Link gel&ouml;scht werden (<CODE>rm
+/etc/sample.conf</CODE>). Danach die aktuelle Datei aus der ROM-Partition
+kopieren (<CODE>cp /rom/etc/sample.conf /etc</CODE>).</P>
+EOF
+
+elif ! eval $(./freifunk-upload -e 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Software-Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+if [ "1" = "$install" ]; then
+echo "<PRE>"
+ipkg -force-defaults install "$ffout" 2>&1
+rm "$ffout"
+echo "</PRE>"
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Software nun manuell installieren mit <CODE>ipkg install $ffout</CODE></TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Software-Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Zus&auml;tzliche Software-Pakete k&ouml;nnen nicht
+im Failsafe-Modus und auch nicht im ReadOnly-Modus installiert oder
+entfernt werden. W&auml;hle auf der Seite <A HREF="reset.html">Neustart</A>
+die Option <I>Einfacher Neustart</I> und best&auml;tige mit <CITE>Neu
+starten</CITE>.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+
+. ${0%/*}/cgi-bin-post.sh

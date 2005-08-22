@@ -1,0 +1,199 @@
+#!/bin/sh
+
+export DATE="28.5.2005"
+export TITLE="Verwaltung: Firmware"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: Firmware</H1>
+EOF
+
+if [ "$(mount|awk '/ \/ / {print $6}')" = "(ro)" ]; then
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle eine zum Gerät passende Firmware-Datei. Für die Freifunk-Firmware kann wahlweise eine der *.bin-Dateien oder die *.trx-Datei geladen werden. Für andere Firmware wähle besser die passende *.bin-Datei aus.">
+<TBODY>
+<TR>
+<TD>Firmware-Datei:</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="firmfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+</TR>
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+<TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Firmware laden">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<P><B>Achtung</B>: Wenn das Ger&auml;t neu gestartet
+wird, wartet es f&uuml;r etwa 5 Sekunden auf eine Firmware-&Uuml;bertragung
+an die IP-Adresse 192.168.1.1 mit dem Protokoll TFTP. Sollte die geladene
+Firmware nicht funktionieren, kann das Ger&auml;t &uuml;ber diesen
+Mechanismus wiederhergestellt werden. Verbinde dazu den PC mit einem der
+Netzwerk-Anschl&uuml;sse [1-4] des Ger&auml;tes. Es k&ouml;nnen sowohl
+gekreuzte aus auch normale Netzwerk-Leitungen verwendet werden.</P>
+
+<H2>Windows XP</H2>
+
+<OL>
+<LI>Am PC als Administrator anmelden.</LI>
+<LI>Rufe in den <B>Netzwerkverbindungen</B> den Dialog
+<B>Eigenschaften von LAN-Verbindung</B> auf. &Auml;ndere die
+Eigenschaften f&uuml;r das <B>Internetprotokoll TCP/IP</B>.</LI>
+<LI>Konfiguriere die IP-Adresse <CODE>192.168.1.2</CODE>.
+Akzeptiere die vorgegebene Netzmaske von <CODE>255.255.255.0</CODE>.
+Andere Einstellungen m&uuml;ssen nicht ge&auml;ndert werden.</LI>
+<LI>Rufe unter <B>Start</B>: <B>Programme</B>: <B>Zubeh&ouml;r</B>
+die <B>Eingabeaufforderung</B> auf. Wechsele mit dem Befehl <CODE>cd</CODE>
+in das Verzeichnis, das die gew&uuml;nschte Firmware-Datei enth&auml;lt.
+Beispiel: Gib ein <CODE>cd /d x:\download\firmware</CODE> und best&auml;tige
+mit der Eingabetaste.</LI>
+<LI>Gib den TFTP-&Uuml;bertragungsbefehl ein, aber best&auml;tige
+noch nicht mit der Eingabetaste. Beispiel: <CODE>tftp -i 192.168.1.1
+put openwrt-g-freifunk-%VERSION%-de.bin</CODE></LI>
+</OL>
+
+<P>Bitte weiterlesen unter <A HREF="#fwtrs">Firmware &Uuml;bertragen</A>
+(s.u.).</P>
+
+<H2>Linux</H2>
+
+<OL>
+<LI>&Ouml;ffne eine Root-Shell.</LI>
+<LI>Wechsele mit dem Befehl <CODE>cd</CODE> in das
+Verzeichnis, das die gew&uuml;nschte Firmware-Datei enth&auml;lt.
+Beispiel: Gib ein <CODE>cd /tmp/download/firmware</CODE> und best&auml;tige
+mit der Eingabetaste.</LI>
+<LI>Konfiguriere die verwendete Netzwerk-Schnittstelle.
+Beispiel: <CODE>ifconfig eth0 192.168.1.2</CODE> </LI>
+<LI>Rufe das TFTP-Programm auf. Gib ein <CODE>tftp
+192.168.1.1</CODE>. Im TFTP-Programm m&uuml;ssen mit zwei
+aufeinanderfolgenden Befehlen die Einstellungen ge&auml;ndert werden.
+Gib ein <CODE>binary</CODE> und <CODE>rexmt 1</CODE> </LI>
+<LI>Gib den TFTP-&Uuml;bertragungsbefehl ein, aber best&auml;tige
+noch nicht mit der Eingabetaste. Beispiel: <CODE>put
+openwrt-g-freifunk-%VERSION%-de.bin</CODE> </LI>
+</OL>
+
+<H2><A NAME="fwtrs">Firmware &uuml;bertagen</A></H2>
+
+<P>Der Netzwerk-Anschluss des PC verf&uuml;gt &uuml;blicherweise
+&uuml;ber eine Verbindungs-LED. Diese leuchtet auf, sobald eine
+Netzwerk-Verbindung besteht. Nach dem Einschalten des Ger&auml;tes muss
+diese LED nach ein paar Sekunden aufleuchten. Auch am Ger&auml;t selber
+muss eine der vier LEDs nach ein paar Sekunden aufleuchten. Dieses
+Verhalten kann gefahrlos durch Trennen und Wiederherstellen der
+Spannungsversorgung am Ger&auml;t gepr&uuml;ft werden. Nach diesem Test
+die folgenden Schritte ausf&uuml;hren:</P>
+<OL>
+<LI>Trenne die Spannungsversorgung.</LI>
+<LI>Stelle die Spannungsversorgung wieder her.</LI>
+<LI>Warte etwa 2 Sekunden, bis die Netzwerk-LEDs
+leuchten.</LI>
+<LI>Warte noch 1-2 Sekunden.</LI>
+<LI>Best&auml;tige den TFTP-&Uuml;bertragungsbefehl mit
+der Eingabetaste.</LI>
+</OL>
+
+<P>Die &Uuml;bertragung muss nach etwa 5 Sekunden
+fehlerfrei abgeschlossen sein. Das Ger&auml;t zeigt den Update-Vorgang
+durch eine blinkende Power-LED an. Der Update-Vorgang ist nach sp&auml;testens
+2 Minuten abgeschlossen. Das Ger&auml;t startet mit der neuen
+Firmware selbstst&auml;ndig.</P>
+EOF
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Firmware-Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+MAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
+if [ "W54G" = "$MAGIC" ] || [ "W54S" = "$MAGIC" ] || [ "W54A" = "$MAGIC" ] || [ "HDR0" = "$MAGIC" ]; then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Schreibe die Firmware-Datei $ffout in den
+Flash-Speicher. Bitte warten...</TD>
+</TR></TBODY>
+</TABLE><IMG
+ALT="164 Sekunden..."
+HEIGHT="8" SRC="../images/progress164.gif" VSPACE="10" WIDTH="255" TITLE="164 Sekunden...">
+
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 164000);
+//--></SCRIPT>
+EOF
+
+echo -n "<PRE>"
+./firmware-burn "$ffout"
+echo "</PRE>"
+else
+rm -f "$ffout"
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Firmware-Datei hat falsches Format.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Bitte eine passende *.bin- oder *.trx-Firmware-Datei
+laden.</P>
+EOF
+
+fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Firmware-Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Firmware-Ladevorgang wurde nicht ausgef&uuml;hrt.</P>
+EOF
+
+fi
+else
+
+cat<<EOF
+<P>Eine neue Firmware kann nur im Failsafe-Modus oder im
+ReadOnly-Modus geladen werden. W&auml;hle dazu auf der Seite
+<A HREF="reset.html">Neustart</A> die gew&uuml;nschte Option und best&auml;tige
+mit <CITE>Neu starten</CITE>. Nach dem Neustart kann die Firmware auf
+dieser Seite geladen werden.</P>
+
+<P><B>Erl&auml;uterung</B>: Das OpenWRT-Kommando <CITE>mtd</CITE>
+&uuml;berschreibt m&ouml;glicherweise durch das Laden der Firmware die
+beschreibbare Partition <CITE>OpenWrt</CITE>. Im Failsafe-Modus wird
+diese Partition nicht verwendet. Im ReadOnly-Modus wird nur lesend darauf
+zugegriffen. Folgende Partitionen bestehen:</P>
+
+<PRE>$(cat /proc/mtd)</PRE>
+EOF
+
+fi
+
+. ${0%/*}/cgi-bin-post.sh

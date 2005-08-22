@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN"
+ "hmpro4.dtd">
+
+<HTML>
+  
+  <HEAD>
+    <TITLE>Freifunk.Net - %TITLE%</TITLE>
+    <META CONTENT="text/html; charset=iso-8559-1" HTTP-EQUIV="Content-Type">
+    <META HTTP-EQUIV="cache-control" CONTENT="no-cache" />
+    <LINK HREF="ff.css" REL="StyleSheet" TYPE="text/css">
+    <LINK HREF="sven-ola*ät*gmx*de" REV="made" TITLE="Sven-Ola">
+
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function navarr(){}
+navset=new navarr();
+navres=new navarr();
+function set(idx){
+  if(!!navset[idx]){
+    document.images[idx].src=navset[idx].src;
+  }
+}
+function res(idx){
+  if(!!navres[idx]){
+    document.images[idx].src=navres[idx];
+  }
+}
+function ini() {
+  if (!!document.images){
+    for(var idx=0; idx<document.images.length; idx++){
+      var src=document.images[idx].src;
+      var pos=src.indexOf('_white.gif');
+      if (0<pos) {
+        navres[idx]=src;
+        src=src.substring(0, src.indexOf('_white.gif'))+'_red.gif';
+        navset[idx]=new Image(document.images[idx].width, document.images[idx].height);
+        navset[idx].src=src;
+        document.images[idx].onmouseover=new Function("if(!!window.set)set("+idx+");");
+        document.images[idx].onmouseout=new Function("if(!!window.res)res("+idx+");");
+      }
+      else if (!document.images[idx].mozbug && !!src.search &&
+        0<=src.search(new RegExp('progress[0-9]+\\.gif$')))
+      {
+        document.images[idx].mozbug=1;
+        document.images[idx].src='';
+        document.images[idx].src=src;
+      }
+    }
+  }
+}
+//--></SCRIPT>
+  </HEAD>
+  
+  <BODY ONLOAD="if(null!=window.ini)window.ini()">
+    <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" CLASS="body">
+      <TBODY>
+      <TR>
+        <TD CLASS="color" COLSPAN="5" HEIGHT="19"><SPAN CLASS="color" LANG="de"><A CLASS="color" HREF="index.html">Home</A></SPAN><SPAN CLASS="color" LANG="en"><A CLASS="color" HREF="index.html">Home</A></SPAN><SPAN CLASS="color" LANG="es"><A CLASS="color" HREF="index.html">Inicio</A></SPAN><SPAN CLASS="color" LANG="fr"><A CLASS="color" HREF="index.html">Accueil</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="images/vertbar.gif" WIDTH="1"><SPAN CLASS="color" LANG="de"><A CLASS="color" HREF="cgi-bin-contact.html">Kontakt</A></SPAN><SPAN CLASS="color" LANG="en"><A CLASS="color" HREF="cgi-bin-contact.html">Contact</A></SPAN><SPAN CLASS="color" LANG="es"><A CLASS="color" HREF="cgi-bin-contact.html">Contacta</A></SPAN><SPAN CLASS="color" LANG="fr"><A CLASS="color" HREF="cgi-bin-contact.html">Contact</A></SPAN></TD>
+      </TR>
+      <TR>
+        <TD HEIGHT="5" WIDTH="150"></TD>
+        <TD HEIGHT="5" WIDTH="5">&#160;</TD>
+        <TD HEIGHT="5"></TD>
+        <TD HEIGHT="5" WIDTH="5"></TD>
+        <TD HEIGHT="5" WIDTH="150"></TD>
+      </TR>
+      <TR>
+        <TD HEIGHT="33" WIDTH="150"></TD>
+        <TD HEIGHT="33" WIDTH="5"></TD>
+        <TD ALIGN="right" HEIGHT="33"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1l.gif" WIDTH="106"></A></TD>
+        <TD ALIGN="right" HEIGHT="33" WIDTH="5"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1m.gif" WIDTH="5"></A></TD>
+        <TD HEIGHT="33" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
+      </TR>
+      <TR>
+        <TD CLASS="magenta" COLSPAN="4" HEIGHT="19">&#160;</TD>
+        <TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
+      </TR>
+      <TR>
+        <TD HEIGHT="5" WIDTH="150"></TD>
+        <TD HEIGHT="5" WIDTH="5"></TD>
+        <TD HEIGHT="5"></TD>
+        <TD HEIGHT="5" WIDTH="5"></TD>
+        <TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.freifunk.net/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
+      </TR>
+      <TR>
+        <TD CLASS="color" VALIGN="top" WIDTH="150">
+        <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+          <TBODY>
+          <TR>
+            <TD>
+            
+            <H1 CLASS="color"><SPAN LANG="de">Inhalt</SPAN><SPAN LANG="en">Contents</SPAN><SPAN LANG="es">Contenidos</SPAN><SPAN LANG="fr">Contenu</SPAN></H1></TD>
+          </TR>
+          
+          <TR>
+            <TD>
+            <DIV CLASS="color"><A CLASS="color" HREF="cgi-bin-status.html"><IMG ALIGN="right" ALT="" BORDER="0" HEIGHT="15" SRC="images/icn_arrow_white.gif" WIDTH="12"><SPAN LANG="de">Status</SPAN><SPAN LANG="en">Status</SPAN><SPAN LANG="es">Estado</SPAN><SPAN LANG="fr">Etat</SPAN></A></DIV></TD>
+          </TR>
+          <TR>
+            <TD>
+            <DIV CLASS="color"><A CLASS="color" HREF="cgi-bin/index.html"><IMG ALIGN="right" ALT="" BORDER="0" HEIGHT="15" SRC="images/icn_arrow_white.gif" WIDTH="12"><SPAN LANG="de">Verwalten</SPAN><SPAN LANG="en">Admin</SPAN><SPAN LANG="es">Administraci&oacute;n</SPAN><SPAN LANG="fr">Administration</SPAN></A></DIV></TD>
+          </TR></TBODY>
+        </TABLE></TD>
+        <TD VALIGN="top" WIDTH="5"></TD>
+        <TD VALIGN="top">%BODY%</TD>
+        <TD VALIGN="top" WIDTH="5"></TD>
+      </TR>
+      <TR>
+        <TD HEIGHT="5" WIDTH="150"></TD>
+        <TD HEIGHT="5" WIDTH="5"></TD>
+        <TD HEIGHT="5"></TD>
+        <TD HEIGHT="5" WIDTH="5"></TD>
+        <TD HEIGHT="5" WIDTH="150"></TD>
+      </TR>
+      <TR>
+        <TD CLASS="magenta" COLSPAN="4" HEIGHT="19" WIDTH="150"><ADDRESS CLASS="magenta"><SPAN LANG="de">Stand</SPAN><SPAN LANG="en">Changed</SPAN><SPAN LANG="es">Modificado</SPAN><SPAN LANG="fr">Chang&eacute;</SPAN>:
+        %DATE%</ADDRESS></TD>
+        <TD CLASS="magenta" HEIGHT="19" WIDTH="150"><SPAN CLASS="magenta" LANG="de"><A CLASS="magenta" HREF="javascript:location.href=location.href;"><IMG ALT="" BORDER="0" HEIGHT="14" SRC="images/btn_top_arrow.gif" WIDTH="14">Seitenanfang</A></SPAN><SPAN CLASS="magenta" LANG="en"><A CLASS="magenta" HREF="javascript:location.href=location.href;"><IMG ALT="" BORDER="0" HEIGHT="14" SRC="images/btn_top_arrow.gif" WIDTH="14">Top
+          of page</A></SPAN><SPAN CLASS="magenta" LANG="es"><A CLASS="magenta" HREF="javascript:location.href=location.href;"><IMG ALT="" BORDER="0" HEIGHT="14" SRC="images/btn_top_arrow.gif" WIDTH="14">Comienzo
+          de p&aacute;gina</A></SPAN><SPAN CLASS="magenta" LANG="fr"><A CLASS="magenta" HREF="javascript:location.href=location.href;"><IMG ALT="" BORDER="0" HEIGHT="14" SRC="images/btn_top_arrow.gif" WIDTH="14">Haut
+          de page</A></SPAN></TD>
+      </TR></TBODY>
+    </TABLE>
+  </BODY>
+</HTML>

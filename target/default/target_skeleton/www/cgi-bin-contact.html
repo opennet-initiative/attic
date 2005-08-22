@@ -1,7 +1,12 @@
+#!/bin/sh
+echo Content-type: text/html
+echo
+
+cat<<EOF
 <HTML>
 
 <HEAD>
-<TITLE>Freifunk.Net - Hallo!</TITLE>
+<TITLE>Freifunk.Net - Kontakt</TITLE>
 <META CONTENT="text/html; charset=iso-8559-1" HTTP-EQUIV="Content-Type">
 <META HTTP-EQUIV="cache-control" CONTENT="no-cache" />
 <LINK HREF="ff.css" REL="StyleSheet" TYPE="text/css">
@@ -100,52 +105,65 @@ document.images[idx].src=src;
 <TD VALIGN="top" WIDTH="5"></TD>
 <TD VALIGN="top">
 
-<H1>Hallo!</H1>
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function help(e) {
+if (!e) e = event;
+// (virt)KeyVal is Konqueror, charCode is Moz/Firefox, else MSIE, Netscape, Opera
+if (26 == e.virtKeyVal || !e.keyVal && !e.charCode && 112 == (e.which || e.keyCode)) {
+var o = null;
+if (e.preventDefault) {
+if (e.cancelable) e.preventDefault();
+o = e.target;
+}
+else {
+e.cancelBubble = true;
+o = e.srcElement;
+}
+while(!!o && '' == o.title) o = o.parentNode;
+if (!!o) alert(o.title);
+}
+}
+if (document.all) {
+document.onkeydown = help;
+document.onhelp = function(){return false;}
+}
+else {
+document.onkeypress = help;
+}
+//--></SCRIPT>
 
-<P>Dies ist ein Freifunk-Zugriffspunkt (neudeutsch:
-WLAN-Access-Point), auf dem der Freifunk-Firmware Version 1.0.2
+<H1>Kontakt</H1>
 
-<!--%KIT_IPADDR%-->
-
-l&auml;uft. Technische Details &uuml;ber diesen Access-Point sind auf der
-<A HREF="cgi-bin-status.html">Statusseite</A> nachzulesen. Informationen &uuml;ber
-das Freifunk-Projekt finden sich im Internet unter
-<A HREF="http://www.freifunk.net/">http://www.freifunk.net/</A>.</P>
-<DIV><A HREF="http://openwrt.org/"><IMG ALIGN="right" ALT="OpenWrt Logo" BORDER="0" HEIGHT="31" SRC="images/openwrt.gif" WIDTH="88" TITLE="OpenWrt Logo"></A></DIV>
-
-<P><B>Hinweis</B>: Freifunk-Firmware und
-Freifunk-Webadmin basieren auf der ganz hervorragenden Linux-Distribution
-<A HREF="http://openwrt.org/">OpenWRT</A>. Im Gegensatz zu anderen
-Firmwares erm&ouml;glicht OpenWRT das zus&auml;tzliche Installieren von
-Software-Paketen ohne dass auf erweiterte Versionen einer Firmware
-gewartet werden muss.</P>
-<CENTER><IMG ALT="ThomasL mit seinem wohlverdienten Bier nach der OLSR-LQ-Entwicklungsarbeit auf dem ETX-Bergfest" HEIGHT="480" SRC="images/intro.jpg" WIDTH="480" TITLE="ThomasL mit seinem wohlverdienten Bier nach der OLSR-LQ-Entwicklungsarbeit auf dem ETX-Bergfest"><BR CLEAR="all">
-</CENTER>
-
-<H2>Einige Links</H2>
-
-<UL>
-<LI><A HREF="http://www.freifunk.net/wiki/FreifunkFirmware"></A><A HREF="http://www.freifunk.net/wiki/FreifunkFirmware">Freifunk-Firmware-Seite
-im Freifunk.net</A></LI>
-<LI><A HREF="http://olsr.freifunk.net/">OLSR Seite im
-Freifunk.net</A></LI>
-<LI><A HREF="http://olsrexperiment.de/">OLSR-Experiment
-(Berliner Forum)</A></LI>
-<LI><A HREF="http://olsrexperiment.de/freifunk/">IP
-Vergabe (Berliner Adressverwaltung)</A></LI>
-<LI><A HREF="http://styx.commando.de/sven-ola/ipkg/">Freifunk-Firmware
-und IPK-Downloads</A></LI>
-
-<!--ADDFIRMWARELINKSHERE-->
-
-<LI><A HREF="cgi-bin-dev-zero.bin">Endlos-Download aus
-/dev/zero</A></LI>
-</UL>
-
-<P><B>Hinweis</B>: Der Abruf von Internet-Seiten &uuml;ber
-das Freifunk-Netzwerk ist an technische und organisatorische Bedingungen
-gekn&uuml;pft. M&ouml;glicherweise funktionieren daher die Verkn&uuml;pfungen
-zu Internet-Seiten nicht.</P>
+<P>Der Administrator dieses Access-Points hat die
+folgenden Kontakt-Daten eingetragen:</P>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="1" CELLPADDING="1" CELLSPACING="0" CLASS="form"
+RULES="rows" WIDTH="448">
+<TBODY>
+<TR>
+<TD>Spitzname: </TD>
+<TD>$(nvram get ff_adm_nick)</TD>
+</TR>
+<TR>
+<TD>Name: </TD>
+<TD>$(nvram get ff_adm_name)</TD>
+</TR>
+<TR>
+<TD>E-Mail: </TD>
+<TD>$(nvram get ff_adm_mail)</TD>
+</TR>
+<TR>
+<TD>Telefon: </TD>
+<TD>$(nvram get ff_adm_tel)</TD>
+</TR>
+<TR>
+<TD>Standort: </TD>
+<TD>$(nvram get ff_adm_loc)</TD>
+</TR>
+<TR>
+<TD>Notiz: </TD>
+<TD>$(nvram get ff_adm_note)</TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 </TD>
 <TD VALIGN="top" WIDTH="5"></TD>
 </TR>
@@ -164,3 +182,4 @@ zu Internet-Seiten nicht.</P>
 </TABLE>
 </BODY>
 </HTML>
+EOF

@@ -1,0 +1,66 @@
+#!/bin/sh
+
+if [ "$1" != "-go" ]; then
+	ffout="$1"
+	if [ -z "$ffout" ] || [ ! -f "$ffout" ]; then
+		echo "Input file missing.">&2
+		exit 1
+	fi
+
+	BINMAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
+	if [ "W54G" = "$BINMAGIC" ] || [ "W54S" = "$BINMAGIC" ]; then
+		TOTMEM=$(awk 'sub("MemTotal:","") {print $1}' /proc/meminfo)
+		if [ -n "$TOTMEM" ] && [ 8192 -gt $TOTMEM ]; then
+			echo "Only $TOTMEM KB RAM: use trx file.">&2
+			rm -f "$ffout"
+			exit 1
+		fi
+		dd bs=32 skip=1 if="$ffout" of="$ffout.trx">/dev/null 2>&1
+		rm -f "$ffout"
+		ffout="$ffout.trx"
+	fi
+
+	if ! /www/cgi-bin/freifunk-upload -c "$ffout"; then
+		echo "CRC error: aborted.">&2
+		rm -f "$ffout"
+		exit 1
+	fi
+	outdev=/dev/null
+	test -e /dev/tts/0 && outdev=/dev/tts/0
+	$0 -go "$ffout">$outdev 2>&1 &
+	exit 0
+fi
+
+trap "" SIGHUP
+trap "" SIGTERM
+
+sleep 1
+killall5 -HUP
+test -f /etc/dropbear/dropbear_dss_host_key && nvram set ff_dsskey=$(/www/cgi-bin/freifunk-upload -b2a</etc/dropbear/dropbear_dss_host_key)
+nvram set ff_reset=format
+nvram commit
+killall5 -TERM
+sleep 1
+
+WLDEV=$(awk 'sub(":","") {print $1}' /proc/net/wireless)
+if [ -n "$WLDEV" ]; then
+	# Save RAM to speed up flash
+	wlconf $WLDEV down
+	ifconfig $WLDEV down
+	rmmod wl
+fi
+
+mkdir -p /tmp/burn.$$/bin
+mkdir -p /tmp/burn.$$/dev
+mkdir -p /tmp/burn.$$/lib
+mkdir -p /tmp/burn.$$/proc
+mount none /tmp/burn.$$/dev -t devfs
+mount none /tmp/burn.$$/proc -t proc
+mv "$2" /tmp/burn.$$/
+unset rom
+test -f /rom/bin/busybox && rom=/rom
+cp -a $rom/sbin/mtd $rom/sbin/mtdkill /tmp/burn.$$/bin/
+cp -a $rom/lib/ld-uClibc* $rom/lib/libc* $rom/lib/libuClibc*\
+ $rom/usr/lib/libnvram.so $rom/usr/lib/libshared.so /tmp/burn.$$/lib/
+echo 0x04>/proc/sys/diag
+exec chroot /tmp/burn.$$ /bin/mtdkill write "${2#/tmp}" linux

@@ -1,2 +1,14 @@
 #!/bin/sh
-httpd -p 80 -h /www -r WRT54G Router
+if test -z "$FAILSAFE"; then
+	test -d /var/etc || mkdir -p /var/etc
+	ff_pw="$(nvram get ff_pw)"
+	test -n "$ff_pw" || ff_pw=admin
+	cat > /var/etc/httpd.conf <<EOM
+A:*
+/cgi-bin:root:$ff_pw
+.asp:text/html
+EOM
+	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Freifunk Webadmin, Log in as root"
+else
+	/usr/sbin/httpd -p 80 -h /www -r "Freifunk Webadmin, FAILSAFE"
+fi
