@@ -27,7 +27,7 @@ BEGIN {
 	"nvram get wl0_channel"|getline wl0c
 
 	srand()
-	if (1 == int(1234*rand()) || "pidof -s olsrd"|getline && "" == $0) {
+	if ("pidof -s olsrd"|getline && "" == $0) {
 		system("logger -t cron.minutely restarting olsrd")
 		system("/etc/init.d/*olsrd stop")
 		system("/usr/sbin/olsrd-clearroutes")

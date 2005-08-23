@@ -89,7 +89,6 @@ BEGIN {
 		while("iwconfig 2>/dev/null"|getline) {
 			if ($2 == "IEEE") {
 				wdev = $1
-				system("nvram set wl0_ifname="wdev)
 				break
 				}
 		}

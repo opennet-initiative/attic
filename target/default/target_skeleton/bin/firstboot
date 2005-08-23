@@ -27,7 +27,15 @@ if [ $lan_ip = "192.168.1.1" ] ; then
 	set wifi_ipaddr=192.168.33.127
 	set wifi_netmask=255.255.0.0
 fi
-/usr/bin/netparam >/dev/null   # sets value of wl0_ifname
+
+eval $(/usr/bin/netparam)
+if [ -z $(nvram get wl0_ifname)]; then
+        nvram set wl0_ifname=$WIFIDEV
+fi
+
+
+
+
 nvram commit
 echo "initializing opennet-values done"
 
