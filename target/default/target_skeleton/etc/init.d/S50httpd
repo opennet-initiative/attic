@@ -8,7 +8,7 @@ A:*
 /cgi-bin:root:$ff_pw
 .asp:text/html
 EOM
-	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Freifunk Webadmin, Log in as root"
+	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Opennet Webadmin, Log in as root"
 else
-	/usr/sbin/httpd -p 80 -h /www -r "Freifunk Webadmin, FAILSAFE"
+	/usr/sbin/httpd -p 80 -h /www -r "Opennet Webadmin, FAILSAFE"
 fi

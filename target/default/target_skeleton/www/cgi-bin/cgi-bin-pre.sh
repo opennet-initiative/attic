@@ -6,7 +6,7 @@ cat<<EOF
 <HTML>
 
 <HEAD>
-<TITLE>Freifunk.Net - $TITLE</TITLE>
+<TITLE>opennet.firmware - $TITLE</TITLE>
 <META CONTENT="text/html; charset=iso-8559-1" HTTP-EQUIV="Content-Type">
 <META HTTP-EQUIV="cache-control" CONTENT="no-cache" />
 <LINK HREF="../ff.css" REL="StyleSheet" TYPE="text/css">

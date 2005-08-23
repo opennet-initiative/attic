@@ -72,14 +72,7 @@ Wert vor dem Neustart auf &quot;on&quot; gesetzt.</P>
 EOF
 
 fi
-if [ -n "$ff_firmware" ]; then
 
-cat<<EOF
-<P><B>Achtung</B>: Die erweiterten Neustart-Einstellungen
-k&ouml;nnen nur mit der Freifunk-Firmware genutzt werden.</P>
-EOF
-
-fi
 else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
