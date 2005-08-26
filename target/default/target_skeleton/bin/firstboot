@@ -29,7 +29,7 @@ if [ $lan_ip = "192.168.1.1" ] ; then
 fi
 
 eval $(/usr/bin/netparam)
-if [ -z $(nvram get wl0_ifname)]; then
+if [ -z $(nvram get wl0_ifname) ]; then
         nvram set wl0_ifname=$WIFIDEV
 fi
 
