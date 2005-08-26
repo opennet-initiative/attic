@@ -45,7 +45,7 @@ source:
 prepare: 
 compile: prepare libnvram-compile libshared-compile $(PKG_IPK) $(PKG_WLCOMPAT)
 	mkdir -p $(STAGING_DIR)/usr/include
-	cp -a ./include/* $(STAGING_DIR)/usr/include/
+	cp -fa ./include/* $(STAGING_DIR)/usr/include/
 install: libnvram-install libshared-install \
 	 $(IPKG_STATE_DIR)/info/$(PKG_NAME).list \
 
