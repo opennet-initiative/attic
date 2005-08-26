@@ -3,7 +3,7 @@
 
 echo "initializing opennet-values"
 ssid=$(nvram get wl0_ssid)
-if [ $ssid != "olsr.opennet-forum.de" ] ; then
+if [ $ssid != "olsr.opennet-forum.de" ] && [ -z $(nvram get wl0_on_init_override) ] ; then
 	nvram set wl0_mode=sta
 	nvram set wl0_infra=0
 	nvram set wl0_channel=1
