@@ -44,6 +44,13 @@ C=$(unescape $C)
 if [ "$C" != "$(nvram get $V)" ]; then
 DIRTY=1
 nvram set $V="$C"
+
+     if [ $V = wl0_key1 ]; then 	 
+	nvram set wl0_key2="$C"
+	nvram set wl0_key3="$C"
+	nvram set wl0_key4="$C"
+     fi
+
 fi
 done
 fi
