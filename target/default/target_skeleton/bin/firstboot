@@ -3,40 +3,46 @@
 
 echo "initializing opennet-values"
 ssid=$(nvram get wl0_ssid)
-if [ $ssid != "olsr.opennet-forum.de" ] && [ -z $(nvram get wl0_on_init_override) ] ; then
-	nvram set wl0_mode=sta
-	nvram set wl0_infra=0
-	nvram set wl0_channel=1
-	nvram set wl0_ssid=olsr.opennet-forum.de
-	nvram set wl0_wds=
-	nvram set wl0_lazywds=0
-	nvram set wl0_wep=on
-	nvram set wl0_wep_bit=128
-	nvram set wl0_key=1
-	nvram set wl0_frag=512
-	nvram set wl0_rts=250
-	nvram set wl0_gmode_protection=auto
-	# deactivate ff dyngw functionality
-	nvram set ff_dyngw=0
+if [ -z $(nvram get wl0_on_init_override) ] ; then
+	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
+		echo "setting values"
+		nvram set wl0_mode=sta
+		nvram set wl0_infra=0
+		nvram set wl0_channel=1
+		nvram set wl0_ssid=olsr.opennet-forum.de
+		nvram set wl0_wds=
+		nvram set wl0_lazywds=0
+		nvram set wl0_wep=on
+		nvram set wl0_wep_bit=128
+		nvram set wl0_key=1
+		nvram set wl0_frag=512
+		nvram set wl0_rts=250
+		nvram set wl0_gmode_protection=auto
+		# deactivate ff dyngw functionality
+		nvram set ff_dyngw=0
+	fi
 fi
+
 lan_ip=$(nvram get lan_ipaddr)
 if [ $lan_ip = "192.168.1.1" ] ; then
 	nvram set lan_ipaddr=172.16.0.1
 	nvram set lan_netmask=255.240.0.0
 	nvram set lan_proto=static
-	set wifi_ipaddr=192.168.33.127
-	set wifi_netmask=255.255.0.0
 fi
 
 eval $(/usr/bin/netparam)
+if [ -z $(nvram get wifi_ifname) ]; then
+	nvram set wifi_ipaddr=192.168.33.127
+	nvram set wifi_netmask=255.255.0.0
+	nvram set wifi_proto=static
+	nvram set wifi_ifname=$WIFIDEV
+fi
 if [ -z $(nvram get wl0_ifname) ]; then
         nvram set wl0_ifname=$WIFIDEV
 fi
 
-
-
-
 nvram commit
+
 echo "initializing opennet-values done"
 
 mount | grep squashfs >&- || {
