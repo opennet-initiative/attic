@@ -14,19 +14,17 @@ fi
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
 lan_proto="$(nvram get lan_proto)"
-test -z "$(nvram get ff_lan_proto)" && lan_proto=noconfig
 
 cat<<EOF
 <FORM ACTION="lan.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
 <TBODY>
+<tr></tr>
+<TR><TD><B>Adressdaten des AccessPoints</B></TD></TR>
 <TR
 TITLE="Bestimmt die Betriebsart der 4 Ethernet-Anschlüsse. Falls noch nicht konfiguriert, wird die Vorgabe 'Statisch' verwendet.">
 <TD>LAN-Protokoll:</TD>
 <TD><SELECT NAME="lan_proto" ONCHANGE="this.form.lan_ipaddr.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.lan_netmask.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_start.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_num.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_lease.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));">
-<OPTION
-VALUE='noconfig' $(test "$lan_proto" = "noconfig" && echo "selected=selected")>Nicht
-konfiguriert</OPTION>
 <OPTION
 VALUE='dhcp' $(test "$lan_proto" = "dhcp" && echo "selected=selected")>DHCP</OPTION>
 <OPTION
@@ -52,6 +50,8 @@ TITLE="Konfiguriert statische Routen im Format 'ip:netmask:gatewayip:metric:inte
 <TD>Statische Routen:</TD>
 <TD><INPUT NAME="static_route" SIZE="32" TYPE="TEXT" VALUE="$(nvram get static_route)"></TD>
 </TR>
+<tr></tr>
+<TR><TD><B>Weitere Einstellungen</B></TD></TR>
 <TR
 TITLE="Schaltet die IP-Adressumsetzung (NAT/Masquerading) zwischen dem internen LAN und dem Drahtlos-Netzwerk aus. Für spezielle Anwendungen kann mit dieser Option das interne LAN mit dem Drahtlos-Netzwerk direkt kommunizieren.">
 <TD>NAT ausschalten:</TD>
@@ -84,7 +84,8 @@ fi
 cat<<EOF
 </TD>
 </TR>
-
+<tr></tr>
+<TR><TD><B>DHCP-Server auf dem AcessPoint</B></TD></TR>
 <TR
 TITLE="Startwert für die per DHCP zugewiesenen IP-Adressen.">
 <TD>DHCP-Start-IP:</TD>
@@ -116,10 +117,7 @@ TITLE="Zeit (in Sekunden) nach der eine vergebene IP-Adresse neu vergeben werden
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
-<P><B>Tipp</B>: Diese Angaben beeinflussen auch die
-Konfiguration, die mittels DHCP im drahtgebundenen Netzwerk an PCs
-vergeben wird. F&uuml;r einen bequemen Netzzugriff sollte der <B>Rechnername</B>
-und die interne <B>Domain</B> angegeben sein (-&gt; <A HREF="wan.html">WAN</A>).
+<P><B>ACHTUNG:</B> Wird bei 'LAN_Protokoll' 'DHCP' ausgewählt, sucht der AccessPoint im LAN nach einem anderen DHCP-Server und versucht eine Adresse zu bekommen. Dies ist oft nicht gewollt. Um auf dem AccessPoint eine DHCP-Server zu betreiben, muss diesem eine statische IP (z.B. 172.16.0.1) zugewiesen werden und im unteren Teil  die maximale Zahl der DHCP-Benutzer größer 0 gesetzt werden.
 
 </SPAN></P>
 EOF
@@ -128,12 +126,7 @@ else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_lan" ]; then
-ff_lan_proto=1
-if [ "$lan_proto" = "noconfig" ]; then
-lan_proto=$(nvram get lan_proto)
-ff_lan_proto=
-fi
-for V in ff_lan_proto lan_proto lan_ipaddr lan_netmask static_route ff_nonat fw_disable dhcp_start dhcp_num dhcp_lease; do
+for V in lan_proto lan_ipaddr lan_netmask static_route ff_nonat fw_disable dhcp_start dhcp_num dhcp_lease; do
 eval "C=\$$V"
 C=$(unescape $C)
 if [ "$C" != "$(nvram get $V)" ]; then
