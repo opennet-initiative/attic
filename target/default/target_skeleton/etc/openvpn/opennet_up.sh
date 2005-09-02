@@ -1,5 +1,5 @@
 #!/bin/sh
-eval $(/usr/bin/netparam)
+export $(/usr/bin/netparam)
 ip route flush table 3
 ip route add throw $LANNET/$LANPRE table 3
 ip route add throw $WIFINET/$WIFIPRE table 3
