@@ -1,0 +1,28 @@
+#!/bin/sh
+## this is an extremly opennet-specific solution by the moment.
+
+map_port_to_ip() {
+	echo "forward port $1 to ip $2"
+	iptables -t nat -A PREROUTING -p udp -i $dev -d $ifconfig_local --dport $1 -j DNAT --to-destination $2
+	iptables -t nat -A PREROUTING -p tcp -i $dev -d $ifconfig_local --dport $1 -j DNAT --to-destination $2
+	iptables -I FORWARD 3 -i $dev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $1 -j ACCEPT
+	iptables -I FORWARD 3 -i $dev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $1 -j ACCEPT
+}
+
+echo "Mapping some ports..."
+
+#calculate the port base
+port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
+last_port=$(($port+9))
+
+if [ $(nvram get on_mapall2one) = 1 ]; then
+	ip=$(nvram get on_mapaddr0)
+	if [ -n "$ip" ]; then map_port_to_ip $port:$last_port $ip; fi
+else
+	#try to map all ten ports
+	for V in 0 1 2 3 4 5 6 7 8 9; do
+		ip=$(nvram get on_mapaddr$V)
+		if [ -n "$ip" ]; then map_port_to_ip $port $ip; fi
+		port=$(($port+1))
+	done
+fi
