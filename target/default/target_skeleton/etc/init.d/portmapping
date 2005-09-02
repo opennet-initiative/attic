@@ -1,28 +1,68 @@
 #!/bin/sh
 ## this is an extremly opennet-specific solution by the moment.
 
+test -n "$FAILSAFE" && exit
+
 map_port_to_ip() {
-	echo "forward port $1 to ip $2"
-	iptables -t nat -A PREROUTING -p udp -i $dev -d $ifconfig_local --dport $1 -j DNAT --to-destination $2
-	iptables -t nat -A PREROUTING -p tcp -i $dev -d $ifconfig_local --dport $1 -j DNAT --to-destination $2
-	iptables -I FORWARD 3 -i $dev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $1 -j ACCEPT
-	iptables -I FORWARD 3 -i $dev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $1 -j ACCEPT
+	if [ $3 = "map" ]; then
+		echo "forward port(s) "$1" to "$2
+		append="A"; insert="I"; rulenum="3"
+	else
+		echo "unforward port(s) "$1" to "$2
+		append="D"; insert="D"; rulenum=""
+	fi
+	iptables -t nat -$append PREROUTING -p udp -i $tundev -d $tunipaddr --dport $1 -j DNAT --to-destination $2
+	iptables -t nat -$append PREROUTING -p tcp -i $tundev -d $tunipaddr --dport $1 -j DNAT --to-destination $2
+	iptables -$insert FORWARD $rulenum -i $tundev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $1 -j ACCEPT
+	iptables -$insert FORWARD $rulenum -i $tundev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $1 -j ACCEPT
 }
 
-echo "Mapping some ports..."
+# get s one argument: 'map' or 'unmap'
+map_all_ports() {
+	#calculate the port base
+	port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
+	last_port=$(($port+9))
+	
+	if [ "$(nvram get on_mapall2one)" = "true" ]; then
+		ip=$(nvram get on_mapaddr0)
+		if [ -n "$ip" ]; then map_port_to_ip $port:$last_port $ip $1; fi
+	else
+		#try to map all ten ports
+		for V in 0 1 2 3 4 5 6 7 8 9; do
+			ip=$(nvram get on_mapaddr$V)
+			if [ -n "$ip" ]; then map_port_to_ip $port $ip $1; fi
+			port=$(($port+1))
+		done
+	fi
+}
 
-#calculate the port base
-port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
-last_port=$(($port+9))
+eval $(/usr/bin/netparam)
+# if not set as external variables (for instance by openvpn up or down scripts) set tunnel values here
+if [ -z "$tundev" ]; then tundev=$(ifconfig | grep tun | cut -d ' ' -f1); fi
+if [ -z "$tunipaddr" ]; then tunipaddr=$(ifconfig $tundev | grep inet | cut -d ':' -f2 | cut -d ' ' -f1); fi
 
-if [ $(nvram get on_mapall2one) = 1 ]; then
-	ip=$(nvram get on_mapaddr0)
-	if [ -n "$ip" ]; then map_port_to_ip $port:$last_port $ip; fi
-else
-	#try to map all ten ports
-	for V in 0 1 2 3 4 5 6 7 8 9; do
-		ip=$(nvram get on_mapaddr$V)
-		if [ -n "$ip" ]; then map_port_to_ip $port $ip; fi
-		port=$(($port+1))
-	done
-fi
+case $1 in
+	start)
+	echo "Mapping ports..."
+	if [ -n "$tundev" ] && [ -n "$tunipaddr" ]; then
+		map_all_ports "map"
+	else
+		echo "ERROR: couldnt find tunnel device or/and tunnel-ip. Maybe openvpn is not running..."
+	fi
+	;;
+	stop)
+	echo "Un-Mapping ports..."
+	if [ -n "$tundev" ] && [ -n "$tunipaddr" ]; then
+		map_all_ports "unmap"
+	else
+		echo "ERROR: couldnt find tunnel device or/and tunnel-ip. Maybe openvpn is not running..."
+	fi
+	;;
+	restart)
+		$0 stop
+		$0 start
+	;;
+	*)
+		echo "Usage: $0 start|stop|restart"
+	;;
+esac

@@ -12,16 +12,13 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
 	read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
-base_addr=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
+	base_addr=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
 cat<<EOF
-	<FORM ACTION="on_portmap.html" CLASS="form" METHOD="POST">
+	<FORM NAME="MAINFORM" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD colspan="2">
-	<INPUT CLASS="radio" NAME="on_mapall2one" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get on_mapall2one)" = "1" ];then echo ' checked="checked"';fi)>Alle Ports an einen Zielrechner weiterleiten
-	</TD></TR>
-	<TR><TD colspan="2">
-	<INPUT CLASS="radio" NAME="on_mapall2one" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get on_mapall2one)" != "1" ];then echo ' checked="checked"';fi)>Ports an unterschiedliche Zielrechner weiterleiten</TD>
+	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "true" && echo "CHECKED='checked'") ONCHANGE="this.value=this.checked; this.form.on_mapaddr1.disabled=('true' == this.value);this.form.on_mapaddr2.disabled=('true' == this.value);this.form.on_mapaddr3.disabled=('true' == this.value);this.form.on_mapaddr4.disabled=('true' == this.value);this.form.on_mapaddr5.disabled=('true' == this.value);this.form.on_mapaddr6.disabled=('true' == this.value);this.form.on_mapaddr7.disabled=('true' == this.value);this.form.on_mapaddr8.disabled=('true' == this.value);this.form.on_mapaddr9.disabled=('true' == this.value);">Alle Ports an einen Zielrechner weiterleiten
 	</TD></TR>
 	
 	<TR><TD><B>Port</B></TD><TD>zu <B>IP-Adresse</B></TD>
@@ -31,45 +28,47 @@ cat<<EOF
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+1))</TD>
-	<TD><INPUT NAME="on_mapaddr1" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr1)"></TD>
+	<TD><INPUT NAME="on_mapaddr1" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr1)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+2))</TD>
-	<TD><INPUT NAME="on_mapaddr2" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr2)"></TD>
+	<TD><INPUT NAME="on_mapaddr2" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr2)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+3))</TD>
-	<TD><INPUT NAME="on_mapaddr3" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr3)"></TD>
+	<TD><INPUT NAME="on_mapaddr3" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr3)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+4))</TD>
-	<TD><INPUT NAME="on_mapaddr4" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr4)"></TD>
+	<TD><INPUT NAME="on_mapaddr4" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr4)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+5))</TD>
-	<TD><INPUT NAME="on_mapaddr5" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr5)"></TD>
+	<TD><INPUT NAME="on_mapaddr5" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr5)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+6))</TD>
-	<TD><INPUT NAME="on_mapaddr6" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr6)"></TD>
+	<TD><INPUT NAME="on_mapaddr6" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr6)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+7))</TD>
-	<TD><INPUT NAME="on_mapaddr7" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr7)"></TD>
+	<TD><INPUT NAME="on_mapaddr7" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr7)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+8))</TD>
-	<TD><INPUT NAME="on_mapaddr8" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr8)"></TD>
+	<TD><INPUT NAME="on_mapaddr8" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr8)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD>$((base_addr+9))</TD>
-	<TD><INPUT NAME="on_mapaddr9" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr9)"></TD>
+	<TD><INPUT NAME="on_mapaddr9" SIZE="34" TYPE="TEXT" VALUE="$(nvram get on_mapaddr9)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
 	</TR>
 	<TR>
 	<TD COLSPAN="3"><INPUT NAME="post_on_portmap" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 	</TR></TBODY>
-	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
 EOF
+	
 else
 	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 	DIRTY=
@@ -78,6 +77,11 @@ else
 			eval "C=\$$V"
 			C=$(unescape $C)
 			if [ "$C" != "$(nvram get $V)" ]; then
+				if [ -z "$DIRTY" ]; then
+					echo -n "<PRE>"
+					/etc/init.d/portmapping stop
+					echo "</PRE>"
+				fi
 				DIRTY=1
 				nvram set $V="$C"
 			fi
@@ -90,11 +94,13 @@ cat<<EOF
 		<TBODY>
 		<TR>
 		<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
-		Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
-		aktiv.</TD>
+		Portmapping wird nun aktualisiert</TD>
 		</TR></TBODY>
 		</TABLE>
 EOF
+		echo -n "<PRE>"
+		/etc/init.d/portmapping start
+		echo "</PRE>"
 	else
 cat<<EOF
 		<TABLE BORDER="0" CLASS="note">
