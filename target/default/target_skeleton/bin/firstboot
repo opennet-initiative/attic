@@ -34,9 +34,11 @@ eval $(/usr/bin/netparam)
 if [ -z $(nvram get wifi_ifname) ]; then
 	nvram set wifi_ipaddr=192.168.33.127
 	nvram set wifi_netmask=255.255.0.0
-	nvram set wifi_dns=192.168.0.254
 	nvram set wifi_proto=static
 	nvram set wifi_ifname=$WIFIDEV
+fi
+if [ -z $(nvram get wifi_dns) ]; then
+	nvram set wifi_dns=192.168.0.254
 fi
 if [ -z $(nvram get wl0_ifname) ]; then
         nvram set wl0_ifname=$WIFIDEV
