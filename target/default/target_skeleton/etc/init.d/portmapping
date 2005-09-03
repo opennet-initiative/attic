@@ -1,23 +1,24 @@
 #!/bin/sh
-## this is an extremly opennet-specific solution by the moment.
+## this is currently an extremly opennet-specific solution.
 
 test -n "$FAILSAFE" && exit
 
+
 map_port_to_ip() {
 	if [ $3 = "map" ]; then
-		echo "forward port(s) "$1" to "$2
-		append="A"; insert="I"; rulenum="3"
+		echo "forwarding port(s) "$1" to "$2
+		ACT_APPEND="A"; ACT_INSERT="I"; rulenum="3"
 	else
-		echo "unforward port(s) "$1" to "$2
-		append="D"; insert="D"; rulenum=""
+		echo "deleting portforwarding of "$1" to "$2
+		ACT_APPEND="D"; ACT_INSERT="D"; rulenum=""
 	fi
-	iptables -t nat -$append PREROUTING -p udp -i $tundev -d $tunipaddr --dport $1 -j DNAT --to-destination $2
-	iptables -t nat -$append PREROUTING -p tcp -i $tundev -d $tunipaddr --dport $1 -j DNAT --to-destination $2
-	iptables -$insert FORWARD $rulenum -i $tundev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $1 -j ACCEPT
-	iptables -$insert FORWARD $rulenum -i $tundev -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $1 -j ACCEPT
+	iptables -t nat -$ACT_APPEND PREROUTING -p udp -i $TUNDEV --dport $1 -j DNAT --to-destination $2
+	iptables -t nat -$ACT_APPEND PREROUTING -p tcp -i $TUNDEV --dport $1 -j DNAT --to-destination $2
+	iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $1 -j ACCEPT
+	iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $1 -j ACCEPT
 }
 
-# get s one argument: 'map' or 'unmap'
+# takes one argument: 'map' or ('unmap' or anything else - doesn't actually matter)
 map_all_ports() {
 	#calculate the port base
 	port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
@@ -36,27 +37,19 @@ map_all_ports() {
 	fi
 }
 
+TUNDEV=tun+
 eval $(/usr/bin/netparam)
-# if not set as external variables (for instance by openvpn up or down scripts) set tunnel values here
-if [ -z "$tundev" ]; then tundev=$(ifconfig | grep tun | cut -d ' ' -f1); fi
-if [ -z "$tunipaddr" ]; then tunipaddr=$(ifconfig $tundev | grep inet | cut -d ':' -f2 | cut -d ' ' -f1); fi
 
 case $1 in
 	start)
-	echo "Mapping ports..."
-	if [ -n "$tundev" ] && [ -n "$tunipaddr" ]; then
-		map_all_ports "map"
-	else
-		echo "ERROR: couldnt find tunnel device or/and tunnel-ip. Maybe openvpn is not running..."
-	fi
+	echo -n "Mapping ports"
+	map_all_ports "map"
+	echo "."
 	;;
 	stop)
-	echo "Un-Mapping ports..."
-	if [ -n "$tundev" ] && [ -n "$tunipaddr" ]; then
-		map_all_ports "unmap"
-	else
-		echo "ERROR: couldnt find tunnel device or/and tunnel-ip. Maybe openvpn is not running..."
-	fi
+	echo -n "Un-Mapping ports"
+	map_all_ports "unmap"
+	echo "."
 	;;
 	restart)
 		$0 stop
