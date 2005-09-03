@@ -4,6 +4,9 @@ since 0.8:
 * /usr/sbin/cron.minutely doesn't do *randomized* olsrd restarts anymore
 * added bwm-ng packaging code
 * added wl0_on_init_override nvram-var check in firstboot; should probably develop a more general approach
+* several webinterface adjustments
+* made time-sync more reliable
+* added on-specific DNAT support
 
 since 0.6:
 
