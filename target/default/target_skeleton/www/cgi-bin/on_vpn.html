@@ -103,10 +103,10 @@ cat<<EOF
 <TD><INPUT NAME="openssl_organizationalUnitName" SIZE="48" TYPE="TEXT" VALUE="$openssl_organizationalUnitName" $(if [ -n "$openssl_organizationalUnitName" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <TR TITLE="accesspunkt-name"><TD>Accesspoint-Name:</TD>
-<TD><INPUT NAME="openssl_commonName" SIZE="48" TYPE="TEXT" VALUE="XX.aps.on" $(if [ -n "$openssl_commonName" ];then echo ' disabled="disabled"';fi)></TD>
+<TD><INPUT NAME="openssl_commonName" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr | cut -d'.' -f4).aps.on" $(if [ -n "$openssl_commonName" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <TR TITLE="email adresse"><TD>email-adresse:</TD>
-<TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="apXX@opennet-initiative.de" $(if [ -n "$openssl_EmailAddress" ];then echo ' disabled="disabled"';fi)></TD>
+<TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="ap$(nvram get wifi_ipaddr | cut -d'.' -f4)@opennet-initiative.de" $(if [ -n "$openssl_EmailAddress" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <tr></tr>
 <TR
