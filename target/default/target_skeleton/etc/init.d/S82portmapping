@@ -42,12 +42,12 @@ eval $(/usr/bin/netparam)
 
 case $1 in
 	start)
-	echo -n "Mapping ports"
+	echo "Mapping ports"
 	map_all_ports "map"
 	echo "."
 	;;
 	stop)
-	echo -n "Un-Mapping ports"
+	echo "Un-Mapping ports"
 	map_all_ports "unmap"
 	echo "."
 	;;
