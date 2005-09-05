@@ -18,7 +18,7 @@ cat<<EOF
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD colspan="2">
-	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "true" && echo "CHECKED='checked'") ONCHANGE="this.value=this.checked; this.form.on_mapaddr1.disabled=('true' == this.value);this.form.on_mapaddr2.disabled=('true' == this.value);this.form.on_mapaddr3.disabled=('true' == this.value);this.form.on_mapaddr4.disabled=('true' == this.value);this.form.on_mapaddr5.disabled=('true' == this.value);this.form.on_mapaddr6.disabled=('true' == this.value);this.form.on_mapaddr7.disabled=('true' == this.value);this.form.on_mapaddr8.disabled=('true' == this.value);this.form.on_mapaddr9.disabled=('true' == this.value);">Alle Ports an einen Zielrechner weiterleiten
+	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "true" && echo "CHECKED='true'" && echo "VALUE='true'") ONCHANGE="this.value=this.checked; this.form.on_mapaddr1.disabled=('true' == this.value);this.form.on_mapaddr2.disabled=('true' == this.value);this.form.on_mapaddr3.disabled=('true' == this.value);this.form.on_mapaddr4.disabled=('true' == this.value);this.form.on_mapaddr5.disabled=('true' == this.value);this.form.on_mapaddr6.disabled=('true' == this.value);this.form.on_mapaddr7.disabled=('true' == this.value);this.form.on_mapaddr8.disabled=('true' == this.value);this.form.on_mapaddr9.disabled=('true' == this.value);">Alle Ports an einen Zielrechner weiterleiten
 	</TD></TR>
 	
 	<TR><TD><B>Port</B></TD><TD>zu <B>IP-Adresse</B></TD>
@@ -79,7 +79,7 @@ else
 			if [ "$C" != "$(nvram get $V)" ]; then
 				if [ -z "$DIRTY" ]; then
 					echo -n "<PRE>"
-					/etc/init.d/portmapping stop
+					/etc/init.d/S82portmapping stop
 					echo "</PRE>"
 				fi
 				DIRTY=1
@@ -99,7 +99,7 @@ cat<<EOF
 		</TABLE>
 EOF
 		echo -n "<PRE>"
-		/etc/init.d/portmapping start
+		/etc/init.d/S82portmapping start
 		echo "</PRE>"
 	else
 cat<<EOF
