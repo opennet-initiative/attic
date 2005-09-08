@@ -17,7 +17,9 @@ for type in rsa dss; do {
 }; done
 
 if [ $VALID_KEY ]; then
+   logger -t S50dropbear Starting dropbear.
    /usr/sbin/dropbear;
 else
+   logger -p error -t S50dropbear No ssh host key files present, and generation failed on all of them. Falling back to telnetd. THIS IS INSECURE!
    telnetd -l /bin/login;
 fi
