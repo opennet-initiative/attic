@@ -102,25 +102,12 @@ echo "replacing opennet-Website"
 	ln -sf /rom/www/index_squashfs.html www/index.html
 echo "done"
 
-echo -n "setting up dropbear (takes a while)..."
-mkdir -p etc/dropbear
-if [ ! -f etc/dropbear/dropbear_dss_host_key ]; then
-	dsskey=$(/rom/usr/sbin/nvram get ff_dsskey)
-	if [ -n "$dsskey" ] && [ -f /rom/www/cgi-bin/freifunk-upload ]; then
-		echo -n $dsskey|/rom/www/cgi-bin/freifunk-upload -a2b>etc/dropbear/dropbear_dss_host_key
-		chmod 0600 etc/dropbear/dropbear_dss_host_key
-	else
-		dropbearkey -t dss -f etc/dropbear/dropbear_dss_host_key
-	fi
-fi
-
 for link in etc/passwd etc/group etc/shells; do
 	test -e $link && rm $link
 done
 echo "root:*:0:">etc/group
 echo "/bin/ash">etc/shells
 
-test -f etc/dropbear/dropbear_dss_host_key && rm etc/init.d/S*telnet
 tar cC /rom usr/lib/ipkg|tar x
 
 export ff_pw="$(/rom/usr/sbin/nvram get ff_pw)"
@@ -146,8 +133,8 @@ fi
 export ff_pw=
 echo "done"
 
-#touch /tmp/resolv.conf
-#ln -s /tmp/resolv.conf /etc/resolv.conf
+touch /tmp/resolv.conf
+ln -s /tmp/resolv.conf /etc/resolv.conf
 
 umount /rom
 mount none /jffs/proc -t proc
