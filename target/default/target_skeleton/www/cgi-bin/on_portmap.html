@@ -6,8 +6,8 @@ export TITLE="Verwaltung: Portmapping"
 
 cat<<EOF
 <H1>Verwaltung: Portmapping</H1>
+<p>Die folgenden Ports werden aus dem Internet durch einen aktivem OpenVPN-Tunnel an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet über den Rechnernamen <b>opennet.dnsalias.org</b> zu erreichen.</p>
 EOF
-
 if [ "$REQUEST_METHOD" = "POST" ]; then
 	read QUERY_STRING
 fi
