@@ -13,4 +13,8 @@ for type in rsa dss; do {
   }
 }; done
 
-/usr/sbin/dropbear
+if [ -f etc/dropbear/dropbear_dss_host_key ] || [ -f etc/dropbear/dropbear_dss_host_key ]; then
+   /usr/sbin/dropbear;
+else
+   telnetd -l /bin/login;
+fi
