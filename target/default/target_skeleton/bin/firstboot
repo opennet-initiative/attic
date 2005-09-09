@@ -44,6 +44,16 @@ if [ -z $(nvram get wl0_ifname) ]; then
         nvram set wl0_ifname=$WIFIDEV
 fi
 
+# remove wifi device from list of bridged devices
+ifnames=
+for if in $(nvram get lan_ifnames); do
+	if [ "$if" != $WIFIDEV ]; then
+		ifnames="$ifnames $if"
+	fi
+done
+ifnames=$(echo $ifnames)
+nvram set lan_ifnames="$ifnames"
+
 nvram commit
 
 echo "initializing opennet-values done"
