@@ -54,6 +54,9 @@ done
 ifnames=$(echo $ifnames)
 nvram set lan_ifnames="$ifnames"
 
+# especially on asus dhcp_start is by default not set to an integer value, so fix this
+nvram set dhcp_start=100
+
 nvram commit
 
 echo "initializing opennet-values done"
