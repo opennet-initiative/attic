@@ -24,7 +24,7 @@ if [ -z $(nvram get wl0_on_init_override) ] ; then
 fi
 
 lan_ip=$(nvram get lan_ipaddr)
-if [ $lan_ip = "192.168.1.1" ] ; then
+if [ $lan_ip = "192.168.1.1" ] || [ $lan_ip = "192.168.001.001" ]; then
 	nvram set lan_ipaddr=172.16.0.1
 	nvram set lan_netmask=255.240.0.0
 	nvram set lan_proto=static
@@ -56,6 +56,7 @@ nvram set lan_ifnames="$ifnames"
 
 # especially on asus dhcp_start is by default not set to an integer value, so fix this
 nvram set dhcp_start=100
+nvram set dhcp_num=50
 
 nvram commit
 
