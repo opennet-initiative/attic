@@ -117,7 +117,8 @@ EOF
 			nvram commit
 		fi		
 		echo "Neue Firmware wird installiert. Hab etwas Geduld, das kann durchaus einige Minuten (etwa 5) dauern."
-		echo "(Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt - Fehler in der Darstellung sind nicht mit Fehlern im Update-Vorgang gleichzusetzen, bitte einfach weiterwarten)"
+		echo "Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt -Fehler in der Darstellung "
+		echo "sind nicht mit Fehlern im Update-Vorgang gleichzusetzen, bitte einfach weiterwarten"
 		mtd -e linux -r write $ffout linux &>/dev/null
 		echo "</PRE>"
 	else
