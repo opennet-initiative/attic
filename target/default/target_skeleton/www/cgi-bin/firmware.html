@@ -104,10 +104,10 @@ cat<<EOF
 		</TR></TBODY>
 		</TABLE><IMG
 		ALT="164 Sekunden..."
-		HEIGHT="8" SRC="../images/progress164.gif" VSPACE="10" WIDTH="255" TITLE="164 Sekunden...">
+		HEIGHT="8" SRC="../images/progress270.gif" VSPACE="10" WIDTH="255" TITLE="270 Sekunden...">
 		
 		<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-		setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 164000);
+		setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 270000);
 		//--></SCRIPT>
 EOF
 		echo -n "<PRE>"
@@ -116,7 +116,8 @@ EOF
 			nvram set boot_wait=on
 			nvram commit
 		fi		
-		echo "Neue Firmware wird installiert. Hab etwas Geduld, das kann durchaus einige Minuten dauern."
+		echo "Neue Firmware wird installiert. Hab etwas Geduld, das kann durchaus einige Minuten (etwa 5) dauern."
+		echo "(Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt - Fehler in der Darstellung sind nicht mit Fehlern im Update-Vorgang gleichzusetzen, bitte einfach weiterwarten)"
 		mtd -e linux -r write $ffout linux &>/dev/null
 		echo "</PRE>"
 	else
