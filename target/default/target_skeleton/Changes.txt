@@ -1,3 +1,6 @@
+since 0.9.1:
+* change openvpn-version to 2.0.5 ; bugfix for client-vulnerability CVE-2005-3393
+
 since 0.8:
 * /usr/bin/netparam doesn't set wl0_ifname anymore - it's better to keep it side-effect less
 * /bin/firstboot now sets wl0_ifname to WIFIDEV output of netparam, if the string evaluated as zero before - what does that nvram-var do, anyway?
