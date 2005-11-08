@@ -29,9 +29,9 @@ BEGIN {
 	srand()
 	if ("pidof -s olsrd"|getline && "" == $0) {
 		system("logger -t cron.minutely restarting olsrd")
-		system("/etc/init.d/*olsrd stop")
+		system("/etc/init.d/S*olsrd stop")
 		system("/usr/sbin/olsrd-clearroutes")
-		system("/etc/init.d/*olsrd start")
+		system("/etc/init.d/S*olsrd start")
 	}
 	#else if (("" != ostat && ostat == wstat) || ("Ad-Hoc" == mode && chan != wl0c)) {
 	#	# Wifi dead? Try restart
