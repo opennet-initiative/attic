@@ -1,0 +1,107 @@
+#!/bin/sh
+
+export DATE="9.12.2005"
+export TITLE="Verwaltung: Opennet"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: OpenVPN-Gateways</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+
+if [ -n "$add_gw" ]; then
+	number=1
+	on_gwaddrs_new=
+	for on_gwaddr in $(nvram get on_gwaddrs); do
+		on_gwaddrs_new="$on_gwaddrs_new "$(eval echo \$on_gw$number)
+		number=$(($number+1))
+	done;
+	on_gwaddrs_new=$(echo $on_gwaddrs_new)
+	nvram set on_gwaddrs="$on_gwaddrs_new $on_gwtoadd"
+fi
+
+cat<<EOF
+
+<FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Gateway Konfiguration">
+<TBODY>
+<TR>
+<TD></TD>
+<TD><b>IP-Adresse</b></TD>
+<TD><b>Erreichbarkeit</b></TD>
+</TR>
+EOF
+change=
+number=1
+for on_gwaddr in $(nvram get on_gwaddrs); do
+cat<<EOF
+<TR>
+	<td>$number. </td>
+	<td><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwaddr"></td>
+	<td> 
+EOF
+	if  [ -z $(route -n | cut -d" " -f1 | grep $on_gwaddr) ]; then
+		echo "<img src=\"../images/no.gif\" alt=\"no\">"
+	else	
+		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
+	fi
+	
+	if [ $(nvram get on_gw) = $on_gwaddr ]; then
+		if [ -f  /tmp/openvpn_msg.txt ];then
+			echo "Tunnel aktiv"
+		else
+			echo "Tunnel gewählt"
+		fi
+		if [ "$number" != "1" ] ; then change="yes"; fi
+	fi
+
+	echo "</td>"
+	number=$(($number+1))
+	echo "</TR>"
+done
+cat<<EOF
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+	<td colspan="3">Gateway hinzufügen:</td>
+</TR>
+</TR>
+	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE=""></td>
+</TR>
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+<TD></TD><TD colspan="2"><INPUT NAME="add_gw" TITLE="OpenVPN-Gateway-Liste aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen"></TD>
+</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+EOF
+if [ "$change" = "yes" ] ; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Der erste erreichbare Gateway ist im Moment nicht der aktive Gateway. Der Tunnel wird neu gestartet. Die Veränderungen sind in wenigen Minuten bei einer <a href="on_gateway.html">Aktualisierung dieser Seite</a> zu sehen.</TD>
+</TR></TBODY>
+</TABLE>
+<br><br>
+EOF
+
+fi
+cat<<EOF
+In diesem Bereich müssen die IP-Adressen der von euch gewünschten OpenVPN-Gateways eingetragen werden. Falls ihr euch über aktuelle Gateways im Opennet informieren wollt, schaut im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet-Wiki</a> nach.<br>
+Als Gateway wird jeweils der erste eingetragene Gateway genutzt, zu dem eine Route führt. Die <b>Übernahme der Werte</b> führt bei einer Veränderung der Reihenfolge erreichbarer Gateways etwa nach 2 Minuten zu einer Anpassung des Gateways - dabei werden alle aktiven <b>Internetverbindungen unterbrochen</b>. Sind keine Gateways aus dieser Liste erreichbar (oder ist die Liste leer), ist OpenVPN deaktiviert . Falls Gateways ohne OpenVPN im Opennet aktiv sind, werden diese dann automatisch genutzt.
+
+EOF
+
+nvram commit
+
+. ${0%/*}/cgi-bin-post.sh
