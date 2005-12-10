@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# get the first gateway
+on_gw=$(nvram get on_gwaddrs | cut -d" " -f1)
+# set titan as fallback, if there is no gateway choosen
+if [ -z $on_gw ]; then on_gw="192.168.0.254"; fi
+
+# set gateway information
+nvram set on_gw=$on_gw
+
+# remove old dns-entries, they will be created again by ifup
+rm -f /etc/resolv.conf; nvram set wifi_dns=$on_gw
+
+# nvram commit # not needed cause variables are refreshed after every reset

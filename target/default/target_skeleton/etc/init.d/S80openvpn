@@ -15,7 +15,9 @@ test -d /var/run || mkdir -p /var/run
 
 start_vpn () {
     $DAEMON --daemon --writepid /var/run/openvpn.$NAME.pid \
-            --config $CONFIG_DIR/$NAME.conf --cd $CONFIG_DIR || echo -n " FAILED->"
+            --remote $(nvram get on_gw) 1600 \
+	    --config $CONFIG_DIR/$NAME.conf \
+	    --cd $CONFIG_DIR || echo -n " FAILED->"
     echo -n " $NAME"
 }
 stop_vpn () {

@@ -1,6 +1,7 @@
 #!/bin/sh
+on_gw=$(nvram get on_gw)
 while $(sleep 3); do
-	ping -c 1 titan.on >/dev/null 2>/dev/null &&
-	/usr/sbin/ntpclient -s -c 0 -i 5 -g 1000000 -h titan.on &&
+	ping -c 1 $on_gw >/dev/null 2>/dev/null &&
+	/usr/sbin/ntpclient -s -c 0 -i 5 -g 1000000 -h $on_gw &&
 	break;
 done;
