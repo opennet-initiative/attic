@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# if on_gw is not reachable (no route goes there) or on_gw is not the first gateway which is reachable then select another gateway
+
+for on_gwaddr in $(nvram get on_gwaddrs); do
+	if  [ $(route -n | cut -d" " -f1 | grep $on_gwaddr) ]; then
+		if [ "$on_gwaddr" != "$(nvram get on_gw)" ]; then
+			logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
+
+			# set gateway information
+			nvram set on_gw=$on_gwaddr
+
+			# replace old resolv.conf
+			echo "nameserver $on_gwaddr" > /etc/resolv.conf
+
+			#nvram set wifi_dns=$on_gwaddr
+
+			/etc/init.d/S80openvpn restart
+
+		fi
+		break;
+	fi
+done
+

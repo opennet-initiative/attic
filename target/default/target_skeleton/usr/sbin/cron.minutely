@@ -3,6 +3,9 @@
 # Will run every minute (at 00:00, 00:01, ...)
 
 BEGIN {
+	# i like shell scripting better: check if gateway is recent
+	system("/usr/sbin/cron.minutely_ongateway")
+	
 	# Get counters of wifi for check
 	#while(getline<"/proc/net/wireless") {
 	#	if (/^$/) break
