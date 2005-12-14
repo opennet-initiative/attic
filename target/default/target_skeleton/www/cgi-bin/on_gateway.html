@@ -22,7 +22,11 @@ if [ -n "$add_gw" ]; then
 	done;
 	on_gwaddrs_new=$(echo $on_gwaddrs_new)
 	nvram set on_gwaddrs="$on_gwaddrs_new $on_gwtoadd"
+	
+	nvram set on_gwauto="$on_gwauto"
 fi
+
+gwauto=$(nvram get on_gwauto)
 
 cat<<EOF
 
@@ -37,27 +41,29 @@ TITLE="Gateway Konfiguration">
 </TR>
 EOF
 change=
+reachable=0
 number=1
 for on_gwaddr in $(nvram get on_gwaddrs); do
 cat<<EOF
 <TR>
 	<td>$number. </td>
-	<td><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwaddr"></td>
+	<td NAME="address"><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwaddr"></td>
 	<td> 
 EOF
-	if  [ -z $(route -n | cut -d" " -f1 | grep $on_gwaddr) ]; then
-		echo "<img src=\"../images/no.gif\" alt=\"no\">"
-	else	
+	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
+		reachable=$(($reachable+1))
+	else	
+		echo "<img src=\"../images/no.gif\" alt=\"no\">"
 	fi
 	
-	if [ $(nvram get on_gw) = $on_gwaddr ]; then
+	if [ "$(nvram get on_gw)" = "$on_gwaddr" ]; then
 		if [ -f  /tmp/openvpn_msg.txt ];then
 			echo "Tunnel aktiv"
 		else
 			echo "Tunnel gewählt"
 		fi
-		if [ "$number" != "1" ] ; then change="yes"; fi
+		if [ "$reachable" != "1" ] ; then change="yes"; fi
 	fi
 
 	echo "</td>"
@@ -65,10 +71,13 @@ EOF
 	echo "</TR>"
 done
 cat<<EOF
+
+<TR><TD colspan="3">
+	<INPUT CLASS="checkbox" NAME="on_gwauto" TYPE="checkbox" $(test "$gwauto" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>Automatische Gateway-Wahl aktiviert
+	</TD></TR>
 <TR>
 <TD> </TD>
-</TR>
-<TR>
+</TR><TR>
 	<td colspan="3">Gateway hinzufügen:</td>
 </TR>
 </TR>
@@ -98,7 +107,7 @@ EOF
 fi
 cat<<EOF
 In diesem Bereich müssen die IP-Adressen der von euch gewünschten OpenVPN-Gateways eingetragen werden. Falls ihr euch über aktuelle Gateways im Opennet informieren wollt, schaut im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet-Wiki</a> nach.<br>
-Als Gateway wird jeweils der erste eingetragene Gateway genutzt, zu dem eine Route führt. Die <b>Übernahme der Werte</b> führt bei einer Veränderung der Reihenfolge erreichbarer Gateways etwa nach 2 Minuten zu einer Anpassung des Gateways - dabei werden alle aktiven <b>Internetverbindungen unterbrochen</b>. Sind keine Gateways aus dieser Liste erreichbar (oder ist die Liste leer), ist OpenVPN deaktiviert . Falls Gateways ohne OpenVPN im Opennet aktiv sind, werden diese dann automatisch genutzt.
+Als Gateway wird jeweils der erste eingetragene Gateway genutzt, zu dem eine Route führt. Die <b>Übernahme der Werte</b> führt bei einer Veränderung der Reihenfolge erreichbarer Gateways etwa nach 6 Minuten zu einer Anpassung des Gateways - dabei werden alle aktiven <b>Internetverbindungen unterbrochen</b>. Ist die automatische Gateway-Wahl aktiviert, werden die eingetragenen Gateways immer wieder überschrieben. Sind keine Gateways aus dieser Liste erreichbar (oder ist die Liste leer), ist OpenVPN deaktiviert . Falls Gateways ohne OpenVPN im Opennet aktiv sind, werden diese dann automatisch genutzt.
 
 EOF
 
