@@ -1,23 +1,45 @@
 #!/bin/sh
 
-# if on_gw is not reachable (no route goes there) or on_gw is not the first gateway which is reachable then select another gateway
+################################################################
+# if on_auto is enabled then load all gateways and sort them
+if [ "$(nvram get on_gwauto)" = "on" ]; then
+	on_gwaddrs=
+	for gw in $(route -n | awk '{if (sub("192.168.0.", "192.168.0.")) {print $5 " " $1 | "sort"}}' | awk '{if ($2 != "192.168.0.0") {print $2}}'); do
+		on_gwaddrs="$on_gwaddrs $gw"
+	done
+	on_gwaddrs=$(echo $on_gwaddrs)
+	nvram set on_gwaddrs="$on_gwaddrs"
+fi
+
+#################################################################
+# if on_gw is not reachable (no route goes there) or on_gw is not the first gateway which is reachable then select another gateway (but only if this happens 5 times in a row)
+
+on_gwcount=$(nvram get on_gwcount)
 
 for on_gwaddr in $(nvram get on_gwaddrs); do
-	if  [ $(route -n | cut -d" " -f1 | grep $on_gwaddr) ]; then
+	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
 		if [ "$on_gwaddr" != "$(nvram get on_gw)" ]; then
-			logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
+			if [ $on_gwcount -gt 5 ]; then
+				logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
+		
+				# set gateway information
+				nvram set on_gw=$on_gwaddr
+		
+				# replace old resolv.conf
+				echo "nameserver $on_gwaddr" > /etc/resolv.conf
+		
+				#nvram set wifi_dns=$on_gwaddr
+		
+				/etc/init.d/S80openvpn restart
+				on_gwcount=0
 
-			# set gateway information
-			nvram set on_gw=$on_gwaddr
-
-			# replace old resolv.conf
-			echo "nameserver $on_gwaddr" > /etc/resolv.conf
-
-			#nvram set wifi_dns=$on_gwaddr
-
-			/etc/init.d/S80openvpn restart
-
+			else
+				on_gwcount=$(($on_gwcount+1))
+			fi
+		else
+			on_gwcount=0
 		fi
+		nvram set on_gwcount=$on_gwcount
 		break;
 	fi
 done
