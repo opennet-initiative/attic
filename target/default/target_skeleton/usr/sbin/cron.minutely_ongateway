@@ -4,7 +4,7 @@
 # if on_auto is enabled then load all gateways and sort them
 if [ "$(nvram get on_gwauto)" = "on" ]; then
 	on_gwaddrs=
-	for gw in $(route -n | awk '{if (sub("192.168.0.", "192.168.0.")) {print $5 " " $1 | "sort"}}' | awk '{if ($2 != "192.168.0.0") {print $2}}'); do
+	for gw in $(route -n | awk '{if (sub("192.168.0.", "192.168.0.")) {print $5 " " $1 | "sort -n"}}' | awk '{if ($2 != "192.168.0.0") {print $2}}'); do
 		on_gwaddrs="$on_gwaddrs $gw"
 	done
 	on_gwaddrs=$(echo $on_gwaddrs)
