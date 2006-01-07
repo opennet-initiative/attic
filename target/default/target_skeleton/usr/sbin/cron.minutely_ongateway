@@ -4,7 +4,16 @@
 # if on_auto is enabled then load all gateways and sort them
 if [ "$(nvram get on_gwauto)" = "on" ]; then
 	on_gwaddrs=
-	for gw in $(route -n | awk '{if (sub("192.168.0.", "192.168.0.")) {print $5 " " $1 | "sort -n"}}' | awk '{if ($2 != "192.168.0.0") {print $2}}'); do
+	for gw in $(
+		route -n \
+		| awk '
+#			$1 == "192.168.0.250" && $5 >= 2 { $5 -= 2; }	# hack (because of bridge AP36-AP27)
+			$1 ~ "^192\.168\.0\.[0-9]+$" && $1 != "192.168.0.0" { a[$5] = a[$5] " " $1; }
+			END {
+				for (i = 0; i < 20; i++)
+					printf "%s ", a[i];
+				printf "\n";
+			}'); do
 		on_gwaddrs="$on_gwaddrs $gw"
 	done
 	on_gwaddrs=$(echo $on_gwaddrs)
