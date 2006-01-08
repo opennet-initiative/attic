@@ -21,6 +21,10 @@ if [ "$(nvram get on_gwauto)" = "on" ]; then
 fi
 
 #################################################################
+# exit script if values should only be refreshed
+if [ "$1" = "refresh" ]; then exit; fi
+
+#################################################################
 # if on_gw is not reachable (no route goes there) or on_gw is not the first gateway which is reachable then select another gateway (but only if this happens 5 times in a row)
 
 on_gwcount=$(nvram get on_gwcount)
