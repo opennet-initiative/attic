@@ -7,12 +7,17 @@ if [ "$(nvram get on_gwauto)" = "on" ]; then
 	for gw in $(
 		route -n \
 		| awk '
+			BEGIN { max = -1; }
 #			$1 == "192.168.0.250" && $5 >= 2 { $5 -= 2; }	# hack (because of bridge AP36-AP27)
-			$1 ~ "^192\.168\.0\.[0-9]+$" && $1 != "192.168.0.0" { a[$5] = a[$5] " " $1; }
+			$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
+				a[$5] = a[$5] " " $1;
+				if ($5 > max)
+					max = $5;
+			}
 			END {
-				for (i = 0; i < 20; i++)
-					printf "%s ", a[i];
-				printf "\n";
+				for (i = 0; i <= max; i++)
+					ret = ret " " a[i];
+				print ret;
 			}'); do
 		on_gwaddrs="$on_gwaddrs $gw"
 	done
