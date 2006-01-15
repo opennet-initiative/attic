@@ -64,6 +64,7 @@ EOF
 change=
 reachable=0
 number=1
+gw_reachable="no"
 for on_gwaddr in $(nvram get on_gwaddrs); do
 cat<<EOF
 <TR>
@@ -79,6 +80,7 @@ EOF
 	fi
 	
 	if [ "$(nvram get on_gw)" = "$on_gwaddr" ]; then
+		gw_reachable="yes"
 		if [ -f  /tmp/openvpn_msg.txt ];then
 			echo "Tunnel aktiv"
 		else
@@ -91,6 +93,11 @@ EOF
 	number=$(($number+1))
 	echo "</TR>"
 done
+
+if [ "$gw_reachable" = "no" ] && [ "$reachable" != "0" ]; then
+	change="yes";
+fi
+
 cat<<EOF
 
 <span name="test">
