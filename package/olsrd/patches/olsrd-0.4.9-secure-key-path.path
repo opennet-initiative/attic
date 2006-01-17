@@ -1,9 +1,8 @@
-diff -ruN olsrd-0.4.9-orig/lib/secure/src/olsrd_secure.h olsrd-0.4.9-1/lib/secure/src/olsrd_secure.h
---- olsrd-0.4.9-orig/lib/secure/src/olsrd_secure.h	2005-03-10 20:57:48.000000000 +0100
-+++ olsrd-0.4.9-1/lib/secure/src/olsrd_secure.h	2005-04-05 00:51:40.000000000 +0200
-@@ -43,7 +43,7 @@
+--- olsrd-0.4.10/lib/secure/src/olsrd_secure.h.orig	2006-01-17 18:24:17.000000000 +0100
++++ olsrd-0.4.10/lib/secure/src/olsrd_secure.h	2006-01-17 18:26:26.000000000 +0100
+@@ -46,7 +46,7 @@
+ #include "hashing.h"
  
- #include "olsrd_plugin.h"
  
 -#define KEYFILE "/root/.olsr/olsrd_secure_key"
 +#define KEYFILE "/etc/olsrd.d/olsrd_secure_key"

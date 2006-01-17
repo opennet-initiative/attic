@@ -3,9 +3,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=olsrd
-PKG_VERSION:=0.4.9
+PKG_VERSION:=0.4.10
 PKG_RELEASE:=1
-PKG_MD5SUM:=593c0861fa10d2a8d0e7d8617479c5cf
+PKG_MD5SUM:=9807d4451e65cb4ec385155eef7bf3cf
 
 PKG_SOURCE_URL:=http://www.olsr.org/releases/0.4
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
