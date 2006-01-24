@@ -1,1 +1,1 @@
-../eucharis_project/socket_management.py
+../py_selflib/socket_management.py
