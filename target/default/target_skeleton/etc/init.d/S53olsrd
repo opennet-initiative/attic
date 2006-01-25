@@ -53,12 +53,13 @@ write_config()
 
 	cat>/var/etc/olsrd.conf<<EOM
 DebugLevel		0
+LinkQualityFishEye	1
 IpVersion		4
 AllowNoInt		yes
-Pollrate		0.25
+Pollrate		0.05
 TcRedundancy		2
-MprCoverage		9
-LinkQualityWinSize	20
+MprCoverage		5
+LinkQualityWinSize	100
 EOM
 
 	if [ "$(nvram get ff_dyngw)" != "0" ]; then
@@ -168,14 +169,14 @@ EOM
 		cat>>/var/etc/olsrd.conf<<EOM
 Interface "$DEV"
 {
-	HelloInterval		3.0
-	HelloValidityTime	60.0
-	TcInterval		5.0
-	TcValidityTime		20.0
-	MidInterval		10.0
-	MidValidityTime		30.0
-	HnaInterval		10.0
-	HnaValidityTime		30.0
+	HelloInterval		5.0
+	HelloValidityTime	200.0
+	TcInterval		0.5
+	TcValidityTime		250.0
+	MidInterval		5.0
+	MidValidityTime		100.0
+	HnaInterval		5.0
+	HnaValidityTime		100.0
 	$ff_ip4broad
 	$ff_lqmults
 	$(test -f /etc/local.olsrd.conf.$DEV && cat /etc/local.olsrd.conf.$DEV)
