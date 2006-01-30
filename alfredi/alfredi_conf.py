@@ -6,6 +6,7 @@ import sys
 import urllib2
 import cPickle
 import logging
+import inspect
 
 import Image
 
@@ -18,7 +19,9 @@ from alfredi_output_shapefile import ShapefileWriter
 
 _log_config = logging.getLogger('config')
 
-os.chdir(os.path.split(sys.argv[0])[0])
+def localdummy(): pass
+os.chdir(os.path.split(inspect.getfile(localdummy))[0])
+del(localdummy)
 
 border_gateways = (ip_make('192.168.0.254'),)
 hsv_map_constant = 240
