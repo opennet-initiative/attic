@@ -80,10 +80,11 @@ output_unit_shp = (
    )
 )
 
-output_units = [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
-output_units.append(output_unit_shp)
+def output_units_generate():
+   retval = [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
+   retval.append(output_unit_shp)
+   return retval
 
-#output_calls = ((('alfredi_output.png',), {}), (('alfredi_output.jpg',), {}))
 url_node_list = 'http://wiki.opennet-initiative.de/index.php/Opennet_Nodes'
 olsr_topology_filename = 'olsr_topology.csv'
 dump_filename = 'alfredi_node_coords.pickle'
@@ -108,21 +109,7 @@ def node_coords_get():
    cPickle.dump(node_coords, file(dump_filename,'w'), -1)
    return node_coords
 
-#def node_coords_get():
-#   import coordinate_structures
-#   return {
-#      ip_make(1): coordinate_structures.PointByCoordinates(54.08651, 12.11131),
-#      ip_make(2): coordinate_structures.PointByCoordinates(54.08702, 12.10989),
-#      ip_make(3): coordinate_structures.PointByCoordinates(54.08857, 12.11131),
-#      ip_make(4): coordinate_structures.PointByCoordinates(54.08814, 12.11273),
-      
-#      ip_make(5): coordinate_structures.PointByCoordinates(54.08659, 12.11139),
-#      ip_make(6): coordinate_structures.PointByCoordinates(54.08702, 12.10993),
-#      ip_make(7): coordinate_structures.PointByCoordinates(54.08864, 12.11139),
-#      ip_make(8): coordinate_structures.PointByCoordinates(54.08822, 12.11277)
-#      }
-   
-
-_log_config.log(25, 'Attempting to read link data from %r and symmetrize.' % (olsr_topology_filename,))
-link_data = links_symmetrize(links_from_csv(file(olsr_topology_filename)))
+def links_symmetrized_get():
+   _log_config.log(25, 'Attempting to read link data from %r and symmetrize.' % (olsr_topology_filename,))
+   return links_symmetrize(links_from_csv(file(olsr_topology_filename)))
 

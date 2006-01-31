@@ -35,6 +35,8 @@ from alfredi_conf import *
 pid_filing.file_pid()
 
 node_coords = node_coords_get()
+output_units = output_units_generate()
+link_data = links_symmetrized_get()
 
 node_border_lq = {}
 #Draw link-lines, and prepare list of nodes participating in known links
