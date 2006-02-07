@@ -461,6 +461,7 @@ if [ -f  /tmp/openvpn_msg.txt ];then
 cat<<EOF
 vpn-tunnel active
 EOF
+echo -n " ($(nvram get on_gw))"
 else
 cat<<EOF
 inactive, Details im System-Log  <img src="images/no.gif" alt="no" align="absmiddle">
