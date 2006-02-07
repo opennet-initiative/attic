@@ -28,6 +28,19 @@ if [ -n "$add_gw" ]; then
 		# refresh gateway values
 		/usr/sbin/cron.minutely_ongateway refresh
 	fi
+elif [ -n "$add_blackgw" ]; then
+	number=1
+	on_gwblackaddrs_new=
+	for on_gwblackaddr in $(nvram get on_gwblackaddrs); do
+		on_gwblackaddrs_new="$on_gwblackaddrs_new "$(eval echo \$on_gwblack$number)
+		number=$(($number+1))
+	done;
+	on_gwblackaddrs_new=$(echo $on_gwblackaddrs_new)
+	nvram set on_gwblackaddrs="$on_gwblackaddrs_new $on_gwblacktoadd"
+	if [ "$on_gwauto" = "on" ]; then
+		# refresh gateway values and remove possible blacklisted entrys
+		/usr/sbin/cron.minutely_ongateway refresh
+	fi
 elif [ -n "$openvpn_restart" ]; then
 	nvram set on_gwcount=10		# force not to wait before changing the gateway
 	echo -n "<br />..."
@@ -72,9 +85,17 @@ cat<<EOF
 	<td NAME="address"><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwaddr" $(test "$gwauto" = "on" && echo "DISABLED='1'")></td>
 	<td> 
 EOF
+	blacklisted=
+	for on_gwblackaddr in $(nvram get on_gwblackaddrs); do
+		if [ "$on_gwblackaddr" = "$on_gwaddr" ]; then
+			blacklisted="true"
+			continue;
+		fi
+	done
+
 	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
-		reachable=$(($reachable+1))
+		if [ -z "$blacklisted" ]; then reachable=$(($reachable+1)); fi
 	else	
 		echo "<img src=\"../images/no.gif\" alt=\"no\">"
 	fi
@@ -82,12 +103,14 @@ EOF
 	if [ "$(nvram get on_gw)" = "$on_gwaddr" ]; then
 		gw_reachable="yes"
 		if [ -f  /tmp/openvpn_msg.txt ];then
-			echo "Tunnel aktiv"
+			echo "Tunnel aktiv "
 		else
-			echo "Tunnel startend"
+			echo "Tunnel startend "
 		fi
-		if [ "$reachable" != "1" ] ; then change="yes"; fi
+		if [ "$reachable" != "1" ] || [ -n "$blacklisted" ]; then change="yes"; fi
 	fi
+
+	if  [ -n "$blacklisted" ]; then echo "* GW gesperrt *"; fi
 
 	echo "</td>"
 	number=$(($number+1))
@@ -100,13 +123,11 @@ fi
 
 cat<<EOF
 
-<span name="test">
 <TR>
 <TD> </TD>
 </TR><TR>
 	<td colspan="3">Gateway hinzufügen:</td>
 </TR>
-</span>
 </TR>
 	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE="" $(test "$gwauto" = "on" && echo "DISABLED='1'")></td>
 </TR>
@@ -117,6 +138,52 @@ cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 
+<H2>Gateway-Blacklist</H2>
+An dieser Stelle kannst Du gezielt einzelne Gateways sperren. Auch wenn diese in der Liste oben auftauchen, werden die Rechner aus der Blacklist nicht berücksichtigt. (Über welchen Rechner eine Verbindung ins Internet ohne OpenVPN - wenn überhaupt - hergestellt wird, kann hierdurch allerdings nicht beeinflusst werden)
+<FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Gateway Blacklist">
+<TBODY>
+<TR>
+<TD></TD>
+<TD><b>IP-Adresse</b></TD>
+<TD><b>Erreichbarkeit</b></TD>
+</TR>
+EOF
+number=1
+for on_gwblackaddr in $(nvram get on_gwblackaddrs); do
+cat<<EOF
+<TR>
+	<td>$number. </td>
+	<td NAME="address"><INPUT NAME="on_gwblack$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwblackaddr"></td>
+	<td> 
+EOF
+	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwblackaddr)" = "$on_gwblackaddr" ]; then
+		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
+	else	
+		echo "<img src=\"../images/no.gif\" alt=\"no\">"
+	fi
+	
+	echo "</td>"
+	number=$(($number+1))
+	echo "</TR>"
+done
+cat<<EOF
+
+<TR>
+<TD> </TD>
+</TR><TR>
+	<td colspan="3">Gateway zur Blacklist hinzufügen:</td>
+</TR>
+</TR>
+	<td></td><td><INPUT NAME="on_gwblacktoadd" SIZE="20" TYPE="TEXT" VALUE=""></td>
+</TR>
+<TR><TD colspan="3"><HR /></TD></TR>
+<TR>
+<TD></TD><TD colspan="3"><INPUT NAME="add_blackgw" TITLE="OpenVPN-Gateway-Blacklist aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen"></TD>
+</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 
 
 EOF
@@ -129,7 +196,7 @@ cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
 <TR>
-<TD>Der erste erreichbare Gateway ist im Moment nicht der aktive Gateway. Der Tunnel wird in etwa $wait Minuten neu gestartet. Die Veränderungen sind dann bei einer <a href="on_gateway.html">Aktualisierung dieser Seite</a> zu sehen.</TD>
+<TD>Der erste erreichbare und nicht gesperrte Gateway ist im Moment nicht der aktive Gateway. Der Tunnel wird in etwa $wait Minuten neu gestartet. Die Veränderungen sind dann bei einer <a href="on_gateway.html">Aktualisierung dieser Seite</a> zu sehen.</TD>
 </TR>
 <TR>
 <TD><INPUT NAME="openvpn_restart" TITLE="Starte Tunnel sofort neu" TYPE="SUBMIT" VALUE="Tunnel sofort neu starten / Gateway sofort wechseln"></TD></TR>
