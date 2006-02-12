@@ -294,7 +294,10 @@ pcf_event(int changes_neighborhood,
   struct topo_dst *dst_entry;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
-
+  struct mid_entry *tmp_mid_entry;
+  struct mid_address *tmp_mid_addr;
+  char mid_buf[330];
+  
   res = 0;
 
   if(changes_neighborhood || changes_topology || changes_hna)
@@ -354,8 +357,27 @@ pcf_event(int changes_neighborhood,
 	      tmp_hna = tmp_hna->next;
 	    }
 	}
-
-
+      /* MID entries */
+      for (index=0;index<HASHSIZE;index++)
+	{
+	for (tmp_mid_entry = mid_set[index].next;
+	     tmp_mid_entry != &mid_set[index];
+	     tmp_mid_entry = tmp_mid_entry->next)
+	  {
+	  tmp_mid_addr = tmp_mid_entry->aliases;
+	  strcpy(mid_buf, "MID\t");
+	  strncat(mid_buf, olsr_ip_to_string(&tmp_mid_entry->main_addr), sizeof(mid_buf));
+	  ipc_send_str(mid_buf);
+	  while (tmp_mid_addr)
+	    {
+	    strcpy(mid_buf, "\t");
+	    strncat(mid_buf, olsr_ip_to_string(&tmp_mid_addr->alias), sizeof(mid_buf));
+	    ipc_send_str(mid_buf);
+	    tmp_mid_addr = tmp_mid_addr->next_alias;
+	    }
+	  ipc_send_str("\n");
+	  }
+	}
       ipc_send_str("END\n\n");
 
       res = 1;
