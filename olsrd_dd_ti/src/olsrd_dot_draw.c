@@ -37,63 +37,85 @@
  * to the project. For more information see the website or contact
  * the copyright holders.
  *
- * $Id: olsrd_dot_draw.c,v 1.11 2005/02/20 15:51:15 kattemat Exp $
+ * $Id: olsrd_dot_draw.c,v 1.20 2005/12/30 02:23:59 tlopatic Exp $
  */
 
 /*
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#include "olsrd_dot_draw.h"
+ 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <time.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include "olsr.h"
+#include "olsr_types.h"
+#include "neighbor_table.h"
+#include "two_hop_neighbor_table.h"
+#include "tc_set.h"
+#include "hna_set.h"
+#include "mid_set.h"
+#include "link_set.h"
+#include "socket_parser.h"
+
+#include "olsrd_dot_draw.h"
+#include "olsrd_plugin.h"
+
+
 #ifdef WIN32
 #define close(x) closesocket(x)
 #endif
 
-int ipc_socket;
-int ipc_open;
-int ipc_connection;
-int ipc_socket_up;
+
+static int ipc_socket;
+static int ipc_open;
+static int ipc_connection;
+static int ipc_socket_up;
+
+
+
+/* IPC initialization function */
+static int
+plugin_ipc_init(void);
+
+static char*
+olsr_netmask_to_string(union hna_netmask *mask);
+
+/* Event function to register with the sceduler */
+static int
+pcf_event(int, int, int);
+
+static void
+ipc_action(int);
+
+static void inline
+ipc_print_neigh_link(struct neighbor_entry *neighbor);
+
+static void inline
+ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry);
+
+static void inline
+ipc_print_net(union olsr_ip_addr *, union olsr_ip_addr *, union hna_netmask *);
+
+static int
+ipc_send(char *, int);
+
+static int
+ipc_send_str(char *);
 
 static void inline
 ipc_print_neigh_link(struct neighbor_entry *);
 
-
-static void inline
-ipc_print_neigh_link(struct neighbor_entry *neighbor)
-{
-  char buf[256];
-  int len;
-  char *adr1, *adr;
-  double olq=0.0;
-  double nlq=0.0;
-  struct link_entry* link;
-  
-  
-  adr1 = olsr_ip_to_string(main_addr);
-  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
-  
-  if (neighbor->status != 0) {
-    /* find best link to neighbor for the ETX */
-    //? why cant i just get it one time at fetch_olsrd_data??? (br1)
-    if(olsr_plugin_io(GETD__LINK_SET, &link, sizeof(link)) && link)
-    {
-      link_set = link; // for olsr_neighbor_best_link    
-      link = olsr_neighbor_best_link(&neighbor->neighbor_main_addr);
-      if (link) {
-        olq = link->loss_link_quality;
-        nlq = link->neigh_link_quality;
-      }
-    }
-  }
-  
-  len = sprintf(buf, "LL\t%s\t%s\t%f\t%f\t%d\t%d\t%d\t%d\n", adr1, adr, olq, nlq, neighbor->status, neighbor->willingness, neighbor->is_mpr, neighbor->linkcount);
-  ipc_send(buf, len);
-}
 
 /**
  *Do initialization here
@@ -102,9 +124,8 @@ ipc_print_neigh_link(struct neighbor_entry *neighbor)
  *function in uolsrd_plugin.c
  */
 int
-olsr_plugin_init()
+olsrd_plugin_init()
 {
-
   /* Initial IPC value */
   ipc_open = 0;
   ipc_socket_up = 0;
@@ -115,7 +136,44 @@ olsr_plugin_init()
   return 1;
 }
 
-int
+
+/**
+ * destructor - called at unload
+ */
+void
+olsr_plugin_exit()
+{
+  if(ipc_open)
+    close(ipc_socket);
+}
+
+
+static void inline
+ipc_print_neigh_link(struct neighbor_entry *neighbor)
+{
+  char buf[256];
+  char *adr1, *adr;
+  double olq=0.0;
+  double nlq=0.0;
+  struct link_entry* link;
+
+  adr1 = olsr_ip_to_string(&main_addr);
+  adr = olsr_ip_to_string(&neighbor->neighbor_main_addr);
+  
+
+  if (neighbor->status != 0) {
+      link = get_best_link_to_neighbor(&neighbor->neighbor_main_addr);
+      if (link) {
+         olq = link->loss_link_quality;
+         nlq = link->neigh_link_quality;
+      }
+  }
+  sprintf(buf, "LL\t%s\t%s\t%f\t%f\t%d\t%d\t%d\t%d\n", adr1, adr, olq, nlq, neighbor->status, neighbor->willingness, neighbor->is_mpr, neighbor->linkcount);
+  ipc_send_str(buf);
+}
+
+
+static int
 plugin_ipc_init()
 {
   struct sockaddr_in sin;
@@ -135,7 +193,7 @@ plugin_ipc_init()
 	return 0;
       }
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ && defined SO_NOSIGPIPE
       if (setsockopt(ipc_socket, SOL_SOCKET, SO_NOSIGPIPE, (char *)&yes, sizeof(yes)) < 0) 
       {
 	perror("SO_REUSEADDR failed");
@@ -174,7 +232,8 @@ plugin_ipc_init()
   return 1;
 }
 
-void
+
+static void
 ipc_action(int fd)
 {
   struct sockaddr_in pin;
@@ -190,7 +249,7 @@ ipc_action(int fd)
           olsr_printf(1, "(DOT DRAW) Error on closing previously active TCP connection on fd %d: %s\n", ipc_connection, strerror(errno));
           if (errno != EINTR)
             {
-            break;
+	      break;
             }
         }
       ipc_open = 0;
@@ -217,42 +276,13 @@ ipc_action(int fd)
 	  pcf_event(1, 1, 1);
 	}
     }
-
 }
-
-/*
- * destructor - called at unload
- */
-void
-olsr_plugin_exit()
-{
-  if(ipc_open)
-    close(ipc_socket);
-}
-
-
-
-/* Mulitpurpose funtion */
-int
-plugin_io(int cmd, void *data, size_t size)
-{
-
-  switch(cmd)
-    {
-    default:
-      return 0;
-    }
-  
-  return 1;
-}
-
-
 
 
 /**
  *Scheduled event
  */
-int
+static int
 pcf_event(int changes_neighborhood,
 	  int changes_topology,
 	  int changes_hna)
@@ -271,7 +301,7 @@ pcf_event(int changes_neighborhood,
     {
       /* Print tables to IPC socket */
 
-      ipc_send("START\n", strlen("START\n"));
+      ipc_send_str("START\n");
 
       /* Neighbors */
       for(index=0;index<HASHSIZE;index++)
@@ -326,7 +356,7 @@ pcf_event(int changes_neighborhood,
 	}
 
 
-      ipc_send("END\n\n", strlen("END\n\n"));
+      ipc_send_str("END\n\n");
 
       res = 1;
     }
@@ -338,43 +368,50 @@ pcf_event(int changes_neighborhood,
   return res;
 }
 
+
 static void inline
 ipc_print_tc_link(struct tc_entry *entry, struct topo_dst *dst_entry)
 {
   char buf[256];
-  int len;
   char *adr1, *adr2;
 
   adr1 = olsr_ip_to_string(&entry->T_last_addr);
   adr2 = olsr_ip_to_string(&dst_entry->T_dest_addr);
-  len = sprintf(buf, "TC\t%s\t%s\t%f\t%f\n", adr1, adr2, dst_entry->link_quality, dst_entry->inverse_link_quality);
-  ipc_send(buf, len);
+  sprintf(buf, "TC\t%s\t%s\t%f\t%f\n", adr1, adr2, dst_entry->link_quality, dst_entry->inverse_link_quality);
+  ipc_send_str(buf);
 }
+
 
 static void inline
 ipc_print_net(union olsr_ip_addr *gw, union olsr_ip_addr *net, union hna_netmask *mask)
 {
   char buf[256];
-  int len;
   char *ip_gateway, *ip_net, *mask_net;
 
   ip_gateway = olsr_ip_to_string(gw);
   ip_net =  olsr_ip_to_string(net);
   mask_net = olsr_netmask_to_string(mask);
 
-  len = sprintf(buf, "HNA\t%s\t%s\t%s\n", ip_net, mask_net, ip_gateway);
-  ipc_send(buf, len);
+  sprintf(buf, "HNA\t%s\t%s\t%s\n", ip_net, mask_net, ip_gateway);
+  ipc_send_str(buf);
+}
+
+static int
+ipc_send_str(char *data)
+{
+  if(!ipc_open)
+    return 0;
+  return ipc_send(data, strlen(data));
 }
 
 
-
-int
+static int
 ipc_send(char *data, int size)
 {
   if(!ipc_open)
     return 0;
 
-#ifdef __FreeBSD__
+#if defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__ || defined __MacOSX__
   if (send(ipc_connection, data, size, 0) < 0) 
 #else
   if (send(ipc_connection, data, size, MSG_NOSIGNAL) < 0) 
@@ -389,100 +426,24 @@ ipc_send(char *data, int size)
   return 1;
 }
 
-
-
-
-
-/**
- *Converts a olsr_ip_addr to a string
- *Goes for both IPv4 and IPv6
- *
- *@param the IP to convert
- *@return a pointer to a static string buffer
- *representing the address in "dots and numbers"
- *
- */
-char *
-olsr_ip_to_string(union olsr_ip_addr *addr)
-{
-  static int index = 0;
-  static char buff[4][100];
-  char *ret;
-  struct in_addr in;
- 
-  if(ipversion == AF_INET)
-    {
-      in.s_addr=addr->v4;
-      ret = inet_ntoa(in);
-    }
-  else
-    {
-      /* IPv6 */
-      ret = (char *)inet_ntop(AF_INET6, &addr->v6, ipv6_buf, sizeof(ipv6_buf));
-    }
-
-  strncpy(buff[index], ret, 100);
-
-  ret = buff[index];
-
-  index = (index + 1) & 3;
-
-  return ret;
-}
-
-
-/**
- *This function is just as bad as the previous one :-(
- */
-char *
+static char*
 olsr_netmask_to_string(union hna_netmask *mask)
 {
   char *ret;
   struct in_addr in;
-  
-  if(ipversion == AF_INET)
+
+  if(olsr_cnf->ip_version == AF_INET)
     {
       in.s_addr = mask->v4;
       ret = inet_ntoa(in);
-      return ret;
-
     }
   else
     {
       /* IPv6 */
+      static char netmask[5];
       sprintf(netmask, "%d", mask->v6);
-      return netmask;
+      ret = netmask;
     }
 
   return ret;
 }
-
-#define COMP_IP(ip1, ip2) (!memcmp(ip1, ip2, ipsize))
-struct link_entry *olsr_neighbor_best_link(union olsr_ip_addr *main)
-{
-  struct link_entry *walker;
-  double best = 0.0;
-  double curr;
-  struct link_entry *res = NULL;
-
-  // loop through all links
-
-  for (walker = link_set; walker != NULL; walker = walker->next)
-  {
-    // check whether it's a link to the requested neighbor and
-    // whether the link's quality is better than what we have
-    if(COMP_IP(main, &walker->neighbor->neighbor_main_addr))
-    {
-      curr = walker->loss_link_quality * walker->neigh_link_quality;
-
-      if (curr >= best)
-      {
-        best = curr;
-        res = walker;
-      }
-    }
-  }
-
-  return res;
-}
-
