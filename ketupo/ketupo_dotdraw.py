@@ -29,7 +29,7 @@ from address_structures import ip_make
 from node_structures import olsr_node
 import ketupo_dotdraw
 
-target_address = ('127.0.0.1', 2005)
+target_address = ('127.0.0.1', 2006)
 
 node_titan = olsr_node(ip_make('192.168.0.254'))
 
