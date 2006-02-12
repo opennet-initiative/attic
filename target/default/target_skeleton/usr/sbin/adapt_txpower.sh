@@ -4,7 +4,7 @@
 # automatic adaption of transmission power in a freifunk-olsr network
 ########################################################################
 
-echo -e "\n*** Auto-Adapting Transmission Power (v.0.1b) ***"
+echo -e "\n*** Auto-Adapting Transmission Power (v.0.1c) ***"
 
 #################### Description  ###########################################
 #
@@ -55,14 +55,15 @@ check_transmission()
 	
 	max_pwr=$MaximalPower;
 	new_pwr=$(wl txpwr | cut -d' ' -f3)
+	max_to_loose=$(($Accepted_PacketLoss*$NumberOfPings/100))
 	
 	echo "initial transmission power is "$new_pwr"mW"
 
-	while true ; do
+	while [ $new_pwr -gt $min_pwr ] ; do 	# min_pwr is the minimal value known not to work
 		wl txpwr $new_pwr
 		ping_count=0;
 		loss_count=0;
-		max_to_loose=$(($Accepted_PacketLoss*$NumberOfPings/100))
+		
 		while [ $ping_count -lt $NumberOfPings ] && [ $loss_count -le $max_to_loose ]; do
 			if [ $(ping -c 1 -q $address | awk '$8=="packet" {print $4}') = 1 ]; then
 				echo -n "."
@@ -126,7 +127,7 @@ else
 	
 	# get list of 1-hop neighbors
 	echo "check one-hop-neighbors and if they need me as a gateway"
-	onehop_neighbors=$(route -n | awk '$5 == "1"  && /0.0.0.0/ { print $1; }')
+	onehop_neighbors=$(route -n | awk '$5 == "1"  && $2 == "0.0.0.0" { print $1 }')
 	interested_neighbors=
 	for address in $onehop_neighbors; do
 		echo -n $address
