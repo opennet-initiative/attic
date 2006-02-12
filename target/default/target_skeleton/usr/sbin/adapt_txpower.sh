@@ -4,7 +4,7 @@
 # automatic adaption of transmission power in a freifunk-olsr network
 ########################################################################
 
-echo -e "\n*** Auto-Adapting Transmission Power (v.0.1c) ***"
+echo -e "\n*** Auto-Adapting Transmission Power (v.0.2) ***"
 
 #################### Description  ###########################################
 #
@@ -25,6 +25,7 @@ echo -e "\n*** Auto-Adapting Transmission Power (v.0.1c) ***"
 # some parameters, maybe set later as command-line parameters
 NumberOfPings=100	# number of pings for the testcase
 Accepted_PacketLoss=5	# percentage of packets which might get lost while accepting connection
+DownloadTest=1		# activate download-Test (1 means active, anything else inactive)
 
 # time to wait before checking, if anybody else needs me as a gateway in seconds
 # retrieved from my own olsrd.conf (HelloInterval*WindowSize/2)
@@ -73,9 +74,20 @@ check_transmission()
 			fi
 			: $((ping_count++))
 		done;
+		echo -n " $loss_count" out of "$ping_count" packets lost
 		
-		echo " $loss_count" out of "$ping_count" packets lost
-		
+		# download-test
+		if [ $DownloadTest = "1" ]; then
+			echo -n " (download-rate: "
+			wget -qO /tmp/testdownload "http://$address/cgi-bin-dev-zero.bin" &
+			sleep 5
+			kill 2>/dev/null $(ps|grep qO|grep -v grep|cut -b 0-5)
+			a=$(ls -l /tmp/testdownload|cut -b 30-42);
+			let b=a/5120;
+			echo $b"kb/s)";
+			echo "0" >/tmp/testdownload
+		fi;
+
 		if [ $loss_count -gt $max_to_loose ]; then
 			# try to increase current transmission power
 			# check if we reached the maximum or a previously working value
