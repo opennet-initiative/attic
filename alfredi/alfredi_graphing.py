@@ -66,11 +66,7 @@ class MapManipulator(alfredi_color.LQColorMap):
       y1 = max(self.y_min-y_margin, 0)
       x2 = min(self.x_max+x_margin, self.image.size[0])
       y2 = min(self.y_max+y_margin, self.image.size[1])
-      if ((x2 - x1 == 0) or (y2 - y1 == 0)):
-         #ugly hack to prevent PIL from throwing an exception on empty result
-         return self.image.copy.crop((0,0,1,1))
-      else:
-         return self.image.copy().crop((max(self.x_min-x_margin, 0), max(self.y_min-y_margin, 0), min(self.x_max+x_margin, self.image.size[0]), min(self.y_max+y_margin, self.image.size[1])))
+      return self.image.copy().crop((max(self.x_min-x_margin, 0), max(self.y_min-y_margin, 0), min(self.x_max+x_margin, self.image.size[0]), min(self.y_max+y_margin, self.image.size[1])))
 
    def edge_draw(self, coords1, coords2, lq):
       pos1 = self.position_calculate(coords1)
