@@ -62,11 +62,11 @@ class MapManipulator(alfredi_color.LQColorMap):
          self.y_max = y
 
    def map_crop(self, x_margin=5, y_margin=5):
-      x1 = max(self.x_min-x_margin, 0)
-      y1 = max(self.y_min-y_margin, 0)
-      x2 = min(self.x_max+x_margin, self.image.size[0])
-      y2 = min(self.y_max+y_margin, self.image.size[1])
-      if ((x2 - x1 == 0) or (y2 -y1 == 0)):
+      x1 = min(max(self.x_min-x_margin, 0), self.image.size[0])
+      y1 = min(max(self.y_min-y_margin, 0), self.image.size[1])
+      x2 = min(max(self.x_max+x_margin,0), self.image.size[0])
+      y2 = min(max(self.y_max+y_margin,0), self.image.size[1])
+      if ((x2 - x1 == 0) or (y2 - y1 == 0)):
          raise ValueError('Bounding sizes (%d,%d,%d,%d) would corrupt PIL image.' % (x1,y1,x2,y2))
       return self.image.copy().crop((max(self.x_min-x_margin, 0), max(self.y_min-y_margin, 0), min(self.x_max+x_margin, self.image.size[0]), min(self.y_max+y_margin, self.image.size[1])))
 

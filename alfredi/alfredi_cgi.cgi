@@ -67,10 +67,17 @@ try:
    padding = int(form.getfirst('padding'))
 except:
    padding = default_padding
-   
+
 background_data = graph_calls[0]
 mm = MapManipulator(Image.open(background_data[0]).convert(), PointByCoordinates(*background_data[1]), PointByCoordinates(*background_data[2]))
 mm.node_draw(node_coords[node_ip], text=str(node_ip), lq=None)
 
-print 'Content-Type: image/png\n'
-mm.map_crop(padding, padding).save(sys.stdout, 'PNG')
+try:
+   output_image = mm.map_crop(padding, padding)
+except ValueError:
+   print 'Content-Type: image/png\n'
+   mm.image.crop((0,0,1,1)).save(sys.stdout, 'PNG')
+else:
+   print 'Content-Type: image/png\n'
+   output_image.save(sys.stdout, 'PNG')
+
