@@ -4,11 +4,12 @@
 # automatic adaption of transmission power in a freifunk-olsr network
 ########################################################################
 
-echo -e "\n*** Auto-Adapting Transmission Power (v.0.2) ***"
+echo -e "*** Auto-Adapting Transmission Power (v.0.3) ***"
+echo    "*** Test time $(date)"
 
 #################### Description  ###########################################
 #
-# Comand line parameters: List of IP-addresses to which optimize transmission power
+# Comand line parameters: [options, see -h for info] [List of IP-addresses to which optimize transmission power]
 #
 # If adresses are given onthe command line, the transmission power is set so that all targets might
 # have a acceptable (user-defined) packet-loss rate.
@@ -22,10 +23,10 @@ echo -e "\n*** Auto-Adapting Transmission Power (v.0.2) ***"
 
 
 #################### PARAMETERS ########################################
-# some parameters, maybe set later as command-line parameters
+# some default values for parameters
 NumberOfPings=100	# number of pings for the testcase
 Accepted_PacketLoss=5	# percentage of packets which might get lost while accepting connection
-DownloadTest=1		# activate download-Test (1 means active, anything else inactive)
+DownloadTest=0		# activate download-Test (1 means active, anything else inactive)
 
 # time to wait before checking, if anybody else needs me as a gateway in seconds
 # retrieved from my own olsrd.conf (HelloInterval*WindowSize/2)
@@ -41,6 +42,37 @@ MaximalPower=19; # 19mW = 12dBm
 # MaximalPower=84; # 84mW = 19dBm
 ########################################################################
 
+# check command line parameters
+count=1; ip_list=
+while [ $count -le $# ] ; do
+	param=$(eval echo \$$count); : $((count++)); next_param=$(eval echo \$$count);
+	case "$param" in
+	"-c")	NumberOfPings=$next_param; : $((count++)); ;;
+	"-l")	Accepted_PacketLoss=$next_param; : $((count++)); ;;
+	"-d")	DownloadTest=1; ;;
+	"-p")	MaximalPower=$next_param; : $((count++)); ;;
+	"-w")   Wait=$next_param; : $((count++)); ;;
+	"-h")	echo -e "\
+Usage: adapt_txpower.sh [OPTION|IP]...
+Options:
+  -c number       number of pings per TestCase (default 100)
+  -d              enable download test (default off)
+  -l number       max number of packets to loose while accepting the
+                  connetion (default 5)
+  -p power        set maximal power to use. Warning: inappropriate 
+	          values might destroy your equipmnet as well as your
+	          and others health.
+  -w seconds      time to wait after increasing power for neighbors to
+                  adapt to the changed value
+  -h              this help
+
+if a paramter is not recognized as an option, it is used as a IP to 
+optimize the transmission to. If there is no IP added, transmission
+will optimized to the used openvpn gateway and all neighbors who are 
+interested in using this AccessPoint as a gateway."; exit; ;;
+	*)	ip_list="$ip_list $next_param";
+	esac
+done
 
 echo "* number of pings per testcase: "$NumberOfPings
 echo "* maximal accepted packet loss: "$Accepted_PacketLoss" packets"
@@ -77,7 +109,7 @@ check_transmission()
 		echo -n " $loss_count" out of "$ping_count" packets lost
 		
 		# download-test
-		if [ $DownloadTest = "1" ]; then
+		if [ "$DownloadTest" = "1" ]; then
 			echo -n " (download-rate: "
 			wget -qO /tmp/testdownload "http://$address/cgi-bin-dev-zero.bin" &
 			sleep 5
@@ -86,6 +118,7 @@ check_transmission()
 			let b=a/5120;
 			echo $b"kb/s)";
 			echo "0" >/tmp/testdownload
+		else echo;
 		fi;
 
 		if [ $loss_count -gt $max_to_loose ]; then
@@ -114,15 +147,18 @@ check_transmission()
 	done;
 }
 
+# restore the old power value if interrupted
+USER_INTERRUPT=13
+initial_txpwr=$(wl txpwr | cut -d' ' -f3)
+trap 'wl txpwr $initial_txpwr; exit $USER_INTERRUPT' TERM INT
+
+
 ip=$(nvram get wifi_ipaddr)
 address=
-if [ -n "$1" ]; then
+if [ -n "$ip_list" ]; then
 	# if there are command line parameters, optimize the transmission to them
-	number=1;
-	while [ -n "$(eval echo \$$number)" ]; do
-		address="$(eval echo \$$number)";
+	for address in $ip_list; do
 		check_transmission
-		: $((number++))
 	done;
 else
 	# set current power to Maximal Value
@@ -143,8 +179,10 @@ else
 	interested_neighbors=
 	for address in $onehop_neighbors; do
 		echo -n $address
-		gateway=$(get_gateway.sh $address)
-		if [ -n "$gateway" ]; then echo -n " using default gateway $gateway";
+		gateway=$(get_gateway.sh $address) 
+		if [ -n "$gateway" ]; then
+			echo -n " using $gateway";
+			gateway=$(echo $gateway|cut -d' ' -f2); # use only the address
 		else echo -n " (couldnt retrieve information)"; fi
 		
 		if [ "$gateway" = "$ip" ]; then
@@ -160,8 +198,17 @@ else
 	echo -e "\n*** optimizing transmission power for gateway ***"
 	
 	address=
-	while [ -z "$address" ]; do address=$(route -n | awk '$1 == "0.0.0.0" && /192.168/ { print $2; exit;}'); done;
-	check_transmission
+	count=0
+	while [ -z "$address" ] && [ $((count++)) -lt 10 ]; do
+		address=$(route -n | awk -v gw="$(nvram get on_gw)" '$1 == gw {print $2; exit;}');
+		if [ -z "$address" ]; then echo "problem retrieving gateway address"; sleep 2; fi;
+	done;
+	if [ -n "$address" ]; then
+		check_transmission
+	else
+		echo "### sorry, couldnt find local gateway, you might retry the procedure"
+		exit
+	fi
 	
 	# optimize for neighbors
 	if [ -n "$interested_neighbors" ]; then
@@ -173,3 +220,4 @@ else
 fi;
 
 echo -e "\n*** Optimal Transmission Power set to "$new_pwr"mW ***"
+nvram set ff_txpwr=$new_pwr; nvram commit;
