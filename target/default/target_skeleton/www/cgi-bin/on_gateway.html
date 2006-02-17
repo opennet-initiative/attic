@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="9.12.2005"
+export DATE="17.2.2006"
 export TITLE="Verwaltung: Opennet"
 . ${0%/*}/cgi-bin-pre.sh
 
@@ -18,12 +18,28 @@ if [ -n "$add_gw" ]; then
 	if [ "$on_gwauto" != "on" ]; then
 		number=1
 		on_gwaddrs_new=
-		for on_gwaddr in $(nvram get on_gwaddrs); do
-			on_gwaddrs_new="$on_gwaddrs_new "$(eval echo \$on_gw$number)
-			number=$(($number+1))
+		on_gwaddrs_old=$(nvram get on_gwaddrs)
+		### go through all existing entrys / use old entrys as reference, there couldnt be more now
+		for dummy in $on_gwaddrs_old; do
+			# get address, continue if no entry found
+			addr=$(eval echo \$on_gw$number)
+			if [ -z "$addr" ]; then continue; fi
+			
+			# search information about status and age in old entrys
+			worked=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $2}')
+			age=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $3}')
+			
+			# store values
+			on_gwaddrs_new="$on_gwaddrs_new $addr:$worked:$age"
+			
+			: $((number++))
 		done;
+		
+		# add new entry
+		if [ -n "$on_gwtoadd" ]; then on_gwaddrs_new="$on_gwaddrs_new $on_gwtoadd::"; fi
+		
 		on_gwaddrs_new=$(echo $on_gwaddrs_new)
-		nvram set on_gwaddrs="$on_gwaddrs_new $on_gwtoadd"
+		nvram set on_gwaddrs="$on_gwaddrs_new"
 	else
 		# refresh gateway values
 		/usr/sbin/cron.minutely_ongateway refresh
@@ -53,25 +69,41 @@ fi
 gwauto=$(nvram get on_gwauto)
 
 cat<<EOF
-
-In diesem Bereich können die IP-Adressen der von euch gewünschten OpenVPN-Gateways eingetragen werden. Falls ihr euch über aktuelle Gateways im Opennet informieren wollt, schaut im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet-Wiki</a> nach. Als Gateway wird der jeweils erste eingetragene Gateway genutzt, zu dem eine Route führt. Ein Wechsel der Gateways erfolgt, wenn der aktuelle Gateway etwa 6 Minuten lang nicht der erste erreichbare Gateway entsprechend der Liste ist. <b>Achtung:</b> Ein Wechsel des Gateways führt zur Unterbrechung aller aktiven Internetverbindungen.
+In diesem Bereich können die IP-Adressen der von euch gewünschten OpenVPN-Gateways konfiguriert werden.<br />
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<div id="description">
+<br />
+Falls ihr euch über aktuelle Gateways im Opennet informieren wollt, schaut im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet-Wiki</a> nach. Als Gateway wird der jeweils erste eingetragene Gateway genutzt, zu dem eine Route führt. Ein Wechsel der Gateways erfolgt, wenn der aktuelle Gateway etwa 6 Minuten lang nicht der erste erreichbare Gateway entsprechend der Liste ist. <b>Achtung:</b> Ein Wechsel des Gateways führt zur Unterbrechung aller aktiven Internetverbindungen.
 <br /><br />
 Sind keine Gateways aus dieser Liste erreichbar,  (oder ist die Liste leer), ist OpenVPN deaktiviert . Falls Gateways ohne OpenVPN im Opennet aktiv sind, werden diese dann automatisch genutzt. 
 <br /><br />
 <b>Automatische Gateway-Suche:</b> Die Gateways werden automatisch ermittelt und anhand ihrer Entfernung (HOP-Count) sortiert. Dies muss nicht in allen Fällen optimal sein.
 <br /><br />
+<b>Informationen zu den Angaben in den Spalten:</b><br />
+Unter 'Erreichbarkeit' wird angegeben, ob aktuell eine Route zum Gateway existiert. Zusätzlich wird vermerkt, ob ein Tunnel zu diesem Gateway aufgebaut ist und/oder ob dieser Gateway über die Blacklist gesperrt wurde.<br />
+Unter 'OpenVPN-Test' wird angegeben, on testweise eine OpenVPN Verbindung zum entsprechenden Gateway aufgebaut werden konnte. Zusätzlich steht in Klammern, wann der entsprechende Gateway zuletzt getestet wurde. Fehlt diese Angabe, wurde noch kein Test durchgeführt.<br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+<br />
+<H2>Gateway-Liste</H2>
 <FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
 TITLE="Gateway Konfiguration">
 <TBODY>
-<TR><TD colspan="3">
+<TR><TD colspan="4">
 	<INPUT CLASS="checkbox" NAME="on_gwauto" TYPE="checkbox" $(test "$gwauto" = "on" && echo "CHECKED='on'" && echo "VALUE='on'") ONCHANGE="var Number=1; while(eval('this.form.on_gw'+Number)) {eval('this.form.on_gw'+Number++).disabled=this.checked;}; this.form.on_gwtoadd.disabled=this.checked;">Automatische Gateway-Suche
 	</TD></TR>
-<TR><TD colspan="3"><HR /></TD></TR>
+<TR><TD colspan="4"><HR /></TD></TR>
 <TR>
 <TD></TD>
 <TD><b>IP-Adresse</b></TD>
 <TD><b>Erreichbarkeit</b></TD>
+<TD><b>OpenVPN-Test</b></TD>
 </TR>
 EOF
 change=
@@ -79,28 +111,25 @@ reachable=0
 number=1
 gw_reachable="no"
 for on_gwaddr in $(nvram get on_gwaddrs); do
+	on_gw_addr=$(echo $on_gwaddr | cut -d":" -f1)
+	on_gw_status=$(echo $on_gwaddr | cut -d":" -f2)
+	on_gw_age=$(echo $on_gwaddr | cut -d":" -f3)
 cat<<EOF
 <TR>
 	<td>$number. </td>
-	<td NAME="address"><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwaddr" $(test "$gwauto" = "on" && echo "DISABLED='1'")></td>
-	<td> 
+	<td NAME="address"><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gw_addr" $(test "$gwauto" = "on" && echo "DISABLED='1'") ONCHANGE="document.getElementById('route$number').style.display='none';document.getElementById('vpntest$number').style.display='none';"></td>
+	<td id="route$number"> 
 EOF
-	blacklisted=
-	for on_gwblackaddr in $(nvram get on_gwblackaddrs); do
-		if [ "$on_gwblackaddr" = "$on_gwaddr" ]; then
-			blacklisted="true"
-			continue;
-		fi
-	done
-
-	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
+	blacklisted="$(nvram get on_gwblackaddrs | awk "/$on_gw_addr/"'{print}')"
+ 
+	if  [ "$(route -n | cut -d" " -f1 | grep $on_gw_addr)" = "$on_gw_addr" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
 		if [ -z "$blacklisted" ]; then reachable=$(($reachable+1)); fi
 	else	
 		echo "<img src=\"../images/no.gif\" alt=\"no\">"
 	fi
 	
-	if [ "$(nvram get on_gw)" = "$on_gwaddr" ]; then
+	if [ "$(nvram get on_gw)" = "$on_gw_addr" ]; then
 		gw_reachable="yes"
 		if [ -f  /tmp/openvpn_msg.txt ];then
 			echo "Tunnel aktiv "
@@ -110,9 +139,21 @@ EOF
 		if [ "$reachable" != "1" ] || [ -n "$blacklisted" ]; then change="yes"; fi
 	fi
 
-	if  [ -n "$blacklisted" ]; then echo "* GW gesperrt *"; fi
+	if  [ -n "$blacklisted" ]; then echo "* gesperrt *"; fi
 
 	echo "</td>"
+	
+	echo "<td id="vpntest$number">"
+	if  [ "$on_gw_status" = "y" ]; then
+		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
+	else	
+		echo "<img src=\"../images/no.gif\" alt=\"no\">"
+	fi
+	if  [ -n "$on_gw_status" ]; then echo " (vor $on_gw_age min)"; fi
+	echo "</td>"
+	
+	
+	
 	number=$(($number+1))
 	echo "</TR>"
 done
@@ -126,20 +167,31 @@ cat<<EOF
 <TR>
 <TD> </TD>
 </TR><TR>
-	<td colspan="3">Gateway hinzufügen:</td>
+	<td colspan="4">Gateway hinzufügen:</td>
 </TR>
 </TR>
 	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE="" $(test "$gwauto" = "on" && echo "DISABLED='1'")></td>
 </TR>
-<TR><TD colspan="3"><HR /></TD></TR>
+<TR><TD colspan="4"><HR /></TD></TR>
 <TR>
-<TD></TD><TD colspan="3"><INPUT NAME="add_gw" TITLE="OpenVPN-Gateway-Liste aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / Auto-Modus festlegen"></TD>
+<TD></TD><TD colspan="4"><INPUT NAME="add_gw" TITLE="OpenVPN-Gateway-Liste aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / Auto-Modus festlegen"></TD>
 </TR>
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 
+<br />
 <H2>Gateway-Blacklist</H2>
+<!-- show the following area only, if user likes more information -->
+<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen</a>
+<div id="description2">
 An dieser Stelle kannst Du gezielt einzelne Gateways sperren. Auch wenn diese in der Liste oben auftauchen, werden die Rechner aus der Blacklist nicht berücksichtigt. (Über welchen Rechner eine Verbindung ins Internet ohne OpenVPN - wenn überhaupt - hergestellt wird, kann hierdurch allerdings nicht beeinflusst werden)
+</div>
+<script type="text/javascript">
+	document.getElementById('switch2').style.display='inline';
+	document.getElementById('description2').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+
 <FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
 TITLE="Gateway Blacklist">

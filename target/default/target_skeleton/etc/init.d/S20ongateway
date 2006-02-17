@@ -1,7 +1,13 @@
 #!/bin/sh
 
 # get the first gateway
-on_gw=$(nvram get on_gwaddrs | cut -d" " -f1)
+for on_gw in $(nvram get on_gwaddrs); do
+	# check if Gateway is tested to work
+	if [ "$(echo $on_gw | cut -d":" -f2)" != "y" ]; then continue;
+	else on_gw=$(echo $on_gw | cut -d":" -f1); break
+	fi
+done;
+
 # set titan as fallback, if there is no gateway choosen
 if [ -z $on_gw ]; then on_gw="192.168.0.254"; fi
 
