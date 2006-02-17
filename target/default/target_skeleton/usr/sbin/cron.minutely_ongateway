@@ -13,6 +13,20 @@
 # example gw_addrs="192.168.0.254:y:12 192.168.0.249:n:3"
 #################################################################################
 
+# If interrupted, remove pid-file and set a mark in log
+USER_INTERRUPT=13
+trap 'rm -f /var/run/cron.minutely_ongateway.pid; logger -t cron.minutely_ongateway was killed by another instance; exit $USER_INTERRUPT' TERM INT
+
+# check if other instance is running, if yes, kill other instance
+if [ -f /var/run/cron.minutely_ongateway.pid ]; then kill $(cat /var/run/cron.minutely_ongateway.pid); fi
+
+# register that process is running
+# wait till other process is finished
+while [ -f /var/run/cron.minutely_ongateway.pid ];do sleep 1; done;
+pidof cron.minutely_ongateway >/var/run/cron.minutely_ongateway.pid
+
+
+
 #################################################################################
 maxage=20   # after how many times i should recheck the gateway
 testcount=5 # how often it will be tried to establish a connection till gateway
@@ -105,7 +119,11 @@ fi
 
 #################################################################################
 # exit script if values should only be refreshed
-if [ "$1" = "refresh" ]; then exit; fi
+if [ "$1" = "refresh" ]; then
+	# remove registration
+	rm -f /var/run/cron.minutely_ongateway.pid
+	exit;
+fi
 
 #################################################################################
 # if on_gw is not reachable (no route goes there) or on_gw is not the first gateway 
@@ -161,3 +179,6 @@ done
 # store updated values
 on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
+
+# remove registration
+rm -f /var/run/cron.minutely_ongateway.pid
