@@ -27,11 +27,13 @@ TITLE="Mit dieser Einstellung kann ein Rechner im internen LAN aus dem OLSR-Netz
 <TD>DMZ-Umleitung:</TD>
 <TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_dmz" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_dmz)"></TD>
 </TR>
+<!-- now done in a separated tab
 <TR
 TITLE="Über DHCP kann eine IP-Adresskonfiguration an WLAN-Rechner in der Nähe zu vergeben werden. Trage einen IP-Netzbereich und eine passende Netzmaske ein, beispielweise '172.31.5.32/28,255.255.255.0'. Nach Anwendung der Netzmaske auf eine DHCP-IP muss die IP-Adresse dieses Gerätes direkt erreichbar sein. Für den IP-Netzbereich wird NAT/Masquerading eingerichtet. Erhält ein WLAN-Rechner über DHCP eine IP von diesem Gerät, kann der WLAN-Rechner ohne OLSR-Dienstprogramm im OLSR-Netz teilnehmen. Mehrere IP-Adressbereiche mit Semikolon trennen. Reserviere den IP-Adressbereich im OLSR-Netzwerk, um Konflikte zu vermeiden.">
 <TD>OLSR-DHCP:</TD>
 <TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_wldhcp" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_wldhcp)"></TD>
 </TR>
+-->
 <!--TR
 TITLE="Normalerweise bestimmt die IP-Adresse und die Netzmaske auf der Seite 'Drahtlos' das OLSR-Netz. Alle Schnittstellen in diesem Netzwerk werden für OLSR konfiguriert. Beispiel: '10.0.0.0/8'.">
 <TD>OLSR-Netz:</TD>
