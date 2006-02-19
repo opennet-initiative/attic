@@ -194,6 +194,8 @@ case $1 in
 		# olsrd will disable per iface, but on wrt that is not enough
 		echo 0 >/proc/sys/net/ipv4/conf/all/send_redirects
 		olsrd -f /var/etc/olsrd.conf -d 0
+		# give olsrd a higher priority than the other userspace-processes
+		renice -3 $(ps|grep olsrd|grep -v grep|cut -b 0-5) 2>/dev/null >/dev/null
 	;;
 	stop)
 		echo "Stopping olsrd..."
