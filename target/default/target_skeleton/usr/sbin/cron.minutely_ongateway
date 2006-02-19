@@ -130,7 +130,9 @@ fi
 # which is reachable then select another gateway (but only if this happens 5 times in a row)
 
 on_gwcount=$(nvram get on_gwcount)
+blacklist=$(nvram get on_gwblackaddrs)
 found_first_gw=
+changed_gw=
 
 on_gwaddrs=
 for on_gwaddr in $old_gwaddrs; do
@@ -144,25 +146,24 @@ for on_gwaddr in $old_gwaddrs; do
 	if [ "$(echo $check_result | cut -d":" -f1)" != "y" ]; then continue; fi
 
 	# check for blacklisted Gateways, if found then continue in loop
-	if [ -n "$(nvram get on_gwblackaddrs | awk "/$on_gwaddr/"'{print}')" ]; then
+	if [ -n "$(echo $blacklist | awk "/$on_gwaddr/"'{print}')" ]; then
 			continue;
 	fi
 	
 	# if first gateway is not found yet, continue searching for it
 	if [ -z "$found_first_gw" ] && [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
 		if [ "$on_gwaddr" != "$(nvram get on_gw)" ]; then
-			if [ $on_gwcount -gt 5 ]; then
+			if [ -z "$(nvram get on_gw)" ] || [ $on_gwcount -gt 5 ]; then
 				logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
 		
 				# set gateway information
 				nvram set on_gw=$on_gwaddr
 		
-				# replace old resolv.conf  -- this should be changed
-				echo "nameserver $on_gwaddr" > /etc/resolv.conf
 		
-				#nvram set wifi_dns=$on_gwaddr
+				#
 		
 				/etc/init.d/S80openvpn restart
+				changed_gw="changed"
 				on_gwcount=0
 
 			else
@@ -179,6 +180,21 @@ done
 # store updated values
 on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
+
+if [ -n "$changed_gw" ]; then
+# update dns entries
+	# use the two first gateways as possible dns-servers
+	gw_addrs=$(/usr/sbin/working_gateways.sh)
+	dnsaddrs=
+	for gw_addr in $gw_addrs; do
+		if [ -z "$dnsaddrs" ]; then dnsaddrs="nameserver $gw_addr";
+		else dnsaddrs="$dnsaddrs\nnameserver $gw_addr"; break;
+		fi
+	done
+	echo -e $dnsaddrs > /etc/resolv.conf
+# restart dhcp-server which forwards dns information
+	/etc/init.d/S50dnsmasq restart
+fi
 
 # remove registration
 rm -f /var/run/cron.minutely_ongateway.pid
