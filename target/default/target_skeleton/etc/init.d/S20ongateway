@@ -1,20 +1,21 @@
 #!/bin/sh
 
-# get the first gateway
-for on_gw in $(nvram get on_gwaddrs); do
-	# check if Gateway is tested to work
-	if [ "$(echo $on_gw | cut -d":" -f2)" != "y" ]; then continue;
-	else on_gw=$(echo $on_gw | cut -d":" -f1); break
-	fi
-done;
-
-# set titan as fallback, if there is no gateway choosen
-if [ -z $on_gw ]; then on_gw="192.168.0.254"; fi
-
-# set gateway information
-nvram set on_gw=$on_gw
+gw_addrs=$(/usr/sbin/working_gateways.sh)
 
 # remove old dns-entries, they will be created again by ifup
-rm -f /etc/resolv.conf; nvram set wifi_dns=$on_gw
+rm -f /etc/resolv.conf
+
+# use the two first gateways as possible dns-servers
+dnsaddrs=
+for gw_addr in $gw_addrs; do
+	if [ -z "$dnsaddrs" ]; then dnsaddrs=$gw_addr;
+	else dnsaddrs="$dnsaddrs,$gw_addr"; break;
+	fi
+done
+
+# hardcoded fallback
+if [ -z "$dnsaddrs" ]; then dnsaddrs="192.168.0.254 192.168.0.249"; fi
+
+nvram set wifi_dns="$(echo $dnsaddrs | awk '{gsub(","," "); print}')"
 
 # nvram commit # not needed cause variables are refreshed after every reset
