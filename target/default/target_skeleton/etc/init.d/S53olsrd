@@ -56,7 +56,7 @@ DebugLevel		0
 LinkQualityFishEye	1
 IpVersion		4
 AllowNoInt		yes
-Pollrate		0.05
+Pollrate		0.5
 TcRedundancy		2
 MprCoverage		5
 LinkQualityWinSize	100
