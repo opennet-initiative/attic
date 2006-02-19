@@ -5,7 +5,7 @@ test "0" = "$(nvram get ff_dnsmasq)" && exit
 . /etc/functions.sh
 
 test -d /var/etc || mkdir -p /var/etc # create directory if not found
-
+test -d /var/run || mkdir -p /var/run # create directory if not found
 
 write_config()
 {
