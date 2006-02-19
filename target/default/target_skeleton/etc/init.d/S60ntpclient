@@ -1,7 +1,28 @@
 #!/bin/sh
-on_gw=$(nvram get on_gw)
-while $(sleep 3); do
-	ping -c 1 $on_gw >/dev/null 2>/dev/null &&
-	/usr/sbin/ntpclient -s -c 0 -i 5 -g 1000000 -h $on_gw &&
-	break;
+
+blacklist=$(nvram get on_gwblackaddrs)
+gw_addrs=
+
+for on_gwaddr in $(nvram get on_gwaddrs); do
+	if [ "$(echo $on_gwaddr | cut -d':' -f2)" = "y" ]; then
+		gw_addr=$(echo $on_gwaddr | cut -d':' -f1)
+		
+		# check for blacklisted Gateways, if found then continue in loop
+		if [ -n "$(echo $blacklist | awk "/$gw_addr/"'{print}')" ]; then
+				continue;
+		fi
+		
+		gw_addrs="$gw_addrs $gw_addr"
+	fi;
+done;
+
+# fallback, hard coded
+if [ -z "$gw_addrs" ]; then gw_addrs="192.168.0.254 192.168.0.250 192.168.0.249"; fi
+
+while true; do
+	for gw_addr in $gw_addrs; do
+		echo "trying $gw_addr"
+		ping -c 1 $gw_addr >/dev/null 2>/dev/null && /usr/sbin/ntpclient -s -c 0 -i 5 -g 1000000 -h $gw_addr && return;
+	done;
+	sleep 3;
 done;
