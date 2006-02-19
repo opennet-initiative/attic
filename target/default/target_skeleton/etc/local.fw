@@ -37,11 +37,13 @@ case $1 in
 
 #prepare a table for openvpn policy-routing
         ip rule add unicast from $LANNET/$LANPRE table 3
+	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
 #load tun module
 #       insmod tun   # not needed, loaded by /etc/modules.d
         ;;
         stop)
 	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
         ip rule del unicast from $LANNET/$LANPRE table 3
-        ;;
+	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+;;
 esac
