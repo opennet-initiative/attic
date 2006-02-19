@@ -95,6 +95,9 @@ BEGIN {
 	}
 	
 	printdev(wdev, wdev, "", "WIFI")
+	
+	dhcpwdev = wdev":0"
+	printdev(dhcpwdev, dhcpwdev, "", "DHCPWIFI")
 
 	printdev("lo", "lo", "", "LO")
 

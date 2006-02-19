@@ -6,6 +6,13 @@ case "$1" in
     ifup wifi
     wifi up
 
+    eval $(netparam)
+    nvram set dhcpwl_ifname="$WIFIDEV:0"
+    nvram set dhcpwl_ipaddr="192.168.34.1"
+    nvram set dhcpwl_netmask="255.255.255.0"
+    nvram set dhcpwl_proto=static
+    ifup dhcpwl
+
     for route in $(nvram get static_route); do {
       eval "set $(echo $route | sed 's/:/ /g')"
       $DEBUG route add -net $1 netmask $2 gw $3 metric $4 dev $5
