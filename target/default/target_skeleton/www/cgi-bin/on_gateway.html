@@ -23,15 +23,14 @@ if [ -n "$add_gw" ]; then
 		for dummy in $on_gwaddrs_old; do
 			# get address, continue if no entry found
 			addr=$(eval echo \$on_gw$number)
-			if [ -z "$addr" ]; then continue; fi
-			
-			# search information about status and age in old entrys
-			worked=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $2}')
-			age=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $3}')
-			
-			# store values
-			on_gwaddrs_new="$on_gwaddrs_new $addr:$worked:$age"
-			
+			if [ -n "$addr" ]; then			
+				# search information about status and age in old entrys
+				worked=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $2}')
+				age=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $3}')
+				
+				# store values
+				on_gwaddrs_new="$on_gwaddrs_new $addr:$worked:$age"
+			fi
 			: $((number++))
 		done;
 		
