@@ -238,7 +238,7 @@ cat<<EOF
 
 
 EOF
-if [ "$change" = "yes" ] && [ "$reachable" != "0" ] ; then
+if [ "$change" = "yes" ] && [ "$reachable" != "0" ]  && [ -n "$(nvram get on_gwcount)" ]; then
 
 wait=$((6-$(nvram get on_gwcount)))
 
