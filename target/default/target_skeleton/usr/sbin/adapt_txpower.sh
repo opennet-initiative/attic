@@ -161,6 +161,11 @@ if [ -n "$ip_list" ]; then
 		check_transmission
 	done;
 else
+	if [ -z "$(nvram get on_gw)" ]; then
+		echo "### sorry, please configure OpenVPN first."
+		exit;
+	fi;
+
 	# set current power to Maximal Value
 	cur_pwr=$(wl txpwr | cut -d' ' -f3)
 	wl txpwr $MaximalPower
