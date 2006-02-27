@@ -35,6 +35,7 @@ if (os.getuid() == 0):
    os.chdir('/')
    basic_io.log_init()
    pycapabilities.prctl(pycapabilities.PR_SET_KEEPCAPS,1,0,0,0)
+   os.setgid(target_gid)
    os.setuid(target_uid)
    pycapabilities.cap_set('all= CAP_NET_ADMIN,CAP_NET_RAW+ep')
 

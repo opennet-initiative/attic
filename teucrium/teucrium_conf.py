@@ -22,12 +22,13 @@ DIRECTION_OUTPUT = 2
 base_separator='_'
 
 target_uid = 2037
+target_gid = target_uid
 
 #filename of filename_rrd: rrd to use; teucrium will not create it, 
 #a suitable rrd with this name must already exist for it to work
 filename_rrd = 't_traffic_001.rrd'
 filename_graphics_base = 't_traffic_001_'
-chroot_target = '/home/sebastian/python/teucrium/chroot'
+chroot_target = '/home/FIXME/teucrium/chroot'
 
 #counters_to_track specifies which netfilter rules/chains to read the
 #counters of and where to put the results
