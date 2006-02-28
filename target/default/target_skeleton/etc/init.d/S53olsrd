@@ -1,7 +1,6 @@
 #!/bin/sh
 
 test -n "$FAILSAFE" && exit
-#test -z "$(awk 'sub(":","") {print $1}' /proc/net/wireless)" && exit
 
 . /etc/functions.sh
 
@@ -51,16 +50,7 @@ write_config()
 	done
 	unset IFS
 
-	cat>/var/etc/olsrd.conf<<EOM
-DebugLevel		0
-LinkQualityFishEye	1
-IpVersion		4
-AllowNoInt		yes
-Pollrate		0.5
-TcRedundancy		2
-MprCoverage		5
-LinkQualityWinSize	100
-EOM
+	/usr/sbin/parse_olsrd_conf main >/var/etc/olsrd.conf
 
 	if [ "$(nvram get ff_dyngw)" != "0" ]; then
 		cat>>/var/etc/olsrd.conf<<EOM
@@ -123,63 +113,13 @@ IpcConnect
 }
 EOM
 
-	ff_qos=2
-	ff_qoslev=$(nvram get ff_qoslev)
-	case "$ff_qoslev" in
-		0|1|2)
-			ff_qos=$ff_qoslev
-		;;
-	esac
-	echo "LinkQualityLevel $ff_qos">>/var/etc/olsrd.conf
-	if [ -z "$ff_qos" ] || [ "$ff_qos" = "0" ]; then
-		ff_hyst=$(nvram get ff_hyst)
-		test -n "$ff_hyst" && echo "UseHysteresis $ff_hyst">>/var/etc/olsrd.conf
-		ff_scale=$(nvram get ff_scale)
-		test -n "$ff_scale" && echo "HystScaling $ff_scale">>/var/etc/olsrd.conf
-		ff_thrh=$(nvram get ff_thrh)
-		test -n "$ff_thrh" && echo "HystThrHigh $ff_thrh">>/var/etc/olsrd.conf
-		ff_thrl=$(nvram get ff_thrl)
-		test -n "$ff_thrl" && echo "HystThrLow $ff_thrl">>/var/etc/olsrd.conf
-	else
-		echo "UseHysteresis no">>/var/etc/olsrd.conf
-	fi
-
-	ff_lqmult=
-	LQMS=$(nvram get ff_lqmult)
-	IFS=\;
-	for LQM in $LQMS; do
-		SRCIP=${LQM%[:,]*}
-		LQVAL=${LQM#*[:,]}
-		if [ -n "$SRCIP" ] && [ -n "$LQVAL" ]; then
-			ff_lqmults="$ff_lqmults
-	LinkQualityMult	$SRCIP $LQVAL"
-		fi
-	done
-	unset IFS
-
-	ff_will=$(nvram get ff_will)
-	test -n "$ff_will" && echo "Willingness $ff_will">>/var/etc/olsrd.conf
-
-	ff_ip4broad=$(nvram get ff_ip4broad)
-	test -n "$ff_ip4broad" && ff_ip4broad="Ip4Broadcast $(nvram get ff_ip4broad)"
-
-	test -f /etc/local.olsrd.conf && cat>>/var/etc/olsrd.conf</etc/local.olsrd.conf
-
 	for DEV in $OLSRDEVLIST; do
-		cat>>/var/etc/olsrd.conf<<EOM
+	cat>>/var/etc/olsrd.conf<<EOM
 Interface "$DEV"
 {
-	HelloInterval		5.0
-	HelloValidityTime	200.0
-	TcInterval		0.5
-	TcValidityTime		250.0
-	MidInterval		5.0
-	MidValidityTime		100.0
-	HnaInterval		5.0
-	HnaValidityTime		100.0
-	$ff_ip4broad
-	$ff_lqmults
-	$(test -f /etc/local.olsrd.conf.$DEV && cat /etc/local.olsrd.conf.$DEV)
+EOM
+	/usr/sbin/parse_olsrd_conf device >>/var/etc/olsrd.conf
+	cat>>/var/etc/olsrd.conf<<EOM
 }
 EOM
 	done
