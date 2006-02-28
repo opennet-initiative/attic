@@ -19,9 +19,28 @@ import os.path
 
 import rrdtool
 
-from teucrium_conf import chroot_target, filename_rrd, filename_graphics_base, conf_service_dict, conf_interfaces, ds_name_filter, rrd_graph_periods, base_separator, graph_args, graph_kwargs, services_graph, DIRECTION_INPUT, DIRECTION_OUTPUT
+from teucrium_conf import chroot_target, filename_rrd, filename_graphics_base, conf_service_dict, \
+                          conf_interfaces, ds_name_filter, rrd_graph_periods, base_separator, graph_args, \
+                          graph_kwargs, services_graph, DIRECTION_INPUT, DIRECTION_OUTPUT, html_out_file, \
+                          html_header, html_footer, html_legend_sample_edge_length, html_header, html_footer
 
 rrd_filename = os.path.join(chroot_target, filename_rrd)
+
+def html_pack_table(text):
+   return '<table class="teucrium_table_table">\n%s</table>\n' % (text,)
+
+def html_pack_tr(text):
+   return '<tr class="teucrium_table_tr">\n%s</tr>\n' % (text,)
+
+def html_pack_td(text):
+   return '<td class="teucrium_table_td">\n%s\n</td>\n' % (text,)
+
+def html_colordiv(color):
+   if (color):
+      colorstr = 'background-color:%s; ' % (color,)
+   else:
+      colorstr = ''
+   return '<div class="teucrium_table_colordiv" style="%s width:%dpx; height:%dpx" />' % (colorstr, html_legend_sample_edge_length, html_legend_sample_edge_length)
 
 
 def ipt_graph(interface, start_time, rrd_filename=rrd_filename, graph_filename=None, base=1024, collocation_function='AVERAGE', width=600, height=200, vertical_label='bytes/s', options=[]):
@@ -36,6 +55,7 @@ def ipt_graph(interface, start_time, rrd_filename=rrd_filename, graph_filename=N
    first_graph_out = first_graph_in = True
    arguments = []
    arguments_negative = []
+   retval = ''
    
    for servicename in services_graph:
       if not (servicename in conf_service_dict):
@@ -45,28 +65,42 @@ def ipt_graph(interface, start_time, rrd_filename=rrd_filename, graph_filename=N
          ds_name = ds_name_filter(devicename=interface, servicename=servicename, direction=direction)
          arguments.append('DEF:%s=%s:%s:%s' % (ds_name, rrd_filename, ds_name, collocation_function))
          if (conf_service_dict[servicename]):
-            service_args = conf_service_dict[servicename][0]
+            (color, rrd_name, service_args) = conf_service_dict[servicename][:3]
+            
+            if (isinstance(color,basestring)):
+               #color value sanity checks; avoid writing invalid html later
+               assert (color[0] == '#')
+               assert (len(color) == 7)
+               int(color[1:],16)
+               rrd_color = color
+            else:
+               color = None
+               rrd_color = ''
             if (direction == DIRECTION_INPUT):
                if (first_graph_in):
                   graph_call = 'AREA'
                   first_graph_in = False
                else:
                   graph_call = 'STACK'
-                  
-               if (conf_service_dict[servicename][1]):
-                  service_args = ':'.join((service_args, conf_service_dict[servicename][1]))
-               arguments.append('%s:%s%s' % (graph_call, ds_name, service_args))
-               
+
+               if (rrd_name):
+                  arguments.append('%s:%s%s:%s%s' % (graph_call, ds_name, rrd_color, rrd_name, service_args))
+               else:
+                  arguments.append('%s:%s%s%s' % (graph_call, ds_name, rrd_color, service_args))
+
+               retval += html_pack_tr(''.join([html_pack_td(text) for text in (html_colordiv(color),ds_name,)]))
+
             else:
                if (first_graph_out):
                   graph_call = 'AREA'
                   first_graph_out = False
                else:
                   graph_call = 'STACK'
-                  
-               arguments.append('CDEF:%s_=%s,-1,*' % (ds_name, ds_name))
-               arguments_negative.append('%s:%s_%s' % (graph_call, ds_name, service_args))
                
+               arguments.append('CDEF:%s_=%s,-1,*' % (ds_name, ds_name))
+               arguments_negative.append('%s:%s_%s%s' % (graph_call, ds_name, rrd_color, service_args))
+            
+
    arguments += arguments_negative
    arguments += list(options)
 
@@ -79,13 +113,20 @@ def ipt_graph(interface, start_time, rrd_filename=rrd_filename, graph_filename=N
       '--height', str(height),
       '--vertical-label', str(vertical_label),
        *arguments)
-   
-   
+
+   return retval
+
+
+
 if (__name__ == '__main__'):
+   html_output = ''
    for interface in conf_interfaces:
       for start_time in rrd_graph_periods:
-         ipt_graph(interface=interface, start_time=start_time, *graph_args, **graph_kwargs)
+         html_output = ipt_graph(interface=interface, start_time=start_time, *graph_args, **graph_kwargs)
    
-         
+   if (html_out_file):
+      html_output = html_header + html_pack_table(html_output) + html_footer
+      html_out_file.write(html_output)
+      
    
    

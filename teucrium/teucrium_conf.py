@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import logging
 import logging.handlers
@@ -40,19 +41,19 @@ counters_to_track = []
 conf_table = 'mangle'
 conf_interfaces = ('tun+', 'eth0', 'eth1', 'eth2', 'ppp+')
 conf_service_dict = {
-   'tcp_http':('#ff00ff', 'tcp-http'),
-   'tcp_https':('#ff0080', 'tcp-https'),
-   'tcp_bt_up':('#0000a0', 'tcp-bt-up'),
-   'tcp_bt_down':('#0000ff', 'tcp-bt-down'),
-   'tcp_other':('#ff0000', 'tcp-other'),
+   'tcp_http':('#ff00ff', 'tcp-http', ''),
+   'tcp_https':('#ff0080', 'tcp-https', ''),
+   'tcp_bt_up':('#0000a0', 'tcp-bt-up', ''),
+   'tcp_bt_down':('#0000ff', 'tcp-bt-down', ''),
+   'tcp_other':('#ff0000', 'tcp-other', ''),
    
-   'udp_dns':('#00b0b0', 'udp-dns'),
-   'udp_vpn':('#006060', 'udp-vpn'),
-   'udp_other':('#00ffff', 'udp-other'),
+   'udp_dns':('#00b0b0', 'udp-dns', ''),
+   'udp_vpn':('#006060', 'udp-vpn', ''),
+   'udp_other':('#00ffff', 'udp-other', ''),
    
-   'icmp':('#04c000', 'icmp'),
+   'icmp':('#04c000', 'icmp', ''),
    
-   'ip_other':('#808080', 'ip-other'),
+   'ip_other':('#808080', 'ip-other', ''),
    }
 
 services_graph = (
@@ -110,6 +111,20 @@ rrd_graph_periods = {
    -2592000:'30d',
    -31557600:'365d',
 }
+
+html_out_file = file('tecurium_legend.html', 'w')
+html_header = '''<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Test graphics</title>
+  </head>
+  <body>'''
+html_footer = '''
+  </body>
+</html>'''
+html_legend_sample_edge_length = 10
 
 for devicename in conf_interfaces:
    for i in range(len(conf_service_list)):

@@ -123,7 +123,7 @@ def main():
             if ((chains_base[chainname] & CHAIN_OUTPUT) == CHAIN_OUTPUT):
                for ipt_command in rule.rule_out():
                   ipt('-A %s %s -j RETURN' % (chainname_if, ipt_command))
-                  
+
 
 
    if ('-f' in sys.argv):
@@ -135,10 +135,9 @@ def main():
          
          ipt('-D %s -j %s' % (source_chainname, chainname), stderr_out=False)
          ipt('-I %s 1 -j %s' % (source_chainname, chainname))
-         
-           
+
+
 if (__name__ == '__main__'):
    execfile('teucrium_helper_ipt_setup_conf.py')
    main()
-         
-             
+
