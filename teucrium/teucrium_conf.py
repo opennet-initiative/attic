@@ -112,7 +112,7 @@ rrd_graph_periods = {
    -31557600:'365d',
 }
 
-html_out_file = file('tecurium_legend.html', 'w')
+html_out_file = file('teucrium_legend.html', 'w')
 html_header = '''<?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
