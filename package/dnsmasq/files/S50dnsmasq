@@ -83,7 +83,10 @@ EOF
 		WLDHCPLEASE=$(nvram get on_wldhcp_lease)
 		test -z "$WLDHCPLEASE" && WLDHCPLEASE=12h
 		test "$WLDHCPLEASE" = "0" && WLDHCPLEASE=12h
-		WLDHCPNET=$(echo $DHCPWIFINET|cut -d'.' -f1-3)
+		
+		# changed the net to separate it from AP adresses
+		# WLDHCPNET=$(echo $DHCPWIFINET|cut -d'.' -f1-3)
+		WLDHCPNET=$(echo $DHCPWIFINET|cut -d'.' -f1-2)"."$(($(echo $DHCPWIFINET|cut -d'.' -f3)+1))
 		WLDHCPBEG=$(nvram get on_wldhcp_start)
 		WLDHCPBEG=${WLDHCPBEG##*.}
 		test -z "$WLDHCPBEG" && WLDHCPBEG=100

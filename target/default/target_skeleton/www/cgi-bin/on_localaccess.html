@@ -55,13 +55,34 @@ fi
 	on_wldhcp=$(nvram get on_wldhcp)
 cat<<EOF
 	<H1>Verwaltung: Lokaler Zugriff über WLAN</H1>
-	An dieser Stelle kann eingestellt werden, wie bzw. ob lokale Clients über WLAN auf den Acesspoint zugreifen können.
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>
+		Achtung: Opennet empfielt für eine dauerhafte Unterverteilung des Netzes die Nutzung eines zweiten AccessPoints auf einem anderen Kanal, um Störungen zu vermeiden.
+	</TD>
+	</TR></TBODY>
+	</TABLE>
+<br />
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr...</a>
+<div id="description">
+An dieser Stelle kann eingestellt werden, wie bzw. ob lokale Clients über WLAN auf den Acesspoint zugreifen können. Die Automatische IP-Vergabe muss dabei nicht immer sinnvoll sein und kann zu Konflikten mit benachbarten Accesspoints führen. Möglicherweise ist es günstiger, am zu verbindenden Rechner die Adresse (Netzwerkkonfiguration) per Hand einzustellen. Die IP-Adresse sollte dabei im Netz 192.168.35.0/24 liegen, also beispielsweise 192.168.35.5. Als Netmaske muss 255.255.254.0 eingeben werden, als Gateway 192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4). Als Nameserver sind alle Gateways geeignet, bspw. $(nvram get wifi_dns).<br/>
+Beachtet weiterhin, dass auf dem Rechner der WEP-Key von Opennet eingegeben werden muss. Diesen findest Du im Bereich <a href="on_wlan.html">Wireless Lan</a>.<br/><br/>
+Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch) gedacht. Bitte bedenkt, dass durch die Verwendung dieser Lösung der Opennet-Funkkanal zusätzlich belastet wird. Ausserdem ist zu beachten, dass die Strecke zwischen eurem per WLAN verbundenen Rechner und dem Accesspoint relativ ungesichert ist, da der OpenVPN-Tunnel des Opennets erst am Accesspoint beginnt. Es müssen daher gegebenenfalls weitere Sicherheitsmassnahmen getroffen werden (bspw. ein weiterer OpenVPN-Tunnel).<br/>
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+	<br/>Hinweis: Die automatische Vergabe von IP-Adressen per WLAN wird täglich gegen Mitternacht deaktiviert.
 	<FORM NAME="localaccess" ACTION="on_localaccess.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD>
 	<INPUT CLASS="checkbox" NAME="on_wldhcp" TYPE="checkbox" $(test "$on_wldhcp" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="on_wldhcp_start.disabled=(0==this.checked);on_wldhcp_num.disabled=(0==this.checked);on_wldhcp_lease.disabled=(0==this.checked);"></TD>
-	<TD colspan="3">Erlaube automatische IP-Vergabe per WLAN (DHCP)
+	<TD colspan="3">automatische IP-Vergabe per WLAN heute erlauben (DHCP)
 	</TD></TR>
 
 	<TR
@@ -70,7 +91,7 @@ cat<<EOF
 	<TD>DHCP-Start-IP:</TD>
 	<TD>
 EOF
-	echo "$(echo $DHCPWIFINET|cut -d'=' -f2|cut -d'.' -f1-3)."
+	echo "$(echo $DHCPWIFINET|cut -d'.' -f1-2)"."$(($(echo $DHCPWIFINET|cut -d'.' -f3)+1))."
 cat<<EOF	
 	<INPUT NAME="on_wldhcp_start" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wldhcp_start)"$(if [ "$on_wldhcp" != "on" ];then echo ' disabled="disabled"';fi)></TD>
 	</TR>
