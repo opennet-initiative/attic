@@ -26,7 +26,7 @@ case $1 in
 	;;
 	stop)
 		echo "Stopping crond..."
-		killall crondd>/dev/null 2>&1
+		killall crond>/dev/null 2>&1
 		rm -rf /var/spool/cron/crontabs/root
 	;;
 	restart)
