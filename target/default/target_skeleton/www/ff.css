@@ -63,7 +63,8 @@ A:active {
   color: crimson;
 }
 A:hover {
-  font-weight: bold;
+  background-color: #bdceff;
+  /*font-weight: bold;*/
 }
 A.form:link,A.form:visited,A.form:active,
 A.color:link,A.color:visited,A.color:active,
@@ -101,7 +102,7 @@ DIV.white {
 H1.color {
   /* Navbar left heading */
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bolder;
   margin-top: 5px;
 }
@@ -170,3 +171,16 @@ BODY {
   padding: 5px 5px 5px 5px;
   background-color: white;
 }
+#title_logos {
+	width: 100px;
+	text-align: center;
+	/*border: solid 1px #00407a;*/
+	float: right;
+	margin: 0 10px 0 10px;
+	padding: 0;
+}
+#image_block p {
+	margin: 0px;
+	padding: 5px 4px 0px 4px;
+}
+
