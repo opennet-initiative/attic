@@ -61,6 +61,15 @@ nvram set lan_ifnames="$ifnames"
 nvram set dhcp_start=100
 nvram set dhcp_num=50
 
+
+# activate automatic olsrd configuration
+nvram set on_remoteconf="on"
+
+# limit txpwr, assume always a external Antenna
+nvram set on_ant_dbi=8
+nvram set ff_txpwr=15
+
+
 nvram commit
 
 echo "initializing opennet-values done"
