@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="5.9.2005"
+export DATE="1.3.2005"
 export TITLE="Verwaltung: OLSR"
 . ${0%/*}/cgi-bin-pre.sh
 
@@ -11,179 +11,153 @@ EOF
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
-if [ -z "$QUERY_STRING" ]; then
-
+if [ -n "$QUERY_STRING" ]; then
+	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+	DIRTY=
+	olsrd_restart=
+	if [ -n "$post_olsr" ]; then
+		for V in ff_dyngw ff_nameservice ff_httpinfo on_remoteconf; do
+			eval "C=\$$V"
+			C=$(unescape $C)
+			if [ "$C" != "$(nvram get $V)" ]; then
+				DIRTY=1
+				if [ "$V" != "on_remoteconf" ]; then
+					olsrd_restart=1
+				fi
+				nvram set $V="$C"
+			fi
+		done
+	fi
+	if [ -n "$DIRTY" ]; then nvram commit>/dev/null 2>&1; fi
+	if [ -n "$olsrd_restart" ]; then /etc/init.d/S53olsrd restart; fi
+fi
 cat<<EOF
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">Erläuterung</a>
+<div id="description">
+Das olsr-Programm (der olsr-Daemon) ist für die Berechnung und Verwaltung der Routen, also der Wege im Funknetz zuständig. An dieser Stelle können einige ausgewählte Erweiterungen (plugins) aktiviert bzw. deaktiviert werden. Eine weitergehende Konfiguration ist hier nicht möglich.<br />
+Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial. Hat sich die Konfiguration auf dem Gateway geändert, wird das olsr-Programm neu gestartet.<br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+<H2>Einstellungen</H2>
 <FORM ACTION="olsrd.html" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TBODY>
+
 <TR
-TITLE="Sollte eine OLSR-Station besser indirekt erreichbar sein, können die OLSR-Rundrufe dieser Station ignoriert werden. Trage die zu filternde IP-Adresse ein. Mehrere IP-Adressen mit Semikolon trennen.">
-<TD>OLSR-Filter:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_ign" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ign)"></TD>
+TITLE="Ist diese Einstellung aktiviert, werden Veränderungen der Konfiguration von einer Datei des Gateways auf diesen AccessPoint übernommen.">
+<TD COLSPAN="3"><INPUT CLASS="checkbox" NAME="on_remoteconf" TYPE="checkbox" $(test "$(nvram get on_remoteconf)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>Synchronisation der Konfiguration mit Gateway (empfohlen)</TD>
 </TR>
-<TR
-TITLE="Mit dieser Einstellung kann ein Rechner im internen LAN aus dem OLSR-Netz heraus erreichbar werden. Trage mit Doppelpunkt getrennt zuerst die Quell-OLSR-IP und dann LAN-IP ein. Mehrere Einträge mit Semikolon trennen.">
-<TD>DMZ-Umleitung:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_dmz" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_dmz)"></TD>
-</TR>
-<!-- now done in a separated tab
-<TR
-TITLE="Über DHCP kann eine IP-Adresskonfiguration an WLAN-Rechner in der Nähe zu vergeben werden. Trage einen IP-Netzbereich und eine passende Netzmaske ein, beispielweise '172.31.5.32/28,255.255.255.0'. Nach Anwendung der Netzmaske auf eine DHCP-IP muss die IP-Adresse dieses Gerätes direkt erreichbar sein. Für den IP-Netzbereich wird NAT/Masquerading eingerichtet. Erhält ein WLAN-Rechner über DHCP eine IP von diesem Gerät, kann der WLAN-Rechner ohne OLSR-Dienstprogramm im OLSR-Netz teilnehmen. Mehrere IP-Adressbereiche mit Semikolon trennen. Reserviere den IP-Adressbereich im OLSR-Netzwerk, um Konflikte zu vermeiden.">
-<TD>OLSR-DHCP:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_wldhcp" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_wldhcp)"></TD>
-</TR>
--->
-<!--TR
-TITLE="Normalerweise bestimmt die IP-Adresse und die Netzmaske auf der Seite 'Drahtlos' das OLSR-Netz. Alle Schnittstellen in diesem Netzwerk werden für OLSR konfiguriert. Beispiel: '10.0.0.0/8'.">
-<TD>OLSR-Netz:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_net" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_net)"></TD>
-</TR-->
+
 <TR>
-<TD COLSPAN="3"> </TD>
-</TR>
-<TR
-TITLE="Mit dieser Angabe kann über OLSR angekündigt werden, dass ein bestimmter IP-Adressbereich über dieses Gerät erreicht wird. Das kann ein Internet-Zugang sein (0.0.0.0/0) oder auch eine einzelne IP-Adresse (z.B. 172.31.1.2/24) für einen PDA mit WLAN aber ohne OLSR. Mehrere IP-Adressbereiche mit Semikolon trennen.">
-<TD>HNA4:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_hna4" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_hna4)"></TD>
-</TR>
-<TR
-TITLE="Ändert die IP-Rundrufadresse (IP-Broadcast) für OLSR-Ankündigungen. Um die Rundrufadresse des WLAN-Gerätes zu verwenden, das Eingabefeld leer lassen.">
-<TD>Broadcast IPV4:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_ip4broad" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ip4broad)"></TD>
-</TR>
-<TR
-TITLE="Ändert den Bereitschaftswert ('Willingness') auf einen festen Wert (0-7). Eingabefeld leer lassen um einen dynamischen Bereitschaftswert aus Batterie- und Energiestatus einzustellen.">
-<TD>Bereitschaftswert:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_will" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_will)"></TD>
-</TR>
-<TR
-TITLE="Stationen mit normalem Protokoll können nicht mit Stationen mit qualitätsbasiertem Protokoll kommunizieren. Mit 'Ausschalten' wird das offizielle OLSR-Protokoll verwendet. Mit 'Einschalten' wird das erweiterte qualitätsbasierte OLSR-Protokoll verwendet.">
-<TD>QOS-Protokoll (ETX):</TD>
-<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_qoslev" ONCLICK="for(var i=0;i<this.form.ff_hyst.length;i++)this.form.ff_hyst[i].disabled=true;this.form.ff_scale.disabled=true;this.form.ff_thrh.disabled=true;this.form.ff_thrl.disabled=true;" TYPE="RADIO" VALUE="2"$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' checked="checked"';fi)>Einschalten </SPAN></TD>
-<TD><INPUT CLASS="radio" NAME="ff_qoslev" ONCLICK="for(var i=0;i<this.form.ff_hyst.length;i++)this.form.ff_hyst[i].disabled=false;this.form.ff_scale.disabled=false;this.form.ff_thrh.disabled=false;this.form.ff_thrl.disabled=false;" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_qoslev)" = "0" ];then echo ' checked="checked"';fi)>Ausschalten</TD>
-</TR>
-<TR
-TITLE="Diese Einstellung erniedrigt den LQ-Wert einer bestimmten Nachbar-OLSR-Station. Sind zwei Nachbarn etwa gleich gut erreichbar, kann mit dieser Einstellung verhindert werden, dass die Routen-Auswahl häufig wechselt. Beispiel: '104.1.2.3:0.5' verhindert eine Route über diese Station, solange andere Nachbarn besser erreichbar sind. Trage eine IP-Adresse und einen mit Doppelpunkt getrennten Multiplikator zwischen 0.1 und 1.0 ein. Mehrere Einträge mit Semikolon trennen.">
-<TD>OLSR LQ-Faktor:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_lqmult" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_lqmult)"></TD>
-</TR>
-<TR
-TITLE="Die Hysterese (Schwellwert-Algorithmus) erhöht die Zuverlässigkeit der Verbindungsermittlung, verlangsamt dabei aber die Registrierung von Nachbarstationen. Vorgabe: Eingeschaltet.">
-<TD>Hysterese:</TD>
-<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_hyst" TYPE="RADIO" VALUE="yes"$(if [ "$(nvram get ff_hyst)" = "yes" ];then echo ' checked="checked"';fi)$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' disabled="disabled"';fi)>Einschalten </SPAN></TD>
-<TD><INPUT CLASS="radio" NAME="ff_hyst" TYPE="RADIO" VALUE="no"$(if [ "$(nvram get ff_hyst)" != "yes" ];then echo ' checked="checked"';fi)$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' disabled="disabled"';fi)>Ausschalten</TD>
-</TR>
-<TR
-TITLE="Ändert die Geschwindigkeit, mit der Nachbarstationen registriert oder vergessen werden. Dezimalwert von 0.1 bis 0.9 (mit Dezimalpunkt). Eingabefeld leer lassen, um die Vorgabe von 0.5 einzustellen.">
-<TD>Hysterese-Tempo:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_scale" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_scale)"$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+<TD COLSPAN="3"> <HR /></TD>
 </TR>
 
-<TR
-TITLE="Überschreitet der Hysterese-Wert diese Grenze, wird eine Station registriert. Dezimalwert von 0.1 bis 0.9 (mit Dezimalpunkt, der Wert muss größer als der untere Grenzwert sein). Eingabefeld leer lassen, um die Vorgabe von 0.8 einzustellen.">
-<TD>Oberer Grenzwert:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_thrh" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_thrh)"$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+<TR>
+<TD COLSPAN="3"><b>Plugins:</b></TD>
 </TR>
 
-<TR
-TITLE="Unterschreitet der Hysterese-Wert diese Grenze, wird eine Station vergessen. Dezimalwert von 0.1 bis 0.9 (mit Dezimalpunkt, der Wert muss kleiner als der obere Grenzwert sein). Eingabefeld leer lassen, um die Vorgabe von 0.3 einzustellen.">
-<TD>Unterer Grenzwert:</TD>
-<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_thrl" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_thrl)"$(if [ "$(nvram get ff_qoslev)" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+<TR>
+<TD></TD>
+<TD>Einschalten</TD>
+<TD>Ausschalten</TD>
 </TR>
+
 
 <TR
 TITLE="Dieses Plugin sendet kündigt automatisch HNA4 an, wenn eine Default-Route aktiv ist.">
 <TD>DynGW:</TD>
-<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_dyngw)" != "0" ];then echo ' checked="checked"';fi)>Einschalten </SPAN></TD>
-<TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_dyngw)" = "0" ];then echo ' checked="checked"';fi)>Ausschalten</TD>
+<TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_dyngw)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_dyngw)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
 <TR
 TITLE="Dieses Plugin sendet und empfängt DNS-Namen über OLSR-Nachrichten.">
 <TD>Nameservice:</TD>
-<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_nameservice)" != "0" ];then echo ' checked="checked"';fi)>Einschalten </SPAN></TD>
-<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_nameservice)" = "0" ];then echo ' checked="checked"';fi)>Ausschalten</TD>
+<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_nameservice)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_nameservice)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
 <TR
 TITLE="Dieses Plugin zeigt die OLSR-Konfiguration an (nur über LAN, Port 8080)">
 <TD>Httpinfo:</TD>
-<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_httpinfo)" != "0" ];then echo ' checked="checked"';fi)>Einschalten </SPAN></TD>
-<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_httpinfo)" = "0" ];then echo ' checked="checked"';fi)>Ausschalten</TD>
+<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_httpinfo)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_httpinfo)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
+
+
 <TR>
-<TD COLSPAN="3"> </TD>
+<TD COLSPAN="3"> <HR /></TD>
 </TR>
 <TR>
 <TD COLSPAN="3" NOWRAP="nowrap"><INPUT NAME="post_olsr" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
-<P><B>Tipp1</B>: Die <CITE>IP-Adresse</CITE> und die
-<CITE>Netzmaske</CITE> auf der Seite <A HREF="wifi.html">Drahtlos</A>
-bestimmen den IP-Adressbereich f&uuml;r OLSR. Es ist m&ouml;glich, auf der
-Seite <A HREF="lan.html">LAN</A> und/oder auf der Seite
-<A HREF="wan.html">WAN</A> eine weitere IP-Adresse aus dem OLSR-Bereich
-zu konfigurieren. Damit wird die OLSR-Signalisierung auch auf einen dieser
-Anschl&uuml;sse aktiviert und die Firewall-Konfiguration f&uuml;r den
-Anschluss wird deaktiviert. Es hat sich bew&auml;hrt, f&uuml;r diese zus&auml;tzlichen
-OLSR-IPs eine &quot;engere&quot; Netzmaske zu verwenden. Damit kann das
-Ger&auml;t &uuml;ber eine geeignete IP-Adresse noch gesprochen werden,
-falls das OLSR-Dienstprogramm nicht l&auml;uft. Als selten ben&ouml;tigter
-Sonderfall kann auf der Seite <A HREF="lan.html">LAN</A> die gleiche
-IP-Adresse wie auf der Seite <A HREF="wifi.html">Drahtlos</A>
-konfiguriert werden. Damit bleiben LAN- und Drahtlos-Schnittstelle mit
-einer Ethernet-Br&uuml;cke verbunden.</P>
 
-<P><B>Tipp2</B>: Internet f&uuml;r andere anzubieten ist
-ganz einfach. Verbinde den Internet-Ausgang des Ger&auml;tes mit einem
-Internet-Router. Der Internet-Router konfiguriert die
-Internet-Schnittstelle per DHCP. Der offene Zugang wird per HNA4 angek&uuml;ndigt.
-Entsprechende Firewall-Regeln existieren. Um dies zu erm&ouml;glichen, ist
-das &quot;dyn_gw_plugin&quot; im OLSR-Dienstprogramm aktiviert. Das Plugin
-pr&uuml;ft die Funktion des Internet-Zugangs regelm&auml;&szlig;ig mit &quot;arping&quot;
-und schaltet die HNA4-Ank&uuml;ndigung gegebenenfalls wieder aus.</P>
-EOF
-
-else
-eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
-DIRTY=
-if [ -n "$post_olsr" ]; then
-for V in ff_lqmult ff_ign ff_dmz ff_wldhcp ff_hna4 ff_ip4broad ff_will ff_qoslev ff_hyst ff_scale ff_thrh ff_thrl ff_dyngw ff_nameservice ff_httpinfo; do
-eval "C=\$$V"
-C=$(unescape $C)
-if [ "$C" != "$(nvram get $V)" ]; then
-DIRTY=1
-nvram set $V="$C"
-fi
-done
-fi
-if [ -n "$DIRTY" ]; then
-nvram commit>/dev/null 2>&1
-
-cat<<EOF
-<TABLE BORDER="0" CLASS="note">
+<H2>aktuelle Konfigurationsdateien</H2>
+<TABLE id="olsrd_configs" CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form" TITLE="Konfigurations-Dateien">
 <TBODY>
-<TR>
-<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
-Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
-aktiv.
-</TD>
-</TR></TBODY>
-</TABLE>
 EOF
-
-else
-
+		if [ -f /etc/olsrd.conf_new ]; then
 cat<<EOF
-<TABLE BORDER="0" CLASS="note">
-<TBODY>
-<TR>
-<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
-</TR></TBODY>
-</TABLE>
+	<TR><TD>vom Gateway erhaltene Konfiguration (
+EOF
+	date -r /etc/olsrd.conf_new
+cat <<EOF
+	)   <a id="switch_1" href="#" onclick="document.getElementById('textarea_1').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_1">
+		<TD>
+		<textarea name="log" cols="80" rows="10" readonly>
+EOF
+		cat /etc/olsrd.conf_new
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+EOF
+		fi
+cat<<EOF
+	<TR><TD></TD></TR>
+	<TR><TD>initiale Konfiguration     <a id="switch_2" href="#" onclick="document.getElementById('textarea_2').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_2">
+		<TD>
+		<textarea name="log" cols="80" rows="10" readonly>
+EOF
+		cat /etc/olsrd.conf_initial
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+	<TR><TD></TD></TR>
+	<TR><TD>aktuelle olsrd-Konfiguration      <a id="switch_3" href="#" onclick="document.getElementById('textarea_3').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_3">
+		<TD>
+		<textarea name="log" cols="80" rows="10" readonly>
+EOF
+		cat /var/etc/olsrd.conf
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+
+<script type="text/javascript">
+	document.getElementById('switch_1').style.display='inline';
+	document.getElementById('textarea_1').style.display='none';
+	document.getElementById('switch_2').style.display='inline';
+	document.getElementById('textarea_2').style.display='none';
+	document.getElementById('switch_3').style.display='inline';
+	document.getElementById('textarea_3').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+
+
+
 EOF
 
-fi
-fi
 
 . ${0%/*}/cgi-bin-post.sh
