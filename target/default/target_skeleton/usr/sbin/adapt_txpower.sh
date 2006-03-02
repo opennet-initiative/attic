@@ -123,23 +123,23 @@ check_transmission()
 
 		if [ $loss_count -gt $max_to_loose ]; then
 			# try to increase current transmission power
+			# store tested value as new test-minimum
+			min_pwr=$new_pwr
 			# check if we reached the maximum or a previously working value
 			if [ $(($new_pwr+1)) -ge $max_pwr ]; then
 				new_pwr=$max_pwr;
 				wl txpwr $new_pwr; # we dont need to test max power (just tested or absolute maximum)
 				break;
 			fi;
-			# store tested value as new test-minimum
-			min_pwr=$new_pwr
 			# increase power
 			new_pwr=$(($new_pwr+($max_pwr-$new_pwr)/2))
 			echo "increased transmission power to "$new_pwr"mW"
 		else
 			#try to decrease current transmission power
-			#check if we reached the minimum or a previously not working value
-			if [ $(($new_pwr-1)) = $min_pwr ]; then break; fi
 			# store tested value as new test maximum
 			max_pwr=$new_pwr
+			#check if we reached the minimum or a previously not working value
+			if [ $(($new_pwr-1)) = $min_pwr ]; then break; fi
 			# decrease power
 			new_pwr=$(($new_pwr-($new_pwr-$min_pwr)/2))
 			echo "decreased transmission power to "$new_pwr"mW"
