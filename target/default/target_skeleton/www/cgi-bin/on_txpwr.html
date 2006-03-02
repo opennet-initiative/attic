@@ -97,10 +97,14 @@ cat<<EOF
 		<TD><INPUT CLASS="checkbox" TITLE="zeige veränderbare Parameter" NAME="on_showparameters" TYPE="checkbox" ONCHANGE="if (this.checked) {document.getElementById('parameters').style.display='inline'} else {document.getElementById('parameters').style.display='none';};">zeige Parameter</TD>
 	
 	</TR>
+EOF
+	if [ -f /tmp/adapt_txpwr.log ]; then
+cat<<EOF
 	<TR>
 		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="zeige die Ausgabe des letzten erfolgreichen Durchlaufs" NAME="on_showresults" TYPE="checkbox" ONCHANGE="if (this.checked) {document.getElementById('adapt_log').style.display='inline'} else {document.getElementById('adapt_log').style.display='none'};">zeige Ergebnisse des letzten Durchlaufs</TD>
 	</TR>
 EOF
+	fi
 fi
 cat<<EOF
 </TBODY>
