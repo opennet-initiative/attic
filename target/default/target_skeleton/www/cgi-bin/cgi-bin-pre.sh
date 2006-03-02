@@ -213,7 +213,7 @@ document.onkeypress = help;
 <TR>
 <TD>
 
-<H1 CLASS="color">Opennet</H1></TD>
+<H1 CLASS="color">ON Basis</H1></TD>
 </TR>
 EOF
 
@@ -228,11 +228,26 @@ cat<<EOF
 <TR>
 <TD>
 
-<H1 CLASS="color">Erweitert</H1></TD>
+<H1 CLASS="color">ON Erweitert</H1></TD>
 </TR>
 EOF
 
-for inc in /www/cgi-bin/[1-9][0-9]-*;do cat $inc;done
+for inc in /www/cgi-bin/1[0-9]-*;do cat $inc;done
+
+cat<<EOF
+</TBODY>
+</TABLE>
+<DIV CLASS="white"></DIV>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TBODY>
+<TR>
+<TD>
+
+<H1 CLASS="color">ExpertIn</H1></TD>
+</TR>
+EOF
+
+for inc in /www/cgi-bin/[2-9][0-9]-*;do cat $inc;done
 
 cat<<EOF
 </TBODY>
@@ -247,5 +262,5 @@ cat<<EOF
 </TABLE>
 <DIV CLASS="white"></DIV></TD>
 <TD VALIGN="top" WIDTH="5"></TD>
-<TD VALIGN="top">
+<TD VALIGN="top" ROWSPAN="2">
 EOF
