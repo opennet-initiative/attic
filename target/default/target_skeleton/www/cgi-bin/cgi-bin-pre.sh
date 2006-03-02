@@ -166,8 +166,10 @@ document.onkeypress = help;
 </HEAD>
 
 <BODY ONLOAD="if(null!=window.ini)window.ini()">
+<DIV id="wrapper">
 <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" CLASS="body">
 <TBODY>
+<!--
 <TR>
 <TD CLASS="color" COLSPAN="5" HEIGHT="19"><SPAN CLASS="color"><A CLASS="color" HREF="../index.html">Home</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="../images/vertbar.gif" WIDTH="1"><SPAN CLASS="color"><A CLASS="color" HREF="../cgi-bin-contact.html">Kontakt</A></SPAN></TD>
 </TR>
@@ -178,6 +180,7 @@ document.onkeypress = help;
 <TD HEIGHT="5" WIDTH="5"></TD>
 <TD HEIGHT="5" WIDTH="150"></TD>
 </TR>
+-->
 <TR>
 <TD HEIGHT="33" WIDTH="150"></TD>
 <TD HEIGHT="33" WIDTH="5"></TD>
@@ -186,8 +189,9 @@ document.onkeypress = help;
 <TD HEIGHT="33" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="../images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
-<TD CLASS="magenta" COLSPAN="4" HEIGHT="19"> </TD>
-<TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="../images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
+<TD CLASS="magenta" COLSPAN="3" HEIGHT="19"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="../index.html">Home</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="../images/vertbar.gif" WIDTH="1"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="../cgi-bin-contact.html">Kontakt</A></SPAN></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD HEIGHT="19" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="../images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
 <TD HEIGHT="5" WIDTH="150"></TD>
@@ -197,23 +201,23 @@ document.onkeypress = help;
 <TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="../images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
-<TD CLASS="color" VALIGN="top" WIDTH="150">
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TD CLASS="white" VALIGN="top" WIDTH="150">
+<TABLE CLASS="idx color title" WIDTH="150">
 <TBODY>
 <TR>
 <TD>
 
-<H1 CLASS="color">Verwalten</H1></TD>
+<H1 CLASS="idx color title">Verwalten</H1></TD>
 </TR>
 </TBODY>
 </TABLE>
 <DIV CLASS="white"></DIV>
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TABLE CLASS="idx color" WIDTH="150">
 <TBODY>
 <TR>
 <TD>
 
-<H1 CLASS="color">ON Basis</H1></TD>
+<H1 CLASS="idx color">ON Basis</H1></TD>
 </TR>
 EOF
 
@@ -223,12 +227,12 @@ cat<<EOF
 </TBODY>
 </TABLE>
 <DIV CLASS="white"></DIV>
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TABLE CLASS="idx color" WIDTH="150">
 <TBODY>
 <TR>
 <TD>
 
-<H1 CLASS="color">ON Erweitert</H1></TD>
+<H1 CLASS="idx color">ON Erweitert</H1></TD>
 </TR>
 EOF
 
@@ -238,12 +242,12 @@ cat<<EOF
 </TBODY>
 </TABLE>
 <DIV CLASS="white"></DIV>
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TABLE CLASS="idx color" WIDTH="150">
 <TBODY>
 <TR>
 <TD>
 
-<H1 CLASS="color">ExpertIn</H1></TD>
+<H1 CLASS="idx color">ExpertIn</H1></TD>
 </TR>
 EOF
 
@@ -252,15 +256,7 @@ for inc in /www/cgi-bin/[2-9][0-9]-*;do cat $inc;done
 cat<<EOF
 </TBODY>
 </TABLE>
-<DIV CLASS="white"></DIV>
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
-<TBODY>
-<TR>
-<TD>
-<DIV CLASS="color"><A CLASS="color" HREF="../index.html"><IMG ALIGN="right" ALT="" BORDER="0" HEIGHT="15" SRC="../images/icn_arrow_white.gif" WIDTH="12">Zur&uuml;ck</A></DIV></TD>
-</TR></TBODY>
-</TABLE>
 <DIV CLASS="white"></DIV></TD>
 <TD VALIGN="top" WIDTH="5"></TD>
-<TD VALIGN="top" ROWSPAN="2">
+<TD CLASS="content" VALIGN="top" ROWSPAN="2">
 EOF

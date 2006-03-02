@@ -96,13 +96,14 @@ DIV.white {
   /* Navbar HR */
   font-size: 0;
   height: 5px;
+  margin: 0;
   width: 100%;
   background-color: white;
 }
 H1.color {
   /* Navbar left heading */
   color: white;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: bolder;
   margin-top: 5px;
 }
@@ -183,4 +184,62 @@ BODY {
 	margin: 0px;
 	padding: 5px 4px 0px 4px;
 }
+.content {
+	padding: 10px 20px 20px 20px;
+	border: 1px solid #00407a;
+}
+#wrapper {
+	padding: 0 15px 0 15px;
+}
 
+/*tr.idx {
+	padding: 0;
+	margin: 0;
+	background-color: green;
+	border: 1px solid red;
+}
+*/
+.idx td {
+	padding: 0;
+	margin: 0;
+}
+
+.idx A:link,
+.idx A:visited,
+.idx A:active {
+	display: block;
+	padding: 4px 16px;
+	margin: 2px;
+}
+
+.idx a:hover,
+.selected a:link,
+.selected A:visited, 
+.selected A:active {
+	border: 1px solid #00407a;
+	display: block;
+	padding: 3px 15px;
+	margin: 2px;
+	text-decoration: none;
+	background-color: #bdceff;
+}	
+
+TABLE.idx {
+		border-collapse: collapse;
+		padding: 0;
+		/*margin: -3px;*/
+}
+
+H1.idx {
+	display: block;
+	border-bottom: 1px solid white;
+	padding: 3px;
+	margin: 0 22px 0 2px;
+}
+
+H1.title {
+	text-align: center;
+	/*border-bottom: none;*/
+	padding: 3px;
+	margin: 5px 22px 5px 22px;
+}

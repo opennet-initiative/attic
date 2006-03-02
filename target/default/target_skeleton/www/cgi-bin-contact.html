@@ -54,18 +54,9 @@ document.images[idx].src=src;
 </HEAD>
 
 <BODY ONLOAD="if(null!=window.ini)window.ini()">
+<DIV id="wrapper">
 <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" CLASS="body">
 <TBODY>
-<TR>
-<TD CLASS="color" COLSPAN="5" HEIGHT="19"><SPAN CLASS="color"><A CLASS="color" HREF="index.html">Home</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="images/vertbar.gif" WIDTH="1"><SPAN CLASS="color"><A CLASS="color" HREF="cgi-bin-contact.html">Kontakt</A></SPAN></TD>
-</TR>
-<TR>
-<TD HEIGHT="5" WIDTH="150"></TD>
-<TD HEIGHT="5" WIDTH="5"> </TD>
-<TD HEIGHT="5"></TD>
-<TD HEIGHT="5" WIDTH="5"></TD>
-<TD HEIGHT="5" WIDTH="150"></TD>
-</TR>
 <TR>
 <TD HEIGHT="33" WIDTH="150"></TD>
 <TD HEIGHT="33" WIDTH="5"></TD>
@@ -74,7 +65,8 @@ document.images[idx].src=src;
 <TD HEIGHT="33" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
-<TD CLASS="magenta" COLSPAN="4" HEIGHT="19"> </TD>
+<TD CLASS="magenta" COLSPAN="3" HEIGHT="19"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="index.html">Home</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="images/vertbar.gif" WIDTH="1"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="cgi-bin-contact.html">Kontakt</A></SPAN></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
 <TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
@@ -85,26 +77,27 @@ document.images[idx].src=src;
 <TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
 </TR>
 <TR>
-<TD CLASS="color" VALIGN="top" WIDTH="150">
-<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="7" WIDTH="150">
+<TD VALIGN="top" WIDTH="150">
+<TABLE CLASS="idx color" WIDTH="150">
 <TBODY>
 <TR>
 <TD>
 
-<H1 CLASS="color">Inhalt</H1></TD>
+<H1 CLASS="idx color">Inhalt</H1></TD>
 </TR>
 
-<TR>
+<TR CLASS="idx">
 <TD>
-<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin-status.html"><IMG ALIGN="right" ALT="" BORDER="0" HEIGHT="15" SRC="images/icn_arrow_white.gif" WIDTH="12">Status</A></DIV></TD>
+<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin-status.html">Status</A></DIV></TD>
 </TR>
-<TR>
+<TR CLASS="idx">
 <TD>
-<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin/index.html"><IMG ALIGN="right" ALT="" BORDER="0" HEIGHT="15" SRC="images/icn_arrow_white.gif" WIDTH="12">Verwalten</A></DIV></TD>
+<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin/index.html">Verwalten</A></DIV></TD>
 </TR></TBODY>
-</TABLE></TD>
+</TABLE>
+<DIV CLASS="white"></DIV></TD>
 <TD VALIGN="top" WIDTH="5"></TD>
-<TD VALIGN="top" ROWSPAN="2">
+<TD CLASS="content" VALIGN="top" ROWSPAN="2">
 
 <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
 function help(e) {
@@ -169,7 +162,7 @@ RULES="rows" WIDTH="448">
 <TD VALIGN="top" WIDTH="5"></TD>
 </TR>
 <TR>
-<TD CLASS="color" HEIGHT="38" WIDTH="150"></TD>
+<TD HEIGHT="38" WIDTH="150"></TD>
 <TD HEIGHT="38" WIDTH="5"></TD>
 <TD HEIGHT="38" WIDTH="5"></TD>
 <TD ALIGN="right" CLASS="color" HEIGHT="38" WIDTH="150"><A HREF="http://add-on-it/opennet"><IMG ALT="" HEIGHT="31" BORDER="0" SRC="../images/addonit_blue.png"></TD>
@@ -182,11 +175,11 @@ RULES="rows" WIDTH="448">
 <TD HEIGHT="5" WIDTH="150"></TD>
 </TR>
 <TR>
-<TD CLASS="magenta" COLSPAN="4" HEIGHT="19" WIDTH="150"><ADDRESS CLASS="magenta">Stand:
-5.9.2005</ADDRESS></TD>
-<TD CLASS="magenta" HEIGHT="19" WIDTH="150"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="javascript:location.href=location.href;"><IMG ALT="" BORDER="0" HEIGHT="14" SRC="images/btn_top_arrow.gif" WIDTH="14">Seitenanfang</A></SPAN></TD>
+<TD COLSPAN="2" HEIGHT="19"></TD>
+<TD CLASS="magenta" COLSPAN="3" HEIGHT="19"></TD>
 </TR></TBODY>
 </TABLE>
+</DIV>
 </BODY>
 </HTML>
 EOF
