@@ -1,9 +1,5 @@
 #!/bin/sh
 
-### I have to look for better place
-ifconfig eth2:0 192.168.34.1 netmask 255.255.255.0
-##################################################
-
 test -n "$FAILSAFE" && exit
 
 # takes one argument: 'create' or ('remove' or anything else - doesn't actually matter)
