@@ -97,7 +97,7 @@ ds_min = 0
 ds_max = 12500000
 rrd_step = 10
 rrd_start = int(time.time())
-rrd_heartbeat = 10
+rrd_heartbeat = 15
 rrd_rras = (
    ('AVERAGE', 0, 1, 380),
    ('AVERAGE', 0.4, 6, 1600),
