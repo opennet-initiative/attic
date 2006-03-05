@@ -49,7 +49,7 @@ cat<<EOF
 </b>aufschreiben. Wenn das firmware-update fehlschlägt, ist der Router vielleicht nur unter dieser Adresse (und nicht unter 192.168.1.1) erreichbar.
 </li>
 EOF
-if [ $(nvram get boot_wait) != "on" ]; then
+if [ -z "$(nvram get boot_wait)" ] || [ $(nvram get boot_wait) != "on" ]; then
 	echo "<li>Option boot_wait ist nicht aktiviert. Aus Sicherheitsgründen ;) wird diese Option bei einem firmware-update automatisch gesetzt.</li>"
 fi
 cat<<EOF
