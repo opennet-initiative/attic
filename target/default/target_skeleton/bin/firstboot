@@ -68,10 +68,10 @@ nvram set on_remoteconf="on"
 # limit txpwr, assume always a external Antenna
 on_ant_dbi=$(nvram get on_ant_dbi)
 ff_txpwr=$(nvram get ff_txpwr)
-if [ -n "$on_ant_dbi" ] || [ $on_ant_dbi -lt 8 ]; then
+if [ -z "$on_ant_dbi" ] || [ $on_ant_dbi -lt 8 ]; then
 	nvram set on_ant_dbi=8
 fi
-if [ -n "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
+if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
 	nvram set ff_txpwr=15
 fi
 
