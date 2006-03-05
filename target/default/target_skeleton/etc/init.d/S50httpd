@@ -9,8 +9,8 @@ A:*
 .asp:text/html
 EOM
 	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Opennet Webadmin, Log in as root"
-else
-	/usr/sbin/httpd -p 80 -h /www -r "Opennet Webadmin, FAILSAFE"
 	# make olsrd.conf visible
 	ln -sf /var/etc/olsrd.conf /www/olsrd.conf
+else
+	/usr/sbin/httpd -p 80 -h /www -r "Opennet Webadmin, FAILSAFE"
 fi
