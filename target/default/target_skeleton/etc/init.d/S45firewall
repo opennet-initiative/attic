@@ -198,6 +198,15 @@ case $1 in
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
 			test -n "$WANDEV" && set_wan_fw
+			
+			# I had cases where $WIFIADR wasnt set from the beginning. So wait a little while
+			count=
+			while [ -z "$WIFIADR" ] && [ $((count++)) -lt 10 ]; do
+				logger "S45firewall WIFIADR not set, sleeping for ten seconds"
+				sleep 10;
+				eval $(/usr/bin/netparam);
+			done;
+			
 			if [ -z "$WIFIADR" ] || [ "$(ipcalc -n $LANADR $WIFIMSK|cut -d'=' -f2)" != "$(ipcalc -n $WIFIADR $WIFIMSK|cut -d'=' -f2)" ]; then
 				set_wlan_fw
 			fi
