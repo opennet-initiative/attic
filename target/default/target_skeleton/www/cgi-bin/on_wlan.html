@@ -20,7 +20,17 @@ if [ -z "$QUERY_STRING" ]; then
 	wl0_key4="$(nvram get wl0_key4)"
 	key_warning=
 cat<<EOF
-	Hier müssen die Angaben eingegeben werden, die ihr bekommen habt, als ihr euch bei 'ichwill - AT - opennet-initiative.de' per email gemeldet habt. Wenn nicht, schaut mal unter <a href="http://wiki.opennet-initiative.de/index.php/Mitmachen">http://wiki.opennet-initiative.de/...</a><br><br>
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<div id="description">
+<br />
+	Hier müssen grundlegende Konfigurationen zur Beteiligung im Opennet eingestellt werden. Den notwendigen WEP-Key solltest Du erhalten haben, wenn Du bereits eine email an  <a href="mailto:admin@opennet-initiative.de"> admin@opennet-initiative.de</a> geschickt hast. Die Adresse des Accesspoints musst Du Dir selbst zuordnen, lege dazu einen Eintrag im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes">Opennet-Wiki </a>an. (Bitte berücksichtige die Informationen unter <a href="http://wiki.opennet-initiative.de/index.php/Mitmachen">'Mitmachen'</a>).<br><br>
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
 	
 	<FORM ACTION="on_wlan.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
