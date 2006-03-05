@@ -14,46 +14,13 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
-ff_firmware=
-if ! grep -q ff_reset /rom/etc/preinit /etc/preinit>/dev/null 2>&1; then
-ff_firmware='" DISABLED="DISABLED'
-fi
-
 cat<<EOF
-<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-function validate(obj) {
-for(var i = 0; i < obj.ff_reset.length; i++) {
-if ('format' == obj.ff_reset[i].value) {
-if (obj.ff_reset[i].checked) {
-var ask = 'Formatting? Enter OK.';
-if ('de'=='de') ask = 'Formatieren? OK eingeben.';
-if ('de'=='es') ask = '===Formatting? Enter OK.===';
-if ('de'=='fr') ask = 'Formatage? Taper OK.';
-return 'OK' == prompt(ask, '');
-}
-}
-if ('killnvram' == obj.ff_reset[i].value) {
-if (obj.ff_reset[i].checked) {
-var ask = 'Completely erase NVRAM? May brick the device! Enter OKOK.';
-if ('de'=='de') ask = 'NVRAM komplett löschen? Dies kann eine Reparatur nötig machen! OKOK eingeben.';
-if ('de'=='es') ask = '===Completely erase NVRAM? May brick the device! Enter OKOK.===';
-if ('de'=='fr') ask = 'Effacer Complètement la NVRAM ? Attention cela peut transmuer votre AP à l'+"'"+'état de brique ! Taper OKOK.';
-return 'OKOK' == prompt(ask, '');
-}
-}
-}
-return true;
-}
---></SCRIPT>
 <br /> <br />
-<INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="HIDDEN" VALUE="normal">
-<INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on">
-
 <FORM ACTION="reset.html" ID="resetform" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TBODY>
 <TR>
-<TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" ONCLICK="return validate(resetform);" TITLE="Das Gerät mit der gewählten Option jetzt neu starten." TYPE="SUBMIT" VALUE="Neu starten"> </TD>
+<TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" TITLE="Das Gerät jetzt neu starten." TYPE="SUBMIT" VALUE="Neu starten"> </TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
@@ -70,23 +37,10 @@ EOF
 fi
 
 else
-eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
-DIRTY=
-if [ -n "$post_reset" ]; then
-if [ "$ff_reset" = "killnvram" ]; then
-if [ $(cat /proc/mtd|awk '/^mtd3:/{print $4}') = '"nvram"' ]; then
-mtd erase /dev/mtd/3
-fi
-else
-for V in ff_reset boot_wait; do
-eval "C=\$$V"
-C=$(unescape $C)
-if [ "$C" != "$(nvram get $V)" ]; then
-DIRTY=1
-nvram set $V="$C"
-fi
-done
-test -n "$DIRTY" && nvram commit>/dev/null 2>&1
+
+if [ "$(nvram get boot_wait)" != "on" ]; then
+	nvram set boot_wait="on"
+	nvram commit>/dev/null 2>&1
 fi
 
 cat<<EOF
@@ -97,39 +51,7 @@ cat<<EOF
 warten...</TD>
 </TR></TBODY>
 </TABLE>
-EOF
 
-if [ "$ff_reset" = "failsafe" ]; then
-
-cat<<EOF
-<IMG ALT="40 Sekunden..."
-HEIGHT="8" SRC="../images/progress40.gif" VSPACE="10" WIDTH="255" TITLE="40 Sekunden...">
-
-<P><B>Tipp</B>: Im Failsafe-Modus hat das Ger&auml;t
-immer die IP-Adresse <CODE>192.168.1.1</CODE>. W&auml;hrend der Wartezeit
-kann die Netzwerk-Karte des PCs umkonfiguriert werden, beispielsweise auf
-die IP-Adresse <CODE>192.168.1.2</CODE>.</P>
-
-<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-setTimeout("location.href='http://192.168.1.1/'", 40000);
-//--></SCRIPT>
-EOF
-
-elif [ "$ff_reset" = "format" ] || [ "$ff_reset" = "killnvram" ]; then
-
-cat<<EOF
-<IMG
-ALT="122 Sekunden..."
-HEIGHT="8" SRC="../images/progress122.gif" VSPACE="10" WIDTH="255" TITLE="122 Sekunden...">
-
-<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 122000);
-//--></SCRIPT>
-EOF
-
-else
-
-cat<<EOF
 <IMG ALT="80 Sekunden..."
 HEIGHT="8" SRC="../images/progress122.gif" VSPACE="10" WIDTH="255" TITLE="80 Sekunden...">
 
@@ -138,9 +60,7 @@ setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get 
 //--></SCRIPT>
 EOF
 
-fi
 sh -c "sleep 2;reboot">/dev/null 2>&1 &
-fi
 fi
 
 . ${0%/*}/cgi-bin-post.sh
