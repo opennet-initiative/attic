@@ -112,7 +112,7 @@ cat <<EOF
 	)   <a id="switch_1" href="#" onclick="document.getElementById('textarea_1').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
 	<TR id="textarea_1">
 		<TD>
-		<textarea name="log" cols="80" rows="10" readonly>
+		<textarea name="log" cols="70" rows="10" readonly>
 EOF
 		cat /etc/olsrd.conf_new
 cat<<EOF
@@ -126,7 +126,7 @@ cat<<EOF
 	<TR><TD>initiale Konfiguration     <a id="switch_2" href="#" onclick="document.getElementById('textarea_2').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
 	<TR id="textarea_2">
 		<TD>
-		<textarea name="log" cols="80" rows="10" readonly>
+		<textarea name="log" cols="70" rows="10" readonly>
 EOF
 		cat /etc/olsrd.conf_initial
 cat<<EOF
@@ -137,7 +137,7 @@ cat<<EOF
 	<TR><TD>aktuelle olsrd-Konfiguration      <a id="switch_3" href="#" onclick="document.getElementById('textarea_3').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
 	<TR id="textarea_3">
 		<TD>
-		<textarea name="log" cols="80" rows="10" readonly>
+		<textarea name="log" cols="70" rows="10" readonly>
 EOF
 		cat /var/etc/olsrd.conf
 cat<<EOF
@@ -147,9 +147,17 @@ cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 
+EOF
+		if [ -f /etc/olsrd.conf_new ]; then
+cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch_1').style.display='inline';
 	document.getElementById('textarea_1').style.display='none';
+</script>
+EOF
+		fi
+cat<<EOF
+<script type="text/javascript">
 	document.getElementById('switch_2').style.display='inline';
 	document.getElementById('textarea_2').style.display='none';
 	document.getElementById('switch_3').style.display='inline';
