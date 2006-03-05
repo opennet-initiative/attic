@@ -24,7 +24,9 @@ if [ -n "$(nvram get on_remoteconf)" ]; then
 				
 				logger "cron.hourly: found a new olsrd configuration"
 				mv /tmp/on_olsrd.conf /etc/olsrd.conf_new
-				/etc/init.d/S53olsrd restart
+				
+				# restarting olsrd is now done by cron-minutely
+				echo "restart olsrd" > /tmp/restart_olsrd
 			else
 				logger "cron.hourly: problem downloading new olsrd config, i'll retry next hour"
 			fi
