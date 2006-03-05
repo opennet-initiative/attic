@@ -197,6 +197,11 @@ Dies sollte nur in wenigen Fällen nötig sein.
 Wenn Du den geheimen Schlüssel vorher nicht heruntergeladen hast, ist dieser <B>unwiederbringlich verloren</B>,
 das Zertifikat, sofern du es schon beantragt hast, wertlos.
 Soll der geheime Schlüssel und/oder die Anfrage zur Zertifizierung gelöscht werden?
+EOF
+if [ -f  /etc/openvpn/on_aps.crt ]; then
+	echo " (Da das aufgespielte Zertifkat dann auch nicht mehr zum neuen Schlüssel passt, wird dieses gleichfalls gelöscht)"
+fi
+cat<<EOF
 </TD>
 </TR>
 <TR>
@@ -283,6 +288,7 @@ EOF
 elif [ -n "$remove_key_csr" ]; then
 rm -f /etc/openvpn/on_aps.csr
 rm -f /etc/openvpn/on_aps.key
+rm -f /etc/openvpn/on_aps.crt
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
