@@ -46,20 +46,12 @@ return true;
 }
 --></SCRIPT>
 <br /> <br />
+<INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="HIDDEN" VALUE="normal">
+<INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on">
+
 <FORM ACTION="reset.html" ID="resetform" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TBODY>
-<!--
-<TR
-TITLE="Das Gerät neu starten um neue Einstellungen zu aktivieren. Dieser Neustart kann auch durch ziehen und wiedereinstecken des Netzteils erreicht werden.">
-<TD><INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="normal"></TD>
-<TD>Einfacher Neustart</TD>
-</TR>
-
-<TR>
-<TD COLSPAN="2"> <INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on"></TD>
-</TR>
--->
 <TR>
 <TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" ONCLICK="return validate(resetform);" TITLE="Das Gerät mit der gewählten Option jetzt neu starten." TYPE="SUBMIT" VALUE="Neu starten"> </TD>
 </TR></TBODY>
@@ -138,11 +130,11 @@ EOF
 else
 
 cat<<EOF
-<IMG ALT="40 Sekunden..."
-HEIGHT="8" SRC="../images/progress40.gif" VSPACE="10" WIDTH="255" TITLE="40 Sekunden...">
+<IMG ALT="80 Sekunden..."
+HEIGHT="8" SRC="../images/progress122.gif" VSPACE="10" WIDTH="255" TITLE="80 Sekunden...">
 
 <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 40000);
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 80000);
 //--></SCRIPT>
 EOF
 
