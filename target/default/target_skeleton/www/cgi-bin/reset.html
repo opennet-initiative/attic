@@ -45,10 +45,11 @@ return 'OKOK' == prompt(ask, '');
 return true;
 }
 --></SCRIPT>
-
+<br /> <br />
 <FORM ACTION="reset.html" ID="resetform" METHOD="POST">
-<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TBODY>
+<!--
 <TR
 TITLE="Das Gerät neu starten um neue Einstellungen zu aktivieren. Dieser Neustart kann auch durch ziehen und wiedereinstecken des Netzteils erreicht werden.">
 <TD><INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="normal"></TD>
@@ -58,8 +59,9 @@ TITLE="Das Gerät neu starten um neue Einstellungen zu aktivieren. Dieser Neustar
 <TR>
 <TD COLSPAN="2"> <INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on"></TD>
 </TR>
+-->
 <TR>
-<TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" ONCLICK="return validate(resetform);" TITLE="Das Gerät mit der gewählten Option jetzt neu starten." TYPE="SUBMIT" VALUE="Neu starten">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+<TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" ONCLICK="return validate(resetform);" TITLE="Das Gerät mit der gewählten Option jetzt neu starten." TYPE="SUBMIT" VALUE="Neu starten"> </TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
