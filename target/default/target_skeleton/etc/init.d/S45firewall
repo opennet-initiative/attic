@@ -199,10 +199,18 @@ case $1 in
 		if [ "$(nvram get fw_disable)" != "1" ]; then
 			test -n "$WANDEV" && set_wan_fw
 			
-			# I had cases where $WIFIADR wasnt set from the beginning. So wait a little while
+			# I had several cases where some netparams weren't set from the beginning.
+			# So I'll check if they are set and if not wait a little while
 			count=
-			while [ -z "$WIFIADR" ] && [ $((count++)) -lt 10 ]; do
-				logger "S45firewall WIFIADR not set, sleeping for ten seconds"
+			sleep=
+			while [ $((count++)) -lt 10 ]; do
+				for V in LODEV LONET LOPRE LANDEV LANNET LANPRE WIFIDEV WIFINET WIFIPRE; do
+					if [ -z "$(eval echo \$$V)" ]; then
+						logger "S45firewall $V not set, sleeping for ten seconds"
+						sleep=1; break;
+					fi
+				done;
+				if [ -z "$sleep" ]; then break; fi
 				sleep 10;
 				eval $(/usr/bin/netparam);
 			done;
