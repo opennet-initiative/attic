@@ -181,9 +181,10 @@ done
 on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
 
-if [ -n "$changed_gw" ]; then
+if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ]; then
 # update dns entries
 	# use the two first gateways as possible dns-servers
+	logger "cron.minutely.ongateway creating /etc/resolv.conf"
 	gw_addrs=$(/usr/sbin/working_gateways.sh)
 	dnsaddrs=
 	for gw_addr in $gw_addrs; do
