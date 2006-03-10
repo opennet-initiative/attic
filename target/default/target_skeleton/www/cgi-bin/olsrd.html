@@ -29,16 +29,37 @@ if [ -n "$QUERY_STRING" ]; then
 				nvram set $V="$C"
 			fi
 		done
+	elif [ -n "$rm_remotecfg" ]; then
+		rm -rf /etc/olsrd.conf_new
+		logger "webinterface: removed retrieved olsrd configuration"
+		olsrd_restart=1
 	fi
 	if [ -n "$DIRTY" ]; then nvram commit>/dev/null 2>&1; fi
-	if [ -n "$olsrd_restart" ]; then /etc/init.d/S53olsrd restart; fi
+	if [ -n "$olsrd_restart" ]; then 
+		# restarting olsrd is now done by cron-minutely
+		echo "restart olsrd" > /tmp/restart_olsrd
+		# /etc/init.d/S53olsrd restart >/dev/null; 
+	fi
+fi
+if [ -f /tmp/restart_olsrd ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Das olsr-Programm wird in weinigen Sekunden neu gestartet. Die veränderten Konfigurationen werden dann übernommen. </TD>
+</TR>
+</TBODY>
+</TABLE>
+<br />
+EOF
 fi
 cat<<EOF
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">Erläuterung</a>
 <div id="description">
 Das olsr-Programm (der olsr-Daemon) ist für die Berechnung und Verwaltung der Routen, also der Wege im Funknetz zuständig. An dieser Stelle können einige ausgewählte Erweiterungen (plugins) aktiviert bzw. deaktiviert werden. Eine weitergehende Konfiguration ist hier nicht möglich.<br />
-Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial. Hat sich die Konfiguration auf dem Gateway geändert, wird das olsr-Programm neu gestartet.<br />
+Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial.<br />
+Wurde die Konfiguration der plugins oder die Konfiguration auf dem Gateway geändert, wird das olsr-Programm neu gestartet. Dies geschieht nicht unmittelbar, sondern etwa mit (maximal) einer Minute Verzögerung.<br />
 </div>
 <script type="text/javascript">
 	document.getElementById('switch').style.display='inline';
@@ -100,6 +121,7 @@ TITLE="Dieses Plugin zeigt die OLSR-Konfiguration an (nur über LAN, Port 8080)">
 
 
 <H2>aktuelle Konfigurationsdateien</H2>
+<FORM ACTION="olsrd.html" METHOD="POST">
 <TABLE id="olsrd_configs" CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form" TITLE="Konfigurations-Dateien">
 <TBODY>
 EOF
@@ -118,6 +140,9 @@ EOF
 cat<<EOF
 		</textarea>
 		</TD>
+	</TR>
+	<TR>
+	<TD ALIGN="RIGHT"><INPUT NAME="rm_remotecfg" TITLE="Die vom Gateway erhaltene Konfiguration wird gelöscht. Danach wird der olsrd mit der bestehenden Konfiguration neu gestartet" TYPE="SUBMIT" VALUE="Vom Gateway erhaltene Konfiguration löschen und olsrd neu starten"></TD>
 	</TR>
 EOF
 		fi
@@ -145,7 +170,7 @@ cat<<EOF
 		</TD>
 	</TR>
 </TBODY>
-</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
 EOF
 		if [ -f /etc/olsrd.conf_new ]; then
