@@ -57,8 +57,8 @@ Usage: adapt_txpower.sh [OPTION|IP]...
 Options:
   -c number       number of pings per TestCase (default 100)
   -d              enable download test (default off)
-  -l number       max number of packets to loose while accepting the
-                  connetion (default 5)
+  -l number       max percentage of packets to loose while accepting the
+                  connetion (default 5%)
   -p power        set maximal power to use. Warning: inappropriate 
 	          values might destroy your equipmnet as well as your
 	          and others health.
@@ -179,14 +179,14 @@ else
 	fi
 	
 	# get list of 1-hop neighbors
-	echo "check one-hop-neighbors and if they need me as a gateway"
+	echo "check one-hop-neighbors and if they need me to reach their gateway"
 	onehop_neighbors=$(route -n | awk '$5 == "1"  && $2 == "0.0.0.0" { print $1 }')
 	interested_neighbors=
 	for address in $onehop_neighbors; do
 		echo -n $address
 		gateway=$(get_gateway.sh $address) 
 		if [ -n "$gateway" ]; then
-			echo -n " using $gateway";
+			echo -n " next hop to $gateway";
 			gateway=$(echo $gateway|cut -d' ' -f2); # use only the address
 		else echo -n " (couldnt retrieve information)"; fi
 		
@@ -212,6 +212,7 @@ else
 		check_transmission
 	else
 		echo "### sorry, couldnt find local gateway, you might retry the procedure"
+		wl txpwr $initial_txpwr;
 		exit
 	fi
 	
@@ -225,4 +226,5 @@ else
 fi;
 
 echo -e "\n*** Optimal Transmission Power set to "$new_pwr"mW ***"
-nvram set ff_txpwr=$new_pwr; nvram commit;
+nvram set ff_txpwr=$new_pwr;
+nvram commit;
