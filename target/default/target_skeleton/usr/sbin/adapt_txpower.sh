@@ -161,9 +161,10 @@ if [ -n "$ip_list" ]; then
 		check_transmission
 	done;
 else
-	if [ -z "$(nvram get on_gw)" ]; then
+	if [ -z "$(working_gateways.sh | cut -d' ' -f1)" ]; then
+		# shouldn't happen
 		echo "### sorry, please configure OpenVPN first."
-		exit;
+		exit 1;
 	fi;
 
 	# set current power to Maximal Value
@@ -205,7 +206,7 @@ else
 	address=
 	count=0
 	while [ -z "$address" ] && [ $((count++)) -lt 10 ]; do
-		address=$(route -n | awk -v gw="$(nvram get on_gw)" '$1 == gw {print $2; exit;}');
+		address=$(route -n | awk -v gw="$(working_gateways.sh | cut -d' ' -f1)" '$1 == gw {print $2; exit;}');
 		if [ -z "$address" ]; then echo "problem retrieving gateway address"; sleep 2; fi;
 	done;
 	if [ -n "$address" ]; then
@@ -213,7 +214,7 @@ else
 	else
 		echo "### sorry, couldnt find local gateway, you might retry the procedure"
 		wl txpwr $initial_txpwr;
-		exit
+		exit 1;
 	fi
 	
 	# optimize for neighbors
