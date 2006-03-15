@@ -4,6 +4,18 @@
 # dependend on recent WIFI-IP-address
 # see /var/spool/cron/crontabs/root for details
 
+if ( ! [ -f /tmp/adapt_txpwr.log ] || [ -f /tmp/adapt_txpwr.failed ] ) && ! [ -f /tmp/adapt_txpwr_running.log ]; then
+	ff_txpwr=$(nvram get ff_txpwr)
+	param="-p $ff_txpwr"
+	adapt_txpower.sh $param >/tmp/adapt_txpwr_running.log
+	if [ $? != 0 ]; then
+		echo "failed" > /tmp/adapt_txpwr.failed
+	else
+		rm -rf /tmp/adapt_txpwr.failed
+	fi
+	mv /tmp/adapt_txpwr_running.log /tmp/adapt_txpwr.log
+fi
+
 if [ -n "$(nvram get on_remoteconf)" ]; then
 	remote_addr=$(nvram get on_gw)
 	if [ -z "remote_addr" ]; then remote_addr=$(working_gateways.sh | cut -d' ' -f1); fi
