@@ -83,7 +83,7 @@ Sind keine Gateways aus dieser Liste erreichbar,  (oder ist die Liste leer), ist
 <br /><br />
 <b>Informationen zu den Angaben in den Spalten:</b><br />
 Unter 'Erreichbarkeit' wird angegeben, ob aktuell eine Route zum Gateway existiert. Zusätzlich wird vermerkt, ob ein Tunnel zu diesem Gateway aufgebaut ist und/oder ob dieser Gateway über die Blacklist gesperrt wurde.<br />
-Unter 'OpenVPN-Test' wird angegeben, on testweise eine OpenVPN Verbindung zum entsprechenden Gateway aufgebaut werden konnte. Zusätzlich steht in Klammern, wann der entsprechende Gateway zuletzt getestet wurde. Fehlt diese Angabe, wurde noch kein Test durchgeführt.<br />
+Unter 'OpenVPN-Test' wird angegeben, ob testweise eine OpenVPN Verbindung zum entsprechenden Gateway aufgebaut werden konnte. Zusätzlich steht in Klammern, wann der entsprechende Gateway zuletzt getestet wurde. Fehlt diese Angabe, wurde noch kein Test durchgeführt.<br />
 </div>
 <script type="text/javascript">
 	document.getElementById('switch').style.display='inline';
@@ -135,7 +135,7 @@ EOF
 		if [ -f  /tmp/openvpn_msg.txt ];then
 			echo "Tunnel aktiv "
 		else
-			echo "Tunnel startend "
+			if [ -f /var/run/openvpn.opennet.pid ]; then echo "Tunnel startend "; fi
 		fi
 		if [ "$reachable" != "1" ] || [ -n "$blacklisted" ]; then change="yes"; fi
 	fi
