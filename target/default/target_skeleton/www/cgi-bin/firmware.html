@@ -61,10 +61,10 @@ cat<<EOF
 
 <FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
-TITLE="Wähle eine Firmware-Datei. Die Opennet-Firmware kann nur als *.trx-Datei geladen werden.">
+TITLE="Wähle eine Prüfsummen-Datei oder eine Firmware-Datei. Die Opennet-Firmware kann nur als *.trx-Datei geladen werden.">
 <TBODY>
 <TR>
-<TD>Firmware-Datei (*.trx):</TD>
+<TD>Firmware-Datei (*.trx) oder Prüfsummen-Datei (*.md5):</TD>
 </TR>
 <TR>
 <TD><INPUT NAME="firmfile" SIZE="60" TYPE="FILE" VALUE="Durchsuchen..."></TD>
@@ -73,12 +73,35 @@ TITLE="Wähle eine Firmware-Datei. Die Opennet-Firmware kann nur als *.trx-Datei 
 <TD> </TD>
 </TR>
 <TR>
-<TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Firmware laden" CLASS="note">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+<TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Prüfsummen-Datei oder Firmware laden" CLASS="note"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
-Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen.
+Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen.<br />
+<b>Hinweis:</b> Es ist sinnvoll, vorher eine passende Prüfsummen-Datei auf den AccessPoint zu laden. Wird der Name der heraufgeladenden Firmware in der Prüfsummendatei gefunden, wird der AccessPoint nur geflasht, wenn die Firmware-Datei fehlerfrei ist. Wird der Name nicht gefunden, wird die Datei nicht geprüft und einfach auf den AccessPoint geschrieben. Firmware-Dateien sollten darum nicht umbenannt werden.
+
 
 EOF
+	if [ -f /tmp/firmware.md5 ]; then
+cat<<EOF
+<H2>Prüfsummen-Datei</H2>
+<FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Prüfsummen-Datei">
+<TBODY>
+<TR>
+	<TD>
+	<textarea name="log" cols="80" rows="5" readonly>
+EOF
+	cat /tmp/firmware.md5
+cat<<EOF
+	</textarea>
+	</TD>
+</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+fi
+
 fi
 elif ! ffout=$(./freifunk-upload 2>&1); then
 
@@ -94,10 +117,39 @@ cat<<EOF
 EOF
 
 elif  [ -n "$ffout" ]; then
-	MAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
-	if [ "HDR0" = "$MAGIC" ]; then
-
+	end=$ffout
+	while [ -n "$(echo $end | cut -s -d'.' -f2-)" ]; do end=$(echo $end | cut -s -d'.' -f2-); done;
+	if [ "$end" = "md5" ]; then
+		mv $ffout /tmp/firmware.md5
 cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Prüfsummen-Datei gespeichert.</TD>
+		</TR></TBODY>
+		</TABLE>
+EOF
+	else
+	
+	# prüfe Checksumme
+	bad_checksum=
+	firmware=$ffout
+	while [ -n "$(echo $firmware | cut -s -d'/' -f2-)" ]; do firmware=$(echo $firmware | cut -s -d'/' -f2-); done;
+	if [ -f /tmp/firmware.md5 ] && [ -n "$(grep $firmware /tmp/firmware.md5)" ]; then
+		if [ "$(awk -v firmware="$firmware" '$2 ~ firmware {print $1; exit}'  /tmp/firmware.md5)" != "$(md5sum $ffout | cut -d" " -f1)" ]; then
+			bad_checksum="yes"
+		else
+cat<<EOF
+			<P>Prüfsume der Firmware-Datei in Ordnung.</P>
+EOF
+		fi
+	fi
+	
+	MAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
+	if [ -z "$bad_checksum" ] && [ "HDR0" = "$MAGIC" ]; then
+cat<<EOF		
+		
+		
 		<TABLE BORDER="0" CLASS="note">
 		<TBODY>
 		<TR>
@@ -119,7 +171,7 @@ EOF
 			nvram commit
 		fi		
 		echo "Neue Firmware wird installiert. Hab etwas Geduld, das kann durchaus einige Minuten (etwa 5) dauern."
-		echo "Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt -Fehler in der Darstellung "
+		echo "Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt - Fehler in der Darstellung "
 		echo "sind nicht mit Fehlern im Update-Vorgang gleichzusetzen, bitte einfach weiterwarten"
 		mtd -e linux -r write $ffout linux &>/dev/null
 		echo "</PRE>"
@@ -130,14 +182,24 @@ cat<<EOF
 		<TABLE BORDER="0" CLASS="note">
 		<TBODY>
 		<TR>
-		<TD>Firmware-Datei hat falsches Format.</TD>
+		<TD>
+EOF
+		if [ -z "$bad_checksum" ]; then
+			echo "Datei hat falsches Format."
+		else
+			echo "Prüfsumme der heraufgeladenen Datei stimmt nicht."
+		fi
+cat<<EOF
+		</TD>
 		</TR></TBODY>
 		</TABLE>
 		
-		<P>Bitte eine passende *.trx-Firmware-Datei
-		laden.</P>
+		<P>Bitte eine korrekte *.md5-Prüfsummen-Datei oder *.trx-Firmware-Datei
+		heraufladen.</P>
 EOF
 
+	fi
+	
 	fi
 else
 
