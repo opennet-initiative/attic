@@ -75,6 +75,9 @@ if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
 	nvram set ff_txpwr=15
 fi
 
+# activate automatic optimization of txpwr by default
+nvram set on_autoadapttxpwr=on
+
 # always set boot_wait
 nvram set boot_wait=on
 

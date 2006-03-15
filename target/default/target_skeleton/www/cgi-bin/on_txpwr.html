@@ -49,17 +49,25 @@ TITLE="Einstellung der Sendeleistung">
 <OPTION VALUE='1' $(test "$on_ant_dbi" = "1" && echo "selected=selected")>1dBi (bspw. AccessPoint-Antenne)</OPTION>
 <OPTION VALUE='8' $(test "$on_ant_dbi" = "8" && echo "selected=selected")>8dBi (bspw. Rappl-Omni)</OPTION>
 <OPTION VALUE='0' $(test "$on_ant_dbi" = "0" && echo "selected=selected")>unbekannt (Vorsicht)</OPTION>
+</TD>
 <TD> Sende-Leistung<br />
 <INPUT NAME="ff_txpwr" SIZE="4" TYPE="TEXT" VALUE="$(nvram get ff_txpwr)" ONCHANGE="if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '1') && (this.value > 84)) {alert('Achtung: Maximalwert für Sendeleistung 84mW'); this.form.ff_txpwr.value=84;} else if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '8') && (this.form.ff_txpwr.value > 19)) {alert('Achtung: Maximalwert für Sendeleistung 19mW'); this.form.ff_txpwr.value=19;};">mW
+</TD>
 </TR>
+<TR>
+		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="Sendeleistung nach jedem Neustart einmal optmieren" NAME="on_autoadapttxpwr" TYPE="checkbox" $(test "$(nvram get on_autoadapttxpwr)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>einmalige automatische Anpassung nach jedem Neustart</TD>
+</TR>
+
 <TR>
 <TD></TD><TD><INPUT NAME="post_txpwr" TITLE="Die Einstellungen übernehmen. Diese werden sofort wirksam." TYPE="SUBMIT" VALUE="Einstellungen übernehmen"></TD>
 </TR>
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-if ( ! [ -f /tmp/adapt_txpwr.log ] || [ -f /tmp/adapt_txpwr.failed ] ) && ! [ -f /tmp/adapt_txpwr_running.log ]; then
-	echo "<b>Hinweis:</b> Auf diesem Access-Point wurde die Sendeleistung nach dem letzten Neustart noch nicht (erfolgreich) automatisch angepasst. Die Automatische Anpassung der Sendeleistung wird nach jedem Neustart einmal - auf diesem AP $((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17)) Minuten nach der vollen Stunde - durchgeführt. Der oben angegebene Wert der Sendeleistung wird dabei als Maximalwert angenommen und möglicherweise verringert. Du kannst die Anpassung der Sendeleistung auch jetzt sofort manuell starten."
+if [ "$(nvram get on_autoadapttxpwr )" = "on" ]; then
+	if ( ! [ -f /tmp/adapt_txpwr.log ] || [ -f /tmp/adapt_txpwr.failed ] ) && ! [ -f /tmp/adapt_txpwr_running.log ]; then
+		echo "<b>Hinweis:</b> Auf diesem Access-Point wurde die Sendeleistung nach dem letzten Neustart noch nicht (erfolgreich) automatisch angepasst. Die Automatische Anpassung der Sendeleistung wird nach jedem Neustart einmal - auf diesem AP $((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17)) Minuten nach der vollen Stunde - durchgeführt. Der oben angegebene Wert der Sendeleistung wird dabei als Maximalwert angenommen und möglicherweise verringert. Du kannst die Anpassung der Sendeleistung auch jetzt sofort manuell starten."
+	fi
 fi
 cat<<EOF
 <br />
@@ -186,7 +194,7 @@ else
 #eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 if [ -n "$post_txpwr" ]; then
 	DIRTY=
-	for V in on_ant_dbi ff_txpwr; do
+	for V in on_ant_dbi ff_txpwr on_autoadapttxpwr; do
 		eval "C=\$$V"
 		C=$(unescape $C)
 		if [ "$C" != "$(nvram get $V)" ]; then
