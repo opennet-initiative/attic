@@ -75,6 +75,10 @@ if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
 	nvram set ff_txpwr=15
 fi
 
+# always set boot_wait
+nvram set boot_wait=on
+
+
 nvram commit
 
 echo "initializing opennet-values done"
