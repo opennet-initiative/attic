@@ -9,11 +9,6 @@ test -d /var/run || mkdir -p /var/run # create directory if not found
 
 write_config()
 {
-	WAN_DNS=$(nvram get wan_dns)
-
-	# No DNS: Use a well known NS
-	test -z "$WAN_DNS" && WAN_DNS=195.50.140.250
-
 	WAN_DOMAIN_LOCAL=
 	WAN_DOMAIN_DOMAIN=
 	test -n "$WAN_DOMAIN" && WAN_DOMAIN_LOCAL="local=/.$WAN_DOMAIN/"
@@ -21,13 +16,8 @@ write_config()
 
 	cat>/var/etc/dnsmasq.conf<<EOF
 # filter what we send upstream
-#domain-needed
 bogus-priv
 filterwin2k
-
-# To speed up ssh, all lookups throug dnsmasq
-no-resolv
-server=$WAN_DNS
 
 # allow /etc/hosts and dhcp lookups via *.lan
 addn-hosts=/etc/local.hosts
