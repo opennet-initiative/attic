@@ -8,7 +8,7 @@ case "$1" in
 
     eval $(netparam)
     
-    if [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" != "33" ]; then
+    if [ -z $(nvram get on_wifiaccess_route_override) ] && [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" != "33" ]; then
 	nvram set dhcpwl_ifname="$WIFIDEV:0"
 	nvram set dhcpwl_ipaddr="192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
 	nvram set dhcpwl_netmask="255.255.254.0"
