@@ -78,6 +78,11 @@ fi
 # activate automatic optimization of txpwr by default
 nvram set on_autoadapttxpwr=on
 
+# if the list of possible gateways is empty switch auto-search on
+if [ -z "$(nvram get on_gwaddrs)" ]; then
+	nvram set on_gwauto=on
+fi
+
 # always set boot_wait
 nvram set boot_wait=on
 
