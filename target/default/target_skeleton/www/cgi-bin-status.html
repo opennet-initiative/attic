@@ -132,7 +132,7 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
 if [ -n "$QUERY_STRING" ]; then
-eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+eval $(echo "${QUERY_STRING%%[^%&=+-:@-_a-z~]*}"|awk -F'&' '{for(i=1;i<=NF;i++)if($i~/^[a-z0-9_]+=/){print $i}}')
 fi
 if [ -n "$post_olsr" ]; then
 
