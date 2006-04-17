@@ -19,6 +19,7 @@ import os.path
 
 import rrdtool
 
+import pid_filing
 from teucrium_conf import chroot_target, filename_rrd, filename_graphics_base, conf_service_dict, \
                           conf_interfaces, ds_name_filter, rrd_graph_periods, base_separator, graph_args, \
                           graph_kwargs, services_graph, DIRECTION_INPUT, DIRECTION_OUTPUT, html_out_file, \
@@ -146,6 +147,7 @@ def ipt_graph(interface, start_time, rrd_filename=rrd_filename, graph_filename=N
 
 
 if (__name__ == '__main__'):
+   pid_filing.file_pid()
    return_html = bool(html_out_file)
    summaries = {}
    for interface in conf_interfaces:
