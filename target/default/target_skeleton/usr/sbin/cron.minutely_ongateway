@@ -181,20 +181,29 @@ done
 on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
 
-if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ]; then
-# update dns entries
-	# use the two first gateways as possible dns-servers
-	logger "cron.minutely.ongateway creating /etc/resolv.conf"
-	gw_addrs=$(/usr/sbin/working_gateways.sh)
-	dnsaddrs=
-	for gw_addr in $gw_addrs; do
-		if [ -z "$dnsaddrs" ]; then dnsaddrs="nameserver $gw_addr";
-		else dnsaddrs="$dnsaddrs\nnameserver $gw_addr"; break;
-		fi
-	done
-	echo -e $dnsaddrs > /etc/resolv.conf
-# restart dhcp-server which forwards dns information
-	/etc/init.d/S50dnsmasq restart
+if [ "$(nvram get on_autodns)" = "on" ]; then
+	if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ]; then
+	# update dns entries
+		# use the two first gateways as possible dns-servers
+		logger "cron.minutely.ongateway creating /etc/resolv.conf"
+		gw_addrs=$(/usr/sbin/working_gateways.sh)
+		dnsaddrs=
+		wifi_dns=
+		for gw_addr in $gw_addrs; do
+			if [ -z "$dnsaddrs" ]; then
+				dnsaddrs="nameserver $gw_addr";
+				wifi_dns="$gw_addr";
+			else
+				dnsaddrs="$dnsaddrs\nnameserver $gw_addr";
+				wifi_dns="$wifi_dns $gw_addr";
+				break;
+			fi
+		done
+		nvram set wifi_dns="$wifi_dns"
+		echo -e $dnsaddrs > /etc/resolv.conf
+	# restart dhcp-server which forwards dns information
+		/etc/init.d/S50dnsmasq restart
+	fi
 fi
 
 # remove registration

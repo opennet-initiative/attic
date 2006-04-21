@@ -1,4 +1,4 @@
 #!/bin/sh
-for V in boardtype boardnum dhcpwl_ifname dhcpwl_ipaddr dhcpwl_netmask dhcpwl_proto ff_dnsmasq ff_dyngw ff_httpinfo ff_nameservice ff_txant ff_txpwr ff_wldhcp lan_dhcp_client lan_dns  lan_gateway lan_hwnames lan_ifname lan_ifnames lan_ipaddr lan_netmask lan_proto lan_stp on_ant_dbi on_autoadapttxpwr on_gw on_gwaddrs on_gwauto on_gwblackaddrs on_gwcount on_remoteconf wifi_dns wifi_ifname wifi_ipaddr wifi_netmask wifi_proto; do
+for V in boardtype boardnum dhcpwl_ifname dhcpwl_ipaddr dhcpwl_netmask dhcpwl_proto ff_dnsmasq ff_dyngw ff_httpinfo ff_nameservice ff_txant ff_txpwr ff_wldhcp lan_dhcp_client lan_dns  lan_gateway lan_hwnames lan_ifname lan_ifnames lan_ipaddr lan_netmask lan_proto lan_stp on_ant_dbi on_autoadapttxpwr on_gw on_gwaddrs on_gwauto on_gwblackaddrs on_gwcount on_remoteconf on_autodns wifi_dns wifi_ifname wifi_ipaddr wifi_netmask wifi_proto; do
 	echo "$V $(nvram get $V)"
 done;
