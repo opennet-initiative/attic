@@ -197,6 +197,8 @@ if [ -n "$post_txpwr" ]; then
 	for V in on_ant_dbi ff_txpwr on_autoadapttxpwr; do
 		eval "C=\$$V"
 		C=$(unescape $C)
+		
+		if [ "$V" = "ff_txpwr" ]; then wl txpwr $ff_txpwr; fi
 		if [ "$C" != "$(nvram get $V)" ]; then
 			DIRTY=1
 			nvram set $V="$C"
