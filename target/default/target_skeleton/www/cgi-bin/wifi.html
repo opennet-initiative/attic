@@ -305,7 +305,17 @@ esac
 for V in wifi_proto wl0_mode wl0_infra wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns wifi_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_wep wl0_wep_bit wl0_key wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
 eval "C=\$$V"
 C=$(unescape $C)
-if [ "$V" = "wifi_dns" ] && [ "$(nvram get on_autodns)" = "on" ]; then continue; fi;
+if [ "$V" = "wifi_dns" ]; then
+	if [ "$(nvram get on_autodns)" = "on" ]; then continue;
+	else
+		C="$(echo $C | awk '{gsub(","," ")} {print}')"
+		rm -rf /etc/resolv.conf
+		for dns in $C; do
+			logger -t "wifi.htm" "replacing /etc/resolv.conf"
+			echo "nameserver $dns" >> /etc/resolv.conf
+		done
+	fi;
+fi;
 if [ "$C" != "$(nvram get $V)" ]; then
 	DIRTY=1
 	nvram set $V="$C"
