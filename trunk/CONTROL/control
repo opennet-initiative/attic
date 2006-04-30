@@ -1,0 +1,9 @@
+Package: opennet-firmware
+Maintainer: Rene Ejury <opennet@absorb.it>
+Source: http://svn.opennet-initiative.de
+Section: net
+Depends: wl, openvpn, openssl-util, libgcc, olsrd, ntpclient, ip, iptables-mod-ulog, iptables-mod-extra, olsrd-mod-nameservice, olsrd-mod-dyn-gw, olsrd-mod-httpinfo
+Priority: normal
+Description: The complete Opennet-Firmware in one package
+Version: 0.10e-rev218-2
+Architecture: mipsel
