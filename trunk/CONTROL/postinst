@@ -107,7 +107,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.10e-rev229-1"
+nvram set on_fw_pkgversion="0.10e-rev231-1"
 
 nvram commit
 
@@ -119,7 +119,7 @@ echo "ipt_LOG"  >/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.10e-rev229-1 --- " >>/etc/banner
+echo " -- modified with opennet-package 0.10e-rev231-1 --- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 
