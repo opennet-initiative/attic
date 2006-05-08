@@ -18,6 +18,5 @@ rm -f /etc/olsrd.conf
 rm -f /etc/ssl/openssl.cnf
 
 rm -f /www/index.html
-rm -f /www/cgi-bin/webif/password.sh
 
 echo "  removing files to replace - done"
