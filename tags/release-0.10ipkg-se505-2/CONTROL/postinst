@@ -1,0 +1,125 @@
+#!/bin/sh
+
+########################################################################
+#--------------- initialization formerly done in firstboot -------------
+echo "  initializing opennet-values"
+ssid=$(nvram get wl0_ssid)
+if [ -z $(nvram get wl0_on_init_override) ] ; then
+	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
+		echo "setting values"
+		nvram set wl0_mode=sta
+		nvram set wl0_infra=0
+		nvram set wl0_channel=1
+		nvram set wl0_ssid=olsr.opennet-forum.de
+		nvram set wl0_wds=
+		nvram set wl0_lazywds=0
+		nvram set wl0_wep=on
+		nvram set wl0_wep_bit=128
+		nvram set wl0_key=1
+		nvram set wl0_frag=512
+		nvram set wl0_rts=250
+		nvram set wl0_gmode_protection=auto
+		echo " ACHTUNG: WLAN SSID wurde für opennet angepasst."
+		# deactivate ff dyngw functionality
+		nvram set ff_dyngw=0
+	fi
+fi
+
+lan_ip=$(nvram get lan_ipaddr)
+if [ $lan_ip = "192.168.1.1" ] || [ $lan_ip = "192.168.001.001" ] || [ $lan_ip = "192.168.2.1" ]; then
+	nvram set lan_ipaddr=172.16.0.1
+	nvram set lan_netmask=255.240.0.0
+	nvram set lan_proto=static
+	echo " ACHTUNG: LAN IP-Adresse wurde zu 172.16.0.1 geändert."
+	echo " ACHTUNG: LAN Netzmaske wurde zu 255.240.0.0 geändert."
+fi
+
+eval $(/usr/bin/netparam)
+if [ -z $(nvram get wifi_ifname) ]; then
+	nvram set wifi_ipaddr=192.168.33.127
+	nvram set wifi_netmask=255.255.0.0
+	nvram set wifi_proto=static
+	nvram set wifi_ifname=$WIFIDEV
+	echo " ACHTUNG: WLAN IP-Adresse wurde zu 192.168.33.127 geändert."
+	echo " ACHTUNG: WLAN Netzmaske wurde zu 255.255.0.0 geändert."
+fi
+
+# wifi_dns is now set in /etc/init.d/S20ongateway
+#if [ -z $(nvram get wifi_dns) ]; then
+#	nvram set wifi_dns=192.168.0.254
+#fi
+
+if [ -z $(nvram get wl0_ifname) ]; then
+        nvram set wl0_ifname=$WIFIDEV
+fi
+
+# remove wifi device from list of bridged devices
+ifnames=
+for if in $(nvram get lan_ifnames); do
+	if [ "$if" != $WIFIDEV ]; then
+		ifnames="$ifnames $if"
+	fi
+done
+ifnames=$(echo $ifnames)
+nvram set lan_ifnames="$ifnames"
+
+# especially on asus dhcp_start is by default not set to an integer value, so fix this
+nvram set dhcp_start=100
+nvram set dhcp_num=50
+
+
+# activate automatic olsrd configuration
+nvram set on_remoteconf="on"
+
+# limit txpwr, assume always a external Antenna
+on_ant_dbi=$(nvram get on_ant_dbi)
+ff_txpwr=$(nvram get ff_txpwr)
+if [ -z "$on_ant_dbi" ] || [ $on_ant_dbi -lt 8 ]; then
+	nvram set on_ant_dbi=8
+fi
+if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
+	nvram set ff_txpwr=15
+	echo " ACHTUNG: Sendeleistung wurde auf 15mW festgelegt."
+fi
+
+# activate automatic optimization of txpwr by default
+nvram set on_autoadapttxpwr="off"
+
+# if the list of possible gateways is empty switch auto-search on
+if [ -z "$(nvram get on_gwaddrs)" ]; then
+	nvram set on_gwauto=on
+fi
+
+# activate automatic selection of DNS-Servers by default
+if [ -z "$(nvram get on_autodns)" ]; then
+	nvram set on_autodns=on
+fi
+
+
+# always set boot_wait
+nvram set boot_wait=on
+
+# set firmware-version to nvram variables
+_version=$( grep "(" /etc/banner )
+_version="${_version%% ---*}"
+nvram set on_fw_version="$(echo $_version)"
+nvram set on_fw_pkgversion="0.10ipkg-se505-2"
+
+nvram commit
+
+echo "  initializing opennet-values - done"
+
+echo "ipt_LOG"  >/etc/modules.d/opennet-firmware
+
+#--------------- initialization formerly done in firstboot -------------
+########################################################################
+
+rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
+echo " -- modified with opennet-package 0.10ipkg-se505-2 - " >>/etc/banner
+echo " --------------------------------------------------- " >>/etc/banner
+
+
+echo " ################################################### "
+echo " #         please reboot after installation        # "
+echo " #      bitte AP nach Installation neu starten     # "
+echo " ################################################### "

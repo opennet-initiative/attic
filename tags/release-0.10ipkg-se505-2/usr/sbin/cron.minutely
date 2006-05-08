@@ -1,0 +1,14 @@
+#!/usr/bin/awk -f
+
+# Will run every minute (at 00:00, 00:01, ...)
+
+BEGIN {
+	srand()
+	if (("pidof -s olsrd"|getline && "" == $0) || ( system("test ! -f /tmp/restart_olsrd") )) {
+		system("logger -t cron.minutely restarting olsrd")
+		system("rm -rf /tmp/restart_olsrd")
+		system("/etc/init.d/S*olsrd stop")
+		system("/usr/sbin/olsrd-clearroutes")
+		system("/etc/init.d/S*olsrd start")
+	}
+}
