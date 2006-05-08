@@ -39,3 +39,18 @@ fi
 
 # PPPoE MTU/MRU issue
 iptables -I FORWARD -o $IFNAME -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
+
+# set dns
+nvram set wifi_dns_store=$(nvram get wifi_dns)
+nvram set wifi_dns="$DNS1 $DNS2"
+nvram set on_store_autodns=$(nvram get on_autodns)
+nvram set on_autodns="off"
+
+mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
+
+echo "nameserver $DNS1" >/etc/resolv.conf
+echo "nameserver $DNS2" >>/etc/resolv.conf
+
+# restart dhcp-server which forwards dns information
+/etc/init.d/S50dnsmasq restart
