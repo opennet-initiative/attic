@@ -24,7 +24,7 @@ cat<<EOF
 <TR
 TITLE="Bestimmt die Betriebsart des Internet-Anschlusses (einzelne RJ45-Buchse). Ist PPPoE-Paket installiert, wird in der Betriebsart 'PPPoE' wird der PPPoE-Daemon automatisch gestartet.">
 <TD>WAN-Protokoll:</TD>
-<TD><SELECT NAME="wan_proto" ONCHANGE="this.form.wan_ipaddr.disabled=(0 != this.value.indexOf('static'));this.form.wan_netmask.disabled=(0 != this.value.indexOf('static'));this.form.wan_gateway.disabled=(0 != this.value.indexOf('static'));">
+<TD><SELECT NAME="wan_proto" ONCHANGE="this.form.wan_ipaddr.disabled=(0 != this.value.indexOf('static'));this.form.wan_netmask.disabled=(0 != this.value.indexOf('static'));this.form.wan_gateway.disabled=(0 != this.value.indexOf('static'));this.form.ppp_username.disabled=(0 != this.value.indexOf('pppoe'));this.form.ppp_passwd.disabled=(0 != this.value.indexOf('pppoe'));this.form.ppp_redialperiod.disabled=(0 != this.value.indexOf('pppoe'));this.form.ppp_idletime.disabled=(0 != this.value.indexOf('pppoe'));this.form.ppp_mtu.disabled=(0 != this.value.indexOf('pppoe'));">
 <OPTION
 VALUE='dhcp' $(test "$wan_proto" = "dhcp" && echo "selected=selected")>DHCP</OPTION>
 <OPTION
@@ -51,6 +51,32 @@ TITLE="Die Netzmaske bestimmt, welche drahtgebundenen IP-Adressen am Internet-An
 TITLE="Default-Route für den Internet-Anschluss.">
 <TD>WAN Default-Route:</TD>
 <TD><INPUT NAME="wan_gateway" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_gateway)"$(if [ "$wan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Benutzername für PPPoE">
+<TD>PPP User:</TD>
+<TD><INPUT NAME="ppp_username" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_username)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Passwort für PPPoE">
+<TD>PPP Password:</TD>
+<TD><INPUT NAME="ppp_passwd" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_passwd)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Einwahlwiederholung">
+<TD>PPP Einwahlwiederholung:</TD>
+<TD><INPUT NAME="ppp_redialperiod" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_redialperiod)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Idletime">
+<TD>PPP Idletime:</TD>
+<TD><INPUT NAME="ppp_idletime" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_idletime)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="MTU">
+<TD>PPP MTU:</TD>
+<TD><INPUT NAME="ppp_mtu" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_mtu)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 
 <TR
@@ -90,7 +116,18 @@ else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_wan" ]; then
-for V in wan_proto wan_ipaddr wan_netmask wan_gateway wan_dns wan_hostname wan_domain; do
+for V in wan_proto wan_ipaddr wan_netmask wan_gateway wan_dns wan_hostname wan_domain ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu; do
+if [ "$V" != "wan_proto" ]; then
+	if [ "$(nvram get wan_proto)" != "static" ]; then
+		if [ "$V" = "wan_ipaddr" ] || [ "$V" = "wan_netmask" ] || [ "$V" = "wan_gateway" ]; then
+			continue;
+		fi;
+	elif [ "$(nvram get wan_proto)" != "pppoe" ]; then
+		if [ "$V" = "ppp_username" ] || [ "$V" = "ppp_passwd" ] || [ "$V" = "ppp_redialperiod" ] || [ "$V" = "ppp_idletime" ] || [ "$V" = "ppp_mtu" ]; then
+			continue;
+		fi;
+	fi;
+fi;
 eval "C=\$$V"
 C=$(unescape $C)
 if [ "$C" != "$(nvram get $V)" ]; then
@@ -100,8 +137,19 @@ fi
 done
 fi
 if [ -n "$DIRTY" ]; then
+wan_ifname="$(nvram get wan_ifname)"
+if [ "$wan_proto" = "pppoe" ]; then
+	if [ "$wan_ifname" != "ppp0" ]; then
+		nvram set pppoe_ifname="$wan_ifname";
+		nvram set wan_ifname="ppp0";
+	fi;
+else
+	if [ "$wan_ifname" = "ppp0" ]; then
+		nvram set wan_ifname="$(nvram get pppoe_ifname)";
+		nvram unset pppoe_ifname;
+	fi;
+fi;	
 nvram commit>/dev/null 2>&1
-
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>

@@ -55,7 +55,7 @@ set_masq() {
 		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
 	fi
 
-	if [ -n "$WANDEV" ]; then
+	if [ -n "$WANDEV" ] && [ "$WANDEV" != "ppp0" ] ; then
 		if [ -z "$WANOLSR" ]; then
 			# Mask packets to WAN
 			iptables -t nat -A POSTROUTING -o $WANDEV -j MASQUERADE
@@ -197,7 +197,7 @@ case $1 in
 		echo "Starting firewall..."
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
-			test -n "$WANDEV" && set_wan_fw
+			test -n "$WANDEV" && [ "$WANDEV" != "ppp0" ] && set_wan_fw
 			
 			# I had several cases where some netparams weren't set from the beginning.
 			# So I'll check if they are set and if not wait a little while
@@ -239,7 +239,7 @@ case $1 in
 		iptables -X ipfilter
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
-			test -n "$WANDEV" && set_wan_fw
+			test -n "$WANDEV" && [ "$WANDEV" != "ppp0" ] && set_wan_fw
 			if [ -z "$WIFIADR" ] || [ "$(ipcalc -n $LANADR $WIFIMSK|cut -d'=' -f2)" != "$(ipcalc -n $WIFIADR $WIFIMSK|cut -d'=' -f2)" ]; then
 				set_wlan_fw
 			fi
