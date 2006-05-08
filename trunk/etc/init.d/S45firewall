@@ -130,7 +130,7 @@ set_wlan_fw() {
 }
 
 set_wan_fw() {
-	if [ -n "$WIFIADR" ] && [ "$(ipcalc -n $WANADR $WIFIMSK|cut -d'=' -f2)" = "$(ipcalc -n $WIFIADR $WIFIMSK|cut -d'=' -f2)" ]; then
+	if [ -n "$WIFIADR" ] && [ "$(ipcalc $WANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" = "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
 		# WAN with OLSR, open firewall
 		iptables -I INPUT -i $WANDEV -j ACCEPT
 		iptables -I OUTPUT -o $WANDEV -j ACCEPT
@@ -215,7 +215,7 @@ case $1 in
 				eval $(/usr/bin/netparam);
 			done;
 			
-			if [ -z "$WIFIADR" ] || [ "$(ipcalc -n $LANADR $WIFIMSK|cut -d'=' -f2)" != "$(ipcalc -n $WIFIADR $WIFIMSK|cut -d'=' -f2)" ]; then
+			if [ -z "$WIFIADR" ] || [ "$(ipcalc $LANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" != "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
 				set_wlan_fw
 			fi
 		fi
@@ -240,7 +240,7 @@ case $1 in
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
 			test -n "$WANDEV" && [ "$WANDEV" != "ppp0" ] && set_wan_fw
-			if [ -z "$WIFIADR" ] || [ "$(ipcalc -n $LANADR $WIFIMSK|cut -d'=' -f2)" != "$(ipcalc -n $WIFIADR $WIFIMSK|cut -d'=' -f2)" ]; then
+			if [ -z "$WIFIADR" ] || [ "$(ipcalc $LANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" != "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
 				set_wlan_fw
 			fi
 		fi
