@@ -51,6 +51,7 @@ mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
 
 echo "nameserver $DNS1" >/etc/resolv.conf
 echo "nameserver $DNS2" >>/etc/resolv.conf
+chmod +r /etc/resolv.conf
 
 # restart dhcp-server which forwards dns information
 /etc/init.d/S50dnsmasq restart

@@ -201,6 +201,7 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 		done
 		nvram set wifi_dns="$wifi_dns"
 		echo -e $dnsaddrs > /etc/resolv.conf
+		chmod +r /etc/resolv.conf
 	# restart dhcp-server which forwards dns information
 		/etc/init.d/S50dnsmasq restart
 	fi
