@@ -6,7 +6,6 @@ echo "  initializing opennet-values"
 ssid=$(nvram get wl0_ssid)
 if [ -z $(nvram get wl0_on_init_override) ] ; then
 	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
-		echo "setting values"
 		nvram set wl0_mode=sta
 		nvram set wl0_infra=0
 		nvram set wl0_channel=1
@@ -21,6 +20,7 @@ if [ -z $(nvram get wl0_on_init_override) ] ; then
 		nvram set wl0_gmode_protection=auto
 		# deactivate ff dyngw functionality
 		nvram set ff_dyngw=0
+		echo " ACHTUNG: WLAN SSID wurde für opennet angepasst."
 	fi
 fi
 
@@ -29,6 +29,8 @@ if [ $lan_ip = "192.168.1.1" ] || [ $lan_ip = "192.168.001.001" ] || [ $lan_ip =
 	nvram set lan_ipaddr=172.16.0.1
 	nvram set lan_netmask=255.240.0.0
 	nvram set lan_proto=static
+	echo " ACHTUNG: LAN IP-Adresse wurde zu 172.16.0.1 geändert."
+	echo " ACHTUNG: LAN Netzmaske wurde zu 255.240.0.0 geändert."
 fi
 
 eval $(/usr/bin/netparam)
@@ -37,12 +39,9 @@ if [ -z $(nvram get wifi_ifname) ]; then
 	nvram set wifi_netmask=255.255.0.0
 	nvram set wifi_proto=static
 	nvram set wifi_ifname=$WIFIDEV
+	echo " ACHTUNG: WLAN IP-Adresse wurde zu 192.168.33.127 geändert."
+	echo " ACHTUNG: WLAN Netzmaske wurde zu 255.255.0.0 geändert."
 fi
-
-# wifi_dns is now set in /etc/init.d/S20ongateway
-#if [ -z $(nvram get wifi_dns) ]; then
-#	nvram set wifi_dns=192.168.0.254
-#fi
 
 if [ -z $(nvram get wl0_ifname) ]; then
         nvram set wl0_ifname=$WIFIDEV
@@ -74,6 +73,7 @@ if [ -z "$on_ant_dbi" ] || [ $on_ant_dbi -lt 8 ]; then
 fi
 if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
 	nvram set ff_txpwr=15
+	echo " ACHTUNG: Sendeleistung wurde auf 15mW festgelegt."
 fi
 
 # activate automatic optimization of txpwr by default
@@ -93,62 +93,33 @@ fi
 # always set boot_wait
 nvram set boot_wait=on
 
+# set wan_device to former wan_ifname or pppoe_ifname
+if [ -z "$(nvram get wan_device)" ]; then
+	wan_ifname="$(nvram get wan_ifname)"
+	if [ "$wan_ifname" != "ppp0" ]; then
+		nvram set wan_device="$wan_ifname";
+	else
+		nvram set wan_device="$(nvram get pppoe_ifname)";
+	fi;
+fi
+
 # set firmware-version to nvram variables
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.10e-rev218-2"
+nvram set on_fw_pkgversion="0.10e-rev229-1"
 
 nvram commit
 
 echo "  initializing opennet-values - done"
-echo "  initializing freifunk-values"
-cd /
-
-for link in etc/passwd etc/group etc/shells; do
-	test -e $link && rm $link
-done
-echo "root:*:0:">etc/group
-echo "/bin/ash">etc/shells
-
-tar cC /rom usr/lib/ipkg|tar x
-
-export ff_pw="$(/rom/usr/sbin/nvram get ff_pw)"
-test -n "$ff_pw" || export ff_pw=admin
-if [ -n "${ff_pw##\$1\$*}" ]; then
-	# Clear pw. The passwd cmd has /etc/passwd hard wired...
-	mkdir /tmp/setpass
-	mkdir /tmp/setpass/bin
-	mkdir /tmp/setpass/etc
-	cp -a /rom/lib /tmp/setpass
-	echo "root::0:0:root:/tmp:/bin/ash">/tmp/setpass/etc/passwd
-	cp /rom/bin/busybox /tmp/setpass/bin
-	ln -s busybox /tmp/setpass/bin/sh
-	ln -s busybox /tmp/setpass/bin/echo
-	ln -s busybox /tmp/setpass/bin/sleep
-	ln -s busybox /tmp/setpass/bin/passwd
-	/rom/usr/sbin/chroot /tmp/setpass sh -c 'sh -c "echo \"$ff_pw\";sleep 1;echo \"$ff_pw\""|passwd'
-	cp /tmp/setpass/etc/passwd etc/passwd
-	rm -r /tmp/setpass
-else
-	echo "root:$ff_pw:0:0:root:/tmp:/bin/ash">etc/passwd
-fi
-export ff_pw=
-
-echo "  initializing freifunk-values - done"
-
 
 echo "ipt_LOG"  >/etc/modules.d/opennet-firmware
-
-
-#touch /tmp/resolv.conf
-#ln -sf /tmp/resolv.conf /etc/resolv.conf
 
 #--------------- initialization formerly done in firstboot -------------
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.10e-rev218-2 --- " >>/etc/banner
+echo " -- modified with opennet-package 0.10e-rev229-1 --- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 
