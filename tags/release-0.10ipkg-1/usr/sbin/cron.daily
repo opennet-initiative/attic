@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Will run every day (at 00:00)
+if [ -n $(nvram get on_wldhcp) ]; then
+	nvram set on_wldhcp=""
+	nvram commit
+	/etc/init.d/S50dnsmasq restart >/dev/null
+	logger cron-daily switched wlan-dhcp off
+fi

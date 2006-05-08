@@ -1,0 +1,356 @@
+#!/bin/sh
+
+export DATE="5.9.2005"
+export TITLE="Verwaltung: Drahtlos"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<script type="text/javascript">document.getElementById('idx44').className="idx selected";</script>
+
+<H1>Verwaltung: Drahtlos</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wifi_proto="$(nvram get wifi_proto)"
+wl0_antdiv="$(nvram get wl0_antdiv)"
+ff_txant="$(nvram get ff_txant)"
+wl0_gmode="$(nvram get wl0_gmode)"
+wl0_rateset="$(nvram get wl0_rateset)"
+wl0_rate="$(nvram get wl0_rate)"
+wl0_closed="$(nvram get wl0_closed)"
+if [ "$(nvram get wl0_mode)" = "ap" ]; then
+wmode=master
+elif [ "$(nvram get wl0_infra)" = "1" ]; then
+wmode=client
+else
+wmode=ad-hoc
+fi
+
+cat<<EOF
+<FORM ACTION="wifi.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR
+TITLE="Bestimmt die Art der IP-Adresskonfiguration für die WLAN-Karte.">
+<TD>WLAN-Protokoll:</TD>
+<TD><SELECT NAME="wifi_proto" ONCHANGE="this.form.wifi_ipaddr.disabled=(0 != this.value.indexOf('static'));this.form.wifi_netmask.disabled=(0 != this.value.indexOf('static'));" STYLE="width: 100%;">
+<OPTION
+VALUE='dhcp' $(test "$wifi_proto" = "dhcp" && echo "selected=selected")>DHCP</OPTION>
+<OPTION
+VALUE='static' $(test "$wifi_proto" = "static" && echo "selected=selected")>Statisch</OPTION>
+<OPTION
+VALUE='disabled' $(test "$wifi_proto" = "disabled" && echo "selected=selected")>Ausschalten</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Gib eine gültige IP-Adresse ein. In einem Netzwerk darf diese Adresse nur einmal verwendet werden. Beispiele: 172.16.1.1 oder 104.255.255.254">
+<TD>IP-Adresse:</TD>
+<TD><INPUT NAME="wifi_ipaddr" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr)"$(if [ "$wifi_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Die Netzmaske ist ein Bitmuster. Die Netzmaske bestimmt, welche IP-Adressen als lokal erreichbar gewertet werden. Alle IP-Pakete, die nicht zur Netzmaske passen, werden an die Default-Route weitergesendet. Beispiele: 255.240.0.0 oder 255.0.0.0.">
+<TD>Netzmaske:</TD>
+<TD><INPUT NAME="wifi_netmask" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_netmask)"$(if [ "$wifi_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR>
+	<TD colspan="2">
+	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.wifi_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
+	</TD>
+</TR>
+<TR
+TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen.">
+<TD>WLAN-DNS-Server:</TD>
+<TD><INPUT NAME="wifi_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wifi_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
+</TR>
+
+<TR>
+<TD COLSPAN="2"> </TD>
+</TR>
+<TR
+TITLE="Bestimmt die Art der IP-Adresskonfiguration für die WLAN-Karte.">
+<TD>WLAN-Modus:</TD>
+<TD><SELECT NAME="wmode" STYLE="width: 100%;">
+<OPTION
+VALUE='master' $(test "$wmode" = "master" && echo "selected=selected")>Master
+(Access Point)</OPTION>
+<OPTION
+VALUE='client' $(test "$wmode" = "client" && echo "selected=selected")>Managed
+(Klient)</OPTION>
+<OPTION
+VALUE='ad-hoc' $(test "$wmode" = "ad-hoc" && echo "selected=selected")>Ad-Hoc
+(Peer zu Peer)</OPTION></SELECT> </TD>
+</TR>
+<TR
+TITLE="Die ESSID bestimmt, in welchem Funknetz der Access Point teilnimmt. Alle Teilnehmer müssen dieselbe ESSID haben.">
+<TD>ESSID:</TD>
+<TD><INPUT NAME="wl0_ssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_ssid)"></TD>
+</TR>
+<TR
+TITLE="Gib eine Kanalnummer von 1 bis 13 ein. In einigen Ländern sind die Kanäle 12 und 13 nicht erlaubt. In Japan darf man den Kanal 14 benutzen.">
+<TD>Kanal:</TD>
+<TD><INPUT NAME="wl0_channel" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_channel)"></TD>
+</TR>
+	<TR>
+	<TD COLSPAN="2"> </TD>
+	</TR>
+	<TR TITLE="WEP">
+	<TD>WEP-Status:</TD>
+	<TD>
+	<INPUT CLASS="radio" NAME="wl0_wep" TYPE="RADIO" VALUE="on"$(if [ "$(nvram get wl0_wep)" = "on" ];then echo ' checked="checked"';fi)>on
+	<INPUT CLASS="radio" NAME="wl0_wep" TYPE="RADIO" VALUE="off"$(if [ "$(nvram get wl0_wep)" != "on" ];then echo ' checked="checked"';fi)>off</TD>
+	</TR>
+	<TR TITLE="WEP-Key-Size">
+	<TD>WEP-Key-Size:</TD>
+	<TD>
+	<SELECT NAME="wl0_wep_bit" STYLE="width: 100%;">
+	<OPTION VALUE='128' $(test "$(nvram get wl0_wep_bit)" = "128" && echo "selected=selected")>128</OPTION>
+	<OPTION VALUE='64' $(test "$(nvram get wl0_wep_bit)" = "64" && echo "selected=selected")>64</OPTION>
+	</SELECT> </TD>
+	</TR>
+	<TR TITLE="WEP-Key 1">
+	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get wl0_key)" = "1" ];then echo ' checked="checked"';fi)>WEP-Key 1:</TD>
+	<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key1)"></TD>
+	</TR>
+	<TR TITLE="WEP-Key 2">
+	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="2"$(if [ "$(nvram get wl0_key)" = "2" ];then echo ' checked="checked"';fi)>WEP-Key 2:</TD>
+	<TD><INPUT NAME="wl0_key2" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key2)"></TD>
+	</TR>
+	<TR TITLE="WEP-Key 3">
+	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="3"$(if [ "$(nvram get wl0_key)" = "3" ];then echo ' checked="checked"';fi)>WEP-Key 3:</TD>
+	<TD><INPUT NAME="wl0_key3" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key3)"></TD>
+	</TR>
+	<TR TITLE="WEP-Key 4">
+	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="4"$(if [ "$(nvram get wl0_key)" = "4" ];then echo ' checked="checked"';fi)>WEP-Key 4:</TD>
+	<TD><INPUT NAME="wl0_key4" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key4)"></TD>
+	</TR>
+	<TR>
+	<TD COLSPAN="2"> </TD>
+	</TR>
+<TR
+TITLE="Bestimmt, welche Antenne zum Empfang benutzt wird.">
+<TD>Empfangsantenne:</TD>
+<TD><INPUT CLASS="radio" NAME="wl0_antdiv" TYPE="RADIO" VALUE="-1"$(if [ "$wl0_antdiv" = "-1" ];then echo ' checked="checked"';fi)>Auto 
+<INPUT CLASS="radio" NAME="wl0_antdiv" TYPE="RADIO" VALUE="0"$(if [ "$wl0_antdiv" = "0" ];then echo ' checked="checked"';fi)>Antenne A  <INPUT CLASS="radio" NAME="wl0_antdiv" TYPE="RADIO" VALUE="1"$(if [ "$wl0_antdiv" = "1" ];then echo ' checked="checked"';fi)>Antenne B</TD>
+</TR>
+<TR
+TITLE="Bestimmt, welche Antenne zum Senden benutzt wird.">
+<TD>Sendeantenne:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_txant" TYPE="RADIO" VALUE="-1"$(if [ -z "$ff_txant" ] || [ "$ff_txant" = "-1" ];then echo ' checked="checked"';fi)>Auto 
+<INPUT CLASS="radio" NAME="ff_txant" TYPE="RADIO" VALUE="0"$(if [ "$ff_txant" = "0" ];then echo ' checked="checked"';fi)>Antenne A  <INPUT CLASS="radio" NAME="ff_txant" TYPE="RADIO" VALUE="1"$(if [ "$ff_txant" = "1" ];then echo ' checked="checked"';fi)>Antenne B</TD>
+</TR>
+<TR
+TITLE="Ändert die Sende-Energie (Wert von 1 bis 84 Milliwatt). Bitte im Regelfall das Eingabefeld leer lassen, um die gesetzlichen Bestimmungen einzuhalten.">
+<TD>Sendeenergie:</TD>
+<TD><INPUT NAME="ff_txpwr" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ff_txpwr)"></TD>
+</TR>
+<TR
+TITLE="Wenn sowohl G-Geräte als auch B-Geräte vorhanden sind, sollte die Vorgabe 'B-Modus und G-Modus' verwendet werden. Die Auswahl von 'WLAN Ausschalten' schaltet die WLAN-Karte komplett aus.">
+<TD>Funk-Modus:</TD>
+<TD><SELECT NAME="wl0_gmode" STYLE="width: 100%;">
+<OPTION VALUE='1' $(test "$wl0_gmode" = "1" && echo "selected=selected")>B-Modus
+und G-Modus</OPTION>
+<OPTION VALUE='0' $(test "$wl0_gmode" = "0" && echo "selected=selected")>Ausschlie&szlig;lich
+B-Modus</OPTION>
+<OPTION VALUE='2' $(test "$wl0_gmode" = "2" && echo "selected=selected")>Ausschlie&szlig;lich
+G-Modus:</OPTION>
+<OPTION
+VALUE='-1' $(test "$wl0_gmode" = "-1" && echo "selected=selected")>WLAN
+Ausschalten</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Das Rundsenden der (E)SSID kann zur Erhöhung der Sicherheit ausgeschaltet werden. Im OLSR-Netz sollte diese Einstellung aber Eingeschaltet sein.">
+<TD>(E)SSID senden:</TD>
+<TD><INPUT CLASS="radio" NAME="wl0_closed" TYPE="RADIO" VALUE="0"$(if [ "$wl0_closed" = "0" ];then echo ' checked="checked"';fi)>Einschalten
+ 
+<INPUT CLASS="radio" NAME="wl0_closed" TYPE="RADIO" VALUE="1"$(if [ "$wl0_closed" = "1" ];then echo ' checked="checked"';fi)>Ausschalten
+</TD>
+</TR>
+<TR
+TITLE="Die Basisrate sollte je nach WLAN-Modus begrenzt werden (dies ist die Vorgabe). Wenn ältere B-Geräte verwendet werden, kann die Basisrate auf '1-2 Megabit/s' begrenzt werden.">
+<TD>Basisrate:</TD>
+<TD><SELECT NAME="wl0_rateset" STYLE="width: 100%;">
+<OPTION VALUE="default">Rate je nach WLAN-Modus</OPTION>
+<OPTION
+VALUE='12' $(test "$wl0_rateset" = "12" && echo "selected=selected")>1-2
+Megabit/s</OPTION>
+<OPTION
+VALUE='all' $(test "$wl0_rateset" = "all" && echo "selected=selected")>Alle
+Raten verwenden</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Setzt die Übertragungsrate (Einstellung von 1 bis 54 Megabit/s, Vorgabe 'Automatisch'). Die Einstellung 'Automatisch' gibt vor, dass die Übertragungsrate automatisch an die Gegebenheiten angepasst wird.">
+<TD>&Uuml;bertragungsrate:</TD>
+<TD><SELECT NAME="wl0_rate" STYLE="width: 100%;">
+<OPTION VALUE="0">Automatisch</OPTION>
+<OPTION
+VALUE='1000000' $(test "$wl0_rate" = "1000000" && echo "selected=selected")>1
+Megabit/s</OPTION>
+<OPTION
+VALUE='2000000' $(test "$wl0_rate" = "2000000" && echo "selected=selected")>2
+Megabit/s</OPTION>
+<OPTION
+VALUE='5500000' $(test "$wl0_rate" = "5500000" && echo "selected=selected")>5.5
+Megabit/s</OPTION>
+<OPTION
+VALUE='6000000' $(test "$wl0_rate" = "6000000" && echo "selected=selected")>6
+Megabit/s</OPTION>
+<OPTION
+VALUE='9000000' $(test "$wl0_rate" = "9000000" && echo "selected=selected")>9
+Megabit/s</OPTION>
+<OPTION
+VALUE='11000000' $(test "$wl0_rate" = "11000000" && echo "selected=selected")>11
+Megabit/s</OPTION>
+<OPTION
+VALUE='12000000' $(test "$wl0_rate" = "12000000" && echo "selected=selected")>12
+Megabit/s</OPTION>
+<OPTION
+VALUE='18000000' $(test "$wl0_rate" = "18000000" && echo "selected=selected")>18
+Megabit/s</OPTION>
+<OPTION
+VALUE='24000000' $(test "$wl0_rate" = "24000000" && echo "selected=selected")>24
+Megabit/s</OPTION>
+<OPTION
+VALUE='36000000' $(test "$wl0_rate" = "36000000" && echo "selected=selected")>36
+Megabit/s</OPTION>
+<OPTION
+VALUE='48000000' $(test "$wl0_rate" = "48000000" && echo "selected=selected")>48
+Megabit/s</OPTION>
+<OPTION
+VALUE='54000000' $(test "$wl0_rate" = "54000000" && echo "selected=selected")>54
+Megabit/s</OPTION></SELECT> </TD>
+</TR>
+<TR
+TITLE="Setzt den CTS-Schutzmodus (Vorgabe: 'Ausgeschaltet'). Wenn dieser Wert auf 'Automatisch' eingestellt ist, achtet ein Schutzmechanismus darauf, dass B-Geräte auch dann zu einem G-Gerät verbinden können, wenn viele G-Geräte im Netzwerk vorhanden sind. Die Netzwerk-Übertragungsrate für G-Geräte kann dadurch verringert werden.">
+<TD>CTS-Schutz:</TD>
+<TD><SELECT NAME="wl0_gmode_protection" STYLE="width: 100%;">
+<OPTION VALUE="off">Ausgeschaltet</OPTION>
+<OPTION
+VALUE='auto' $(test "$(nvram get wl0_gmode_protection)" = "auto" && echo "selected=selected")>Automatisch</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Dieser Modus kann die Datenübertragung beschleunigen, wenn die Gegenstation dies ebenfalls zuverlässig unterstützt. Als Vorgabe ist dieser Modus 'Ausgeschaltet'.">
+<TD>Frame-Burst:</TD>
+<TD><SELECT NAME="wl0_frameburst" STYLE="width: 100%;">
+<OPTION VALUE="off">Ausgeschaltet</OPTION>
+<OPTION
+VALUE='on' $(test "$(nvram get wl0_frameburst)" = "on" && echo "selected=selected")>Eingeschaltet</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Setzt den Beacon Intervall (Wert von 1 bis 65535 Millisekunden, Vorgabe 100). Das regelmäßige Aussenden eines Beacons informiert über die ESSID und andere Wireless-Eigenschaften.">
+<TD>Beacon-Intervall:</TD>
+<TD><INPUT NAME="wl0_bcn" SIZE="32" VALUE="$(nvram get wl0_bcn)"></TD>
+</TR>
+<TR
+TITLE="Bestimmt den Delivery Traffic Indication Message (DTIM) Intervall (Wert von 1 bis 255 Millisekunden, Vorgabe 1). Das DTIM-Feld informiert über das nächste Zeitfenster für Rundsende- oder Punkt-zu-Mehrpunkt-Nachrichten.">
+<TD>DTIM-Intervall:</TD>
+<TD><INPUT NAME="wl0_dtim" SIZE="32" VALUE="$(nvram get wl0_dtim)"></TD>
+</TR>
+<TR
+TITLE="Setzt die Fragmentierungs-Schwelle (Wert von 256 bis 2346, Vorgabe 2346). Dieser Wert gibt vor, ab welcher Paketgröße ein Paket in mehrere Fragmente unterteilt wird. Dies kann den Datendurchsatz steigern, wenn viele Netzwerk-Kollisionen auftreten. Die WLAN-Fragmentierung sollte der IP-Fragmentierung ('MTU') vorgezogen werden.">
+<TD>Frag.-Schwelle:</TD>
+<TD><INPUT NAME="wl0_frag" SIZE="32" VALUE="$(nvram get wl0_frag)"></TD>
+</TR>
+<TR
+TITLE="Setzt die RTS-Schwelle (Wert von 0 bis 2346, Vorgabe 2347). Dies aktiviert das RTS/CTS-Handshake für sicherere Übertragung in belasteten Funknetzen.">
+<TD>RTS-Schwelle:</TD>
+<TD><INPUT NAME="wl0_rts" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wl0_rts)"></TD>
+</TR>
+<TR
+TITLE="Ändert die Maximalgröße für einzelne IP-Datenpakete. Für die Vorgabe von 1500 Byte das Eingabefeld leer lassen.">
+<TD>MTU-Wert:</TD>
+<TD><INPUT NAME="ff_mtu" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ff_mtu)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2"> </TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_wifi" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<!-- strittig
+<P><B>Tipp</B>: Die Einstellung <B>Antenne A</B>
+aktivert bei vielen Ger&auml;ten die linke Antenne (von vorne gesehen).</P>
+-->
+EOF
+
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$post_wifi" ]; then
+case $wmode in
+master)
+wl0_mode=ap
+wl0_infra=1
+;;
+client)
+wl0_mode=sta
+wl0_infra=1
+;;
+*)
+wl0_mode=sta
+wl0_infra=0
+;;
+esac
+for V in wifi_proto wl0_mode wl0_infra wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns wifi_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_wep wl0_wep_bit wl0_key wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$V" = "wifi_dns" ]; then
+	if [ "$(nvram get on_autodns)" = "on" ]; then continue;
+	else
+		C="$(echo $C | awk '{gsub(","," ")} {print}')"
+		rm -rf /etc/resolv.conf
+		for dns in $C; do
+			logger -t "wifi.htm" "replacing /etc/resolv.conf"
+			echo "nameserver $dns" >> /etc/resolv.conf
+		done
+	fi;
+fi;
+if [ "$C" != "$(nvram get $V)" ]; then
+	DIRTY=1
+	nvram set $V="$C"
+fi
+done
+if checkbridge; then
+DIRTY=1
+fi
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
+aktiv.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${0%/*}/cgi-bin-post.sh

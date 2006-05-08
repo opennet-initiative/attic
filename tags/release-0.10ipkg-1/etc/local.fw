@@ -1,0 +1,49 @@
+# Place your firewall addons here
+
+case $1 in
+        start)
+#variable defintions;
+        TUNDEV="tun0"
+
+#SNAT in den Tunnel
+        # MASQUERADING seems not to work well in 2.4.30
+	# see this news-entry:
+	# http://groups-beta.google.com/group/lucky.linux.kernel/browse_frm/thread/9631983ea435086c/576b4816db12e2e7
+	# so SNAT is now done in vpn_up.sh
+	#iptables -t nat -A POSTROUTING -o $TUNDEV -s $LANNET/$LANPRE -j MASQUERADE
+	
+
+#eingehende frames
+        iptables -I FORWARD 1 -i $TUNDEV -o $LANDEV -m state --state INVALID -j DROP
+        iptables -I FORWARD 2 -i $TUNDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -I FORWARD 3 -i $TUNDEV -o $LANDEV -j LOG --log-prefix "FRAMEDROP-FWIN:"
+        iptables -I FORWARD 4 -i $TUNDEV -o $LANDEV -j DROP
+#ausgehende Verbindungen
+        iptables -I FORWARD 5 -i $LANDEV -o $TUNDEV -m state --state INVALID -j DROP
+        iptables -I FORWARD 6 -i $LANDEV -o $TUNDEV -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+        iptables -I FORWARD 7 -i $LANDEV -o $TUNDEV -j LOG --log-prefix "FRAMEDROP-FWOUT:"
+        iptables -I FORWARD 8 -i $LANDEV -o $TUNDEV -j DROP
+#local output
+        iptables -I OUTPUT 1 -o $TUNDEV -j ACCEPT
+#local input
+        iptables -I INPUT 1 -i $TUNDEV -m state --state INVALID -j DROP
+        iptables -I INPUT 2 -i $TUNDEV -p tcp --dport 22 -j ACCEPT
+        iptables -I INPUT 3 -i $TUNDEV -p tcp --dport 80 -j ACCEPT
+        iptables -I INPUT 4 -i $TUNDEV -p icmp -j ACCEPT
+
+        iptables -I INPUT 5 -i $TUNDEV -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -I INPUT 6 -i $TUNDEV -j LOG --log-prefix "FRAMEDROP-IN"
+        iptables -I INPUT 7 -i $TUNDEV -j DROP
+
+#prepare a table for openvpn policy-routing
+        ip rule add unicast from $LANNET/$LANPRE table 3
+	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+#load tun module
+#       insmod tun   # not needed, loaded by /etc/modules.d
+        ;;
+        stop)
+	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
+        ip rule del unicast from $LANNET/$LANPRE table 3
+	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+;;
+esac
