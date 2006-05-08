@@ -57,11 +57,21 @@ map_all_ports() {
 	# (un)Mapping Opennet Ports
 	
 	echo "** Opennet (WLAN-Access) ports **"
-	for on_internal_maping in $(nvram get on_intrlmap); do
-		port=$(echo $on_internal_maping | cut -d'>' -f1)
-		ip=$(echo $on_internal_maping | cut -d'>' -f2)
+	for on_internal_mapping in $(nvram get on_intrlmap); do
+		port=$(echo $on_internal_mapping | cut -d'>' -f1)
+		ip=$(echo $on_internal_mapping | cut -d'>' -f2)
 		map_port_to_ip $port $ip $WIFIDEV $1
 	done
+
+	# (un)Mapping WAN Ports
+	
+	echo "** DSL (WAN-Access) ports **"
+	for on_wan_mapping in $(nvram get on_wanmap); do
+		port=$(echo $on_wan_mapping | cut -d'>' -f1)
+		ip=$(echo $on_wan_mapping | cut -d'>' -f2)
+		map_port_to_ip $port $ip $WANDEV $1
+	done
+
 }
 
 TUNDEV=tun+

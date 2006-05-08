@@ -86,9 +86,9 @@ cat<<EOF
 	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD></TR>	
 EOF
 number=1
-for on_internal_maping in $(nvram get on_intrlmap); do
-on_internal_port=$(echo $on_internal_maping | cut -d'>' -f1)
-local_lan_addr=$(echo $on_internal_maping | cut -d'>' -f2)
+for on_internal_mapping in $(nvram get on_intrlmap); do
+on_internal_port=$(echo $on_internal_mapping | cut -d'>' -f1)
+local_lan_addr=$(echo $on_internal_mapping | cut -d'>' -f2)
 cat<<EOF
 <TR>
 	<td NAME="on_intrlsport"><INPUT NAME="on_intrlsport$number" SIZE="20" TYPE="TEXT" VALUE="$on_internal_port"></td>
@@ -117,6 +117,44 @@ cat<<EOF
 	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 	</FORM>
 
+	<H2>Weiterleitung aus dem DSL-Internet</H2>
+	<p>Die folgenden Ports werden aus dem DSL-Internet (WAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus direkt erreichbar.</p>
+	<FORM NAME="MAINFORM_ON" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+	<TBODY>
+	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD></TR>	
+EOF
+number=1
+for on_wan_mapping in $(nvram get on_wanmap); do
+on_wan_port=$(echo $on_wan_mapping | cut -d'>' -f1)
+local_lan_addr=$(echo $on_wan_mapping | cut -d'>' -f2)
+cat<<EOF
+<TR>
+	<td NAME="on_wansport"><INPUT NAME="on_wansport$number" SIZE="20" TYPE="TEXT" VALUE="$on_wan_port"></td>
+	<td NAME="on_wandaddr"><INPUT NAME="on_wandaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
+	<td>
+</TR>	
+EOF
+	number=$(($number+1))
+done
+cat<<EOF
+<TR>
+<TD> </TD>
+</TR><TR>
+	<td colspan="3">Mapping hinzufügen:</td>
+</TR>
+<TR>
+	<td NAME="on_new_wansport"><INPUT NAME="on_new_wansport" SIZE="20" TYPE="TEXT"></td>
+	<td NAME="on_new_wandaddr"><INPUT NAME="on_new_wandaddr" SIZE="20" TYPE="TEXT"></td>
+	<td></td>
+</TR>	
+<TR><TD colspan="2"><HR /></TD></TR>
+<TR>
+<TD colspan="2"><INPUT NAME="post_wan_portmap" TITLE="DSL (WAN) Port-Forwarding aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+</TR>
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
 EOF
 	
 else
@@ -146,6 +184,27 @@ else
 		
 		on_portmap_newlist=$(echo $on_portmap_newlist)
 		nvram set on_intrlmap="$on_portmap_newlist"
+	
+	elif [ -n "$post_wan_portmap" ]; then
+		number=1
+		wan_portmap_newlist=
+		# refresh all stored values
+		for wan_portmap in $(nvram get on_wanmap); do
+			sourceport=$(unescape $(eval echo \$on_wansport$number))
+			destaddr=$(unescape $(eval echo \$on_wandaddr$number))
+			if [ -n "$sourceport" ] && [ -n "$destaddr" ]; then
+				wan_portmap_newlist="$wan_portmap_newlist $sourceport>$destaddr"
+			fi;
+			number=$(($number+1))
+		done;
+		
+		# add new values if possible
+		if [ -n "$on_new_wansport" ] && [ -n "$on_new_wandaddr" ]; then
+			wan_portmap_newlist="$wan_portmap_newlist $(unescape $on_new_wansport)>$(unescape $on_new_wandaddr)"
+		fi
+		
+		wan_portmap_newlist=$(echo $wan_portmap_newlist)
+		nvram set on_wanmap="$wan_portmap_newlist"
 	
 	elif [ -n "$post_inet_portmap" ]; then
 		for V in on_mapaddr0 on_mapaddr1 on_mapaddr2 on_mapaddr3 on_mapaddr4 on_mapaddr5 on_mapaddr6 on_mapaddr7 on_mapaddr8 on_mapaddr9 on_mapall2one; do
