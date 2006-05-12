@@ -114,6 +114,7 @@ nvram commit
 echo "  initializing opennet-values - done"
 
 echo "ipt_LOG"  >/etc/modules.d/opennet-firmware
+echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 
 #--------------- initialization formerly done in firstboot -------------
 ########################################################################
