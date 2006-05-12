@@ -35,9 +35,11 @@ case $1 in
         iptables -I INPUT 6 -i $TUNDEV -j LOG --log-prefix "FRAMEDROP-IN"
         iptables -I INPUT 7 -i $TUNDEV -j DROP
 
-#prepare a table for openvpn policy-routing
+#prepare tables for openvpn and pppoe policy-routing
         ip rule add unicast from $LANNET/$LANPRE table 3
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+	ip rule add unicast from $LANNET/$LANPRE table 4
+	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
 #load tun module
 #       insmod tun   # not needed, loaded by /etc/modules.d
         ;;
@@ -45,5 +47,7 @@ case $1 in
 	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
         ip rule del unicast from $LANNET/$LANPRE table 3
 	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+	ip rule del unicast from $LANNET/$LANPRE table 4
+	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
 ;;
 esac

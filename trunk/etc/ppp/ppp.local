@@ -1,0 +1,109 @@
+#!/bin/sh
+# prepared to be a hotplug-script in the future
+# the recent problem is that hotplug-scripts are not called with full env variables set
+
+PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin
+
+get_netparams() {
+	LANDEV=$(nvram get lan_ifname)
+	LANADR=$(nvram get lan_ipaddr)
+	LANNET=$(ipcalc $(nvram get lan_ipaddr) $(nvram get lan_netmask) |grep "NETWORK"|cut -d'=' -f2)
+	LANPRE=$(ipcalc $(nvram get lan_ipaddr) $(nvram get lan_netmask) |grep "PREFIX"|cut -d'=' -f2)
+	WIFIDEV=$(nvram get wifi_ifname)
+	WIFIADR=$(nvram get wifi_ipaddr)
+	WIFINET=$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask) |grep "NETWORK"|cut -d'=' -f2)
+	WIFIPRE=$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask) |grep "PREFIX"|cut -d'=' -f2)
+	DHCPWIFINET=$(ipcalc $(nvram get dhcpwl_ipaddr) $(nvram get dhcpwl_netmask) |grep "NETWORK"|cut -d'=' -f2)
+	DHCPWIFIPRE=$(ipcalc $(nvram get dhcpwl_ipaddr) $(nvram get dhcpwl_netmask) |grep "PREFIX"|cut -d'=' -f2)
+}
+
+fw_rules() {
+        if [ $1 = "add" ]; then
+		ACT_APPEND="A"; ACT_INSERT="I";
+        else
+                ACT_APPEND="D"; ACT_INSERT="D";
+        fi
+
+	
+	if [ "$(nvram get fw_disable)" != "1" ]; then
+		iptables -$ACT_INSERT INPUT -i $IFNAME -j DROP
+		iptables -$ACT_INSERT INPUT -i $IFNAME -m state --state ESTABLISHED,RELATED -j ACCEPT
+		iptables -$ACT_INSERT INPUT -i $IFNAME -m state --state INVALID -j DROP
+	
+		iptables -$ACT_INSERT OUTPUT -o $IFNAME -j ACCEPT
+	
+		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -j DROP
+		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -m state --state INVALID -j DROP
+	
+		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -d $LANNET/$LANPRE -j DROP
+		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -m state --state INVALID -j DROP
+	
+		if [ -n "$WIFIADR" ]; then
+			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -j DROP
+			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -s $WIFINET/$WIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -m state --state INVALID -j DROP
+	
+			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -d $WIFINET/$WIFIPRE -j DROP
+			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -s ! $WIFINET/$WIFIPRE -d $WIFINET/$WIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -m state --state INVALID -j DROP
+		fi
+	fi
+	
+	# PPPoE MTU/MRU issue
+	iptables -$ACT_INSERT FORWARD -o $IFNAME -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	
+	# SNAT
+	iptables -t nat -$ACT_APPEND POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
+	iptables -t nat -$ACT_APPEND POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
+}
+
+case "$ACTION" in
+        ifup)
+                [ -f /tmp/env.txt ] || env > /tmp/env.txt
+		
+		logger "running ppp.local script ifup ppp"
+		
+		get_netparams
+		fw_rules add
+		
+		# activate policy routing
+		# network adresses not always set by netparam, so read them from nvram variables
+		ip route flush table 4
+		ip route add throw $LANNET/$LANPRE table 4
+		ip route add throw $WIFINET/$WIFIPRE table 4
+		ip route add default via $IPREMOTE table 4
+		
+		# set dns
+		nvram set wifi_dns_store=$(nvram get wifi_dns)
+		nvram set wifi_dns="$DNS1 $DNS2"
+		nvram set on_store_autodns=$(nvram get on_autodns)
+		nvram set on_autodns="off"
+		
+		mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
+		
+		echo "nameserver $DNS1" >/etc/resolv.conf
+		echo "nameserver $DNS2" >>/etc/resolv.conf
+		chmod a+r /etc/resolv.conf
+		
+		# restart dhcp-server which forwards dns information
+		/etc/init.d/S50dnsmasq restart
+
+                ;;
+        ifdown)
+                logger "running ppp.local script ifdown ppp"
+		
+		get_netparams
+		fw_rules del
+		
+		# reset dns
+		mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
+		chmod a+r /etc/resolv.conf
+		
+		nvram set on_autodns=$(nvram get on_store_autodns)
+		nvram set wifi_dns=$(nvram get wifi_dns_store)
+		
+		# restart dhcp-server which forwards dns information
+		/etc/init.d/S50dnsmasq restart
+esac
