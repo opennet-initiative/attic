@@ -2,7 +2,6 @@
 case "$1" in
   start|restart)
     ifup lan
-    ifup wan
     ifup wifi
     wifi up
 
@@ -15,6 +14,9 @@ case "$1" in
 	nvram set dhcpwl_proto=static
 	ifup dhcpwl
     fi
+    
+    # bring up wan as the latest device to have all other device-parameters for calling ip-up
+    ifup wan
     
     for route in $(nvram get static_route); do {
       eval "set $(echo $route | sed 's/:/ /g')"
