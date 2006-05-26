@@ -8,41 +8,39 @@ mac_access() {
 	if [ -n "$mac_addrs" ]; then
 		if [ $1 = "create" ]; then
 			echo "enabling tunnel access for specified mac-adresses"
-			ACT_INSERT="I";
+			ACT_INSERT="I"; rulenum="2"
 		else
 			echo "removing tunnel access for specified mac-adresses"
-			ACT_INSERT="D";
+			ACT_INSERT="D"; rulenum=""
 		fi
 	
 		# frames vom wifi/dhcp zum tunnel
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -j DROP
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWOUT:"
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -j LOG --log-prefix "WIFIDHCP-TUN-FWOUT:"
 		for mac_addr in $mac_addrs; do
 			iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -m mac --mac-source $mac_addr -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 		done;
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -m state --state INVALID -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state INVALID -j DROP
 
 		# frames vom tunnel zum wifi/dhcp
-		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -j DROP
-		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWIN:"
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -j LOG --log-prefix "WIFIDHCP-TUN-FWIN:"
 		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -m state --state INVALID -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -m state --state INVALID -j DROP
 
 		# frames vom wifi/dhcp zu ppp
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -j DROP
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWOUT:"
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -j LOG --log-prefix "WIFIDHCP-PPP-FWOUT:"
 		for mac_addr in $mac_addrs; do
 			iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -m mac --mac-source $mac_addr -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 		done;
-		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -m state --state INVALID -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $PPPDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state INVALID -j DROP
 
 		# frames vom ppp zum wifi/dhcp
-		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -j DROP
-		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWIN:"
+		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -j LOG --log-prefix "WIFIDHCP-PPP-FWIN:"
 		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -m state --state INVALID -j DROP
-
-
+		iptables -$ACT_INSERT FORWARD $rulenum -i $PPPDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -m state --state INVALID -j DROP
 fi;
 }
 
