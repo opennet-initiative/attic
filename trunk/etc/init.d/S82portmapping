@@ -19,7 +19,7 @@ map_port_to_ip() {
         fi
         if [ $4 = "map" ]; then
                 echo "forwarding port(s) "$1" to "$2
-                ACT_APPEND="A"; ACT_INSERT="I"; rulenum="3"
+                ACT_APPEND="A"; ACT_INSERT="I"; rulenum="2"
                 echo "accepting packets to $intrldestip port(s) $intrldport"
         else
                 echo "deleting portforwarding of "$1" to "$2
@@ -56,22 +56,25 @@ map_all_ports() {
 	
 	# (un)Mapping Opennet Ports
 	
-	echo "** Opennet (WLAN-Access) ports **"
-	for on_internal_mapping in $(nvram get on_intrlmap); do
-		port=$(echo $on_internal_mapping | cut -d'>' -f1)
-		ip=$(echo $on_internal_mapping | cut -d'>' -f2)
-		map_port_to_ip $port $ip $WIFIDEV $1
-	done
-
+	if [ -n "$WIFDEV" ]; then
+		echo "** Opennet (WLAN-Access) ports **"
+		for on_internal_mapping in $(nvram get on_intrlmap); do
+			port=$(echo $on_internal_mapping | cut -d'>' -f1)
+			ip=$(echo $on_internal_mapping | cut -d'>' -f2)
+			map_port_to_ip $port $ip $WIFIDEV $1
+		done
+	fi
+	
 	# (un)Mapping WAN Ports
 	
-	echo "** DSL (WAN-Access) ports **"
-	for on_wan_mapping in $(nvram get on_wanmap); do
-		port=$(echo $on_wan_mapping | cut -d'>' -f1)
-		ip=$(echo $on_wan_mapping | cut -d'>' -f2)
-		map_port_to_ip $port $ip $WANDEV $1
-	done
-
+	if [ -n "$WANDEV" ]; then
+		echo "** DSL (WAN-Access) ports **"
+		for on_wan_mapping in $(nvram get on_wanmap); do
+			port=$(echo $on_wan_mapping | cut -d'>' -f1)
+			ip=$(echo $on_wan_mapping | cut -d'>' -f2)
+			map_port_to_ip $port $ip $WANDEV $1
+		done
+	fi
 }
 
 TUNDEV=tun+
