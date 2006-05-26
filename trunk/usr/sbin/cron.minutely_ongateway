@@ -47,7 +47,7 @@ test_vpngateway()
 
 	# check if it is possible to open tunnel to the gateway (10 sec. maximum)
 	# test-parameters; '--dev null' will be prefaced
-	openvpn_test_parameters="--client --ns-cert-type server --remote $1 1600 --ca /etc/openvpn/opennet-ca.crt --cert /etc/openvpn/on_aps.crt --key /etc/openvpn/on_aps.key --inactive 10 --verb 3 --nice 3"
+	openvpn_test_parameters="--client --ns-cert-type server --remote $1 1600 --ca /etc/openvpn/opennet_user/opennet-ca.crt --cert /etc/openvpn/opennet_user/on_aps.crt --key /etc/openvpn/opennet_user/on_aps.key --inactive 10 --verb 3 --nice 3"
 	
 	# if 'Initial packet' is recieved, stop waiting and accept connection
 	openvpn --dev null $openvpn_test_parameters | \

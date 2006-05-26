@@ -27,9 +27,9 @@ cat<<EOF
 EOF
 
 elif [ -n "$ffout" ]; then
-	if [ $(md5sum "$ffout" | awk '{ print $1 }') = $(md5sum /etc/openvpn/on_aps.key | awk '{ print $1 }') ]; then
+	if [ $(md5sum "$ffout" | awk '{ print $1 }') = $(md5sum /etc/openvpn/opennet_user/on_aps.key | awk '{ print $1 }') ]; then
 		rm -f $ffout
-		rm -f /etc/openvpn/on_aps.key
+		rm -f /etc/openvpn/opennet_user/on_aps.key
 cat<<EOF
 		<TABLE BORDER="0" CLASS="note">
 		<TBODY>
@@ -38,7 +38,7 @@ cat<<EOF
 		</TR></TBODY>
 		</TABLE>
 EOF
-		if [ -f /etc/openvpn/on_aps.crt ]; then
+		if [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 		echo "<P>Bitte nicht vergessen, auch das Zertifikat zu sichern.</P>"
 		fi
 	else

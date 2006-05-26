@@ -15,7 +15,7 @@ read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
 
-if [ -f /etc/openvpn/on_aps.key ]; then
+if [ -f /etc/openvpn/opennet_user/on_aps.key ]; then
 cat<<EOF
 <H2>ACHTUNG: Firmware-update nicht möglich</H2>
 <b>Auf dem Rechner befindet sich noch ein geheimer Schlüssel.</b> Diesen kannst du unter dem Punkt <a href="on_vpn.html">OpenVPN</a> herunterladen. Speicher diesen, aber <b>auch dein öffentliches Zertifikat</b>, an einem sicheren Ort. Erst wenn der geheime Schlüssel von diesem Rechner gelöscht ist, kannst du die Firmware aktualisieren.<br><br>

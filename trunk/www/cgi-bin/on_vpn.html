@@ -38,19 +38,19 @@ else
 fi
 echo "<TD><INPUT NAME=\"openvpn_restart\" TITLE=\"Starte bzw. Neustarte OpenVPN jetzt\" TYPE=\"SUBMIT\" VALUE=\" OpenVPN neustarten\"></TD>"
 echo "</tr>"
-if [ -f  /etc/openvpn/on_aps.csr ];then
+if [ -f  /etc/openvpn/opennet_user/on_aps.csr ];then
 	echo "<tr><td>Zertifikatanfrage (CSR) vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.csr">herunterladen</a></td></tr>"
-elif ! [ -f  /etc/openvpn/on_aps.key ] && ! [ -f /etc/openvpn/on_aps.crt ]; then
+elif ! [ -f  /etc/openvpn/opennet_user/on_aps.key ] && ! [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo "<tr><td>Zertifikatanfrage (CSR) fehlt </td><td></td></tr>"
 fi
 echo "<tr>"
-if [ -f  /etc/openvpn/on_aps.key ];then
+if [ -f  /etc/openvpn/opennet_user/on_aps.key ];then
 	echo "<td>Schlüssel vorhanden </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.key">herunterladen</a></td>"
 else
 	echo "<td>Schlüssel fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
 fi
 echo "</tr><tr>"
-if [ -f /etc/openvpn/on_aps.crt ];then
+if [ -f /etc/openvpn/opennet_user/on_aps.crt ];then
 	echo "<td>Zertifikat vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.crt">herunterladen</a></td>"
 else
 	echo "<td>Zertifikat fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
@@ -61,7 +61,7 @@ cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-if [ -f  /etc/openvpn/on_aps.csr ] && ! [ -f /etc/openvpn/on_aps.crt ]; then
+if [ -f  /etc/openvpn/opennet_user/on_aps.csr ] && ! [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo "Schicke die Zertifikatanfrage (CSR) <b> und nur diese Datei </b> an csr@opennet-initiative.de, um ein Zertifikat zu erhalten."
 fi
 
@@ -71,7 +71,7 @@ cat<<EOF
 
 <H2>Schlüssel-Verwaltung</H2>
 EOF
-	if [ -f  /etc/openvpn/on_aps.key ] && [ -f /etc/openvpn/on_aps.crt ]; then
+	if [ -f  /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 cat<<EOF
 <a id="switch1" href="#" onclick="document.getElementById('vpn_upload_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -86,11 +86,11 @@ TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus
 </TR>
 <TR>
 <TD><INPUT NAME="opensslfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
-<TD><INPUT NAME="post_opensslfile" TITLE="Die ausgewählte Datei wird übertragen und im Verzeichnis /etc/openvpn gespeichert" TYPE="SUBMIT" VALUE="Datei auf den Accesspoint laden"></TD>
+<TD><INPUT NAME="post_opensslfile" TITLE="Die ausgewählte Datei wird übertragen und im Verzeichnis /etc/openvpn/opennet_user/ gespeichert" TYPE="SUBMIT" VALUE="Datei auf den Accesspoint laden"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if [ -f  /etc/openvpn/on_aps.key ] && [ -f /etc/openvpn/on_aps.crt ]; then
+	if [ -f  /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch1').style.display='inline';
@@ -108,7 +108,7 @@ EOF
 cat<<EOF
 <H2>Schlüssel-Erstellung</H2>
 EOF
-	if [ -f  /etc/openvpn/on_aps.key ] && [ -f /etc/openvpn/on_aps.crt ]; then
+	if [ -f  /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 cat<<EOF
 <a id="switch2" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -149,7 +149,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
 EOF
-	if [ -f  /etc/openvpn/on_aps.key ] && [ -f /etc/openvpn/on_aps.crt ]; then
+	if [ -f  /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch2').style.display='inline';
@@ -169,7 +169,7 @@ else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$gen_csr" ]; then
-	if [ -f /etc/openvpn/on_aps.key ] || [ -f /etc/openvpn/on_aps.csr ]; then
+	if [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_user/on_aps.csr ]; then
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
@@ -177,11 +177,11 @@ cat<<EOF
 <TD>
 EOF
 	echo "<H1>"
-		if [ -f /etc/openvpn/on_aps.key ]; then
-			echo "Geheimer Schlüssel (Datei on_aps.key im Verzeichnis /etc/openvpn) auf dem Accesspoint schon vorhanden.<br>"
+		if [ -f /etc/openvpn/opennet_user/on_aps.key ]; then
+			echo "Geheimer Schlüssel (Datei on_aps.key im Verzeichnis /etc/openvpn/opennet_user/) auf dem Accesspoint schon vorhanden.<br>"
 		fi
-		if [ -f /etc/openvpn/on_aps.csr ]; then
-			echo "Anfrage zur Zertifizierung (Datei on_aps.csr im Verzeichnis /etc/openvpn) auf dem Accesspoint schon vorhanden.<br>"
+		if [ -f /etc/openvpn/opennet_user/on_aps.csr ]; then
+			echo "Anfrage zur Zertifizierung (Datei on_aps.csr im Verzeichnis /etc/openvpn/opennet_user/) auf dem Accesspoint schon vorhanden.<br>"
 		fi
 		echo "Was soll ich machen?<br>"
 	echo "</H1>"
@@ -198,7 +198,7 @@ Wenn Du den geheimen Schlüssel vorher nicht heruntergeladen hast, ist dieser <B>
 das Zertifikat, sofern du es schon beantragt hast, wertlos.
 Soll der geheime Schlüssel und/oder die Anfrage zur Zertifizierung gelöscht werden?
 EOF
-if [ -f  /etc/openvpn/on_aps.crt ]; then
+if [ -f  /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo " (Da das aufgespielte Zertifkat dann auch nicht mehr zum neuen Schlüssel passt, wird dieses gleichfalls gelöscht)"
 fi
 cat<<EOF
@@ -236,11 +236,11 @@ openssl_organizationalUnitName=$(unescape $openssl_organizationalUnitName); expo
 openssl_commonName=$(unescape $openssl_commonName); export openssl_commonName
 openssl_EmailAddress=$(unescape $openssl_EmailAddress); export openssl_EmailAddress
 
-openssl req -days 3650 -nodes -new -keyout /etc/openvpn/on_aps.key -out /etc/openvpn/on_aps.csr
+openssl req -days 3650 -nodes -new -keyout /etc/openvpn/opennet_user/on_aps.key -out /etc/openvpn/opennet_user/on_aps.csr
 
 return_value=$?
 
-#openssl req -noout -text -in /etc/openvpn/on_aps.csr
+#openssl req -noout -text -in /etc/openvpn/opennet_user/on_aps.csr
 
 
 
@@ -270,15 +270,15 @@ cat<<EOF
 <TD>
 EOF
 	if [ -f /tmp/on_vpn_upload.key ]; then
-		mv /etc/openvpn/on_aps.key /etc/openvpn/on_aps.key_bak
-		echo "geheimer Schlüssel /etc/openvpn/on_aps.key wurde durch die hochgeladene Datei überschrieben"
-		mv /tmp/on_vpn_upload.key /etc/openvpn/on_aps.key
-		rm /etc/openvpn/on_aps.key_bak
+		mv /etc/openvpn/opennet_user/on_aps.key /etc/openvpn/opennet_user/on_aps.key_bak
+		echo "geheimer Schlüssel /etc/openvpn/opennet_user/on_aps.key wurde durch die hochgeladene Datei überschrieben"
+		mv /tmp/on_vpn_upload.key /etc/openvpn/opennet_user/on_aps.key
+		rm /etc/openvpn/opennet_user/on_aps.key_bak
 	elif [ -f /tmp/on_vpn_upload.crt ]; then
-		mv  /etc/openvpn/on_aps.crt /etc/openvpn/on_aps.crt_bak
-		echo "Zertifikat /etc/openvpn/on_aps.crt wurde durch die hochgeladene Datei überschrieben"
-		mv /tmp/on_vpn_upload.crt /etc/openvpn/on_aps.crt
-		rm /etc/openvpn/on_aps.crt_bak
+		mv  /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/on_aps.crt_bak
+		echo "Zertifikat /etc/openvpn/opennet_user/on_aps.crt wurde durch die hochgeladene Datei überschrieben"
+		mv /tmp/on_vpn_upload.crt /etc/openvpn/opennet_user/on_aps.crt
+		rm /etc/openvpn/opennet_user/on_aps.crt_bak
 	fi
 cat<<EOF
 </TD>
@@ -286,9 +286,9 @@ cat<<EOF
 </TABLE>
 EOF
 elif [ -n "$remove_key_csr" ]; then
-rm -f /etc/openvpn/on_aps.csr
-rm -f /etc/openvpn/on_aps.key
-rm -f /etc/openvpn/on_aps.crt
+rm -f /etc/openvpn/opennet_user/on_aps.csr
+rm -f /etc/openvpn/opennet_user/on_aps.key
+rm -f /etc/openvpn/opennet_user/on_aps.crt
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
