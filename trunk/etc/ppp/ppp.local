@@ -3,19 +3,7 @@
 # the recent problem is that hotplug-scripts are not called with full env variables set
 
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin
-
-get_netparams() {
-	LANDEV=$(nvram get lan_ifname)
-	LANADR=$(nvram get lan_ipaddr)
-	LANNET=$(ipcalc $(nvram get lan_ipaddr) $(nvram get lan_netmask) |grep "NETWORK"|cut -d'=' -f2)
-	LANPRE=$(ipcalc $(nvram get lan_ipaddr) $(nvram get lan_netmask) |grep "PREFIX"|cut -d'=' -f2)
-	WIFIDEV=$(nvram get wifi_ifname)
-	WIFIADR=$(nvram get wifi_ipaddr)
-	WIFINET=$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask) |grep "NETWORK"|cut -d'=' -f2)
-	WIFIPRE=$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask) |grep "PREFIX"|cut -d'=' -f2)
-	DHCPWIFINET=$(ipcalc $(nvram get dhcpwl_ipaddr) $(nvram get dhcpwl_netmask) |grep "NETWORK"|cut -d'=' -f2)
-	DHCPWIFIPRE=$(ipcalc $(nvram get dhcpwl_ipaddr) $(nvram get dhcpwl_netmask) |grep "PREFIX"|cut -d'=' -f2)
-}
+export PATH
 
 fw_rules() {
         if [ $1 = "add" ]; then
@@ -59,17 +47,17 @@ fw_rules() {
 	iptables -t nat -$ACT_APPEND POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 }
 
+eval $(netparam)
+
 case "$ACTION" in
         ifup)
                 [ -f /tmp/env.txt ] || env > /tmp/env.txt
 		
 		logger "running ppp.local script ifup ppp"
 		
-		get_netparams
 		fw_rules add
 		
 		# activate policy routing
-		# network adresses not always set by netparam, so read them from nvram variables
 		ip route flush table 4
 		ip route add throw $LANNET/$LANPRE table 4
 		ip route add throw $WIFINET/$WIFIPRE table 4
@@ -89,12 +77,14 @@ case "$ACTION" in
 		
 		# restart dhcp-server which forwards dns information
 		/etc/init.d/S50dnsmasq restart
+		
+		# restart portmapping to forward packets before filtering
+		/etc/init.d/S82portmapping restart
 
                 ;;
         ifdown)
                 logger "running ppp.local script ifdown ppp"
 		
-		get_netparams
 		fw_rules del
 		
 		# reset dns
