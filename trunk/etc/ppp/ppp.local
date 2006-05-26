@@ -5,48 +5,6 @@
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
-fw_rules() {
-        if [ $1 = "add" ]; then
-		ACT_APPEND="A"; ACT_INSERT="I";
-        else
-                ACT_APPEND="D"; ACT_INSERT="D";
-        fi
-
-	
-	if [ "$(nvram get fw_disable)" != "1" ]; then
-		iptables -$ACT_INSERT INPUT -i $IFNAME -j DROP
-		iptables -$ACT_INSERT INPUT -i $IFNAME -m state --state ESTABLISHED,RELATED -j ACCEPT
-		iptables -$ACT_INSERT INPUT -i $IFNAME -m state --state INVALID -j DROP
-	
-		iptables -$ACT_INSERT OUTPUT -o $IFNAME -j ACCEPT
-	
-		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -j DROP
-		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-		iptables -$ACT_INSERT FORWARD -i $LANDEV -o $IFNAME -m state --state INVALID -j DROP
-	
-		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -d $LANNET/$LANPRE -j DROP
-		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-		iptables -$ACT_INSERT FORWARD -i $IFNAME -o $LANDEV -m state --state INVALID -j DROP
-	
-		if [ -n "$WIFIADR" ]; then
-			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -j DROP
-			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -s $WIFINET/$WIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-			iptables -$ACT_INSERT FORWARD -i $WIFIDEV -o $IFNAME -m state --state INVALID -j DROP
-	
-			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -d $WIFINET/$WIFIPRE -j DROP
-			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -s ! $WIFINET/$WIFIPRE -d $WIFINET/$WIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-			iptables -$ACT_INSERT FORWARD -i $IFNAME -o $WIFIDEV -m state --state INVALID -j DROP
-		fi
-	fi
-	
-	# PPPoE MTU/MRU issue
-	iptables -$ACT_INSERT FORWARD -o $IFNAME -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	
-	# SNAT
-	iptables -t nat -$ACT_APPEND POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
-	iptables -t nat -$ACT_APPEND POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
-}
-
 eval $(netparam)
 
 case "$ACTION" in
@@ -55,8 +13,10 @@ case "$ACTION" in
 		
 		logger "running ppp.local script ifup ppp"
 		
-		fw_rules add
-		
+		# SNAT
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
+
 		# activate policy routing
 		ip route flush table 4
 		ip route add throw $LANNET/$LANPRE table 4
@@ -80,12 +40,24 @@ case "$ACTION" in
 		
 		# restart portmapping to forward packets before filtering
 		/etc/init.d/S82portmapping restart
+		
+		# enable direct access to nagare
+		ip route flush table 5
+		nagare_ip=$(ping -c 1 nagare.on-i.de 2>/dev/null | grep PING);
+		nagare_ip=${nagare_ip#*\(};
+		nagare_ip=${nagare_ip%%\)*};
+		if [ -n "$nagare_ip" ]; then ip route add $nagare_ip via $IPREMOTE table 5; fi
+		
+		# start opennet_dsl tunnel
+		if [ -n "$nagare_ip" ]; then /etc/init.d/S80openvpn start opennet_dsl; fi
 
                 ;;
         ifdown)
                 logger "running ppp.local script ifdown ppp"
 		
-		fw_rules del
+		# SNAT
+		iptables -t nat -D POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
+		iptables -t nat -D POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 		
 		# reset dns
 		mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
@@ -96,4 +68,10 @@ case "$ACTION" in
 		
 		# restart dhcp-server which forwards dns information
 		/etc/init.d/S50dnsmasq restart
+
+		# remove direct access to nagare
+		ip route flush table 5
+		
+		# stop opennet_dsl tunnel
+		/etc/init.d/S80openvpn stop opennet_dsl
 esac
