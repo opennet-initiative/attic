@@ -4,13 +4,15 @@
 
 DEBUG=true
 
+table_5=$(ip route show table 5)
+if [ "$1" = "quick" ] && [ -z "$table_5" ] && ! [ -e /var/run/openvpn.dsl.pid ]; then return; fi
+
 eval $(netparam)
 
 ip_remote=$(route -n | awk '$8 == "'$WANDEV'"  && $1 == "0.0.0.0" { print $2; exit }')
-table_5=$(ip route show table 5)
 
 if [ -z "$WANDEV" ] || [ -z "$ip_remote" ] || [ -z "$table_5" ]; then
-	# es gibt kein WANDEV mehr, keine default route über WANDEV oder keine spzifische Route zu nagare
+	# es gibt kein WANDEV mehr, keine default route über WANDEV oder keine spezifische Route zu nagare
 	test $DEBUG && logger -t check_nagare "stoppe opennet_dsl tunnel (wenn gestartet)"
 	/etc/init.d/S80openvpn stop opennet_dsl
 	ip route flush table 5 2>/dev/null
