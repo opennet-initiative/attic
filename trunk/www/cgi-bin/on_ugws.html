@@ -34,6 +34,7 @@ In diesem Bereich kannst Du Deinen Breitband-Anschluss für Opennet-Mitglieder zu
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
 <div id="description">
+<br />
 Wenn Du selbst einen Breitband-Anschluss besitzt, kannst Du diesen hier für die Nutzung im Opennet freigeben. Die Verbindung zum Breitband-Anschluss muss dabei über die WAN-Buchse deines AccessPoint hergestellt werden. Wenn Du DSL nutzt, kannst den AP auch für die Einwahl ins Internet nutzen (siehe <a href="wan.html">WAN</a>)<br />
 Für die Freigabe Deines Breitband-Anschlusses wird ein Tunnel zwischen Deinem AccessPoint und dem Opennet-Gateway "nagare" über das Internet aufgebaut. Dieser Gateway ist dadurch direkt mit Deinem AccessPoint verbunden und wird so Teil des Opennet. Alle Nutzer, die Deinen AP erreichen, können somit auch den Gateway "nagare" erreichen und zu diesem, wie zu allen Vereinsgateways, einen Nutzer-Tunnel aufbauen.<br />
 Um "nagare" einzubinden (und somit Internet freizugeben) musst Du also (genauso wie wenn Du aktiver Nutzer bist) zuerst einen Schlüssel und eine Zertifikatanfrage generieren.
@@ -305,13 +306,13 @@ openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
 openssl_organizationalUnitName="user gateways"
 
-openssl_countryName=$(unescape $openssl_countryName); export openssl_countryName
-openssl_provinceName=$(unescape $openssl_provinceName); export openssl_provinceName
-openssl_localityName=$(unescape $openssl_localityName); export openssl_localityName
-openssl_organizationName=$(unescape $openssl_organizationName); export openssl_organizationName
-openssl_organizationalUnitName=$(unescape $openssl_organizationalUnitName); export openssl_organizationalUnitName
-openssl_commonName=$(unescape $openssl_commonName); export openssl_commonName
-openssl_EmailAddress=$(unescape $openssl_EmailAddress); export openssl_EmailAddress
+openssl_countryName=$(unescape "$openssl_countryName"); export openssl_countryName
+openssl_provinceName=$(unescape "$openssl_provinceName"); export openssl_provinceName
+openssl_localityName=$(unescape "$openssl_localityName"); export openssl_localityName
+openssl_organizationName=$(unescape "$openssl_organizationName"); export openssl_organizationName
+openssl_organizationalUnitName=$(unescape "$openssl_organizationalUnitName"); export openssl_organizationalUnitName
+openssl_commonName=$(unescape "$openssl_commonName"); export openssl_commonName
+openssl_EmailAddress=$(unescape "$openssl_EmailAddress"); export openssl_EmailAddress
 
 openssl req -days 3650 -nodes -new -keyout /etc/openvpn/opennet_dsl/on_ugws.key -out /etc/openvpn/opennet_dsl/on_ugws.csr
 

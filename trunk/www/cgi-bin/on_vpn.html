@@ -226,15 +226,15 @@ echo "<pre>"
 openssl_countryName="de"
 openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
-openssl_organizationalUnitName="OUN"
+openssl_organizationalUnitName="users"
 
-openssl_countryName=$(unescape $openssl_countryName); export openssl_countryName
-openssl_provinceName=$(unescape $openssl_provinceName); export openssl_provinceName
-openssl_localityName=$(unescape $openssl_localityName); export openssl_localityName
-openssl_organizationName=$(unescape $openssl_organizationName); export openssl_organizationName
-openssl_organizationalUnitName=$(unescape $openssl_organizationalUnitName); export openssl_organizationalUnitName
-openssl_commonName=$(unescape $openssl_commonName); export openssl_commonName
-openssl_EmailAddress=$(unescape $openssl_EmailAddress); export openssl_EmailAddress
+openssl_countryName=$(unescape "$openssl_countryName"); export openssl_countryName
+openssl_provinceName=$(unescape "$openssl_provinceName"); export openssl_provinceName
+openssl_localityName=$(unescape "$openssl_localityName"); export openssl_localityName
+openssl_organizationName=$(unescape "$openssl_organizationName"); export openssl_organizationName
+openssl_organizationalUnitName=$(unescape "$openssl_organizationalUnitName"); export openssl_organizationalUnitName
+openssl_commonName=$(unescape "$openssl_commonName"); export openssl_commonName
+openssl_EmailAddress=$(unescape "$openssl_EmailAddress"); export openssl_EmailAddress
 
 openssl req -days 3650 -nodes -new -keyout /etc/openvpn/opennet_user/on_aps.key -out /etc/openvpn/opennet_user/on_aps.csr
 
