@@ -1,0 +1,102 @@
+#!/bin/sh
+
+export DATE="5.9.2005"
+export TITLE="Verwaltung: DSL-Freigabe"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: DSL-Freigabe</H1>
+EOF
+
+if [ "$REQUEST_METHOD" != "POST" ]; then
+
+cat<<EOF
+it makes no sense to call this site directly
+EOF
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Datei-Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+
+cat<<EOF
+<P>Der Datei-Ladevorgang wird ausgef&uuml;hrt.</P>
+
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>
+EOF
+if [ -z "${ffout##*.key}" ] && ! [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+	echo "geheimer Schlüssel wurde hochgeladen und in /etc/openvpn/opennet_dsl/ als Datei on_ugws.key gespeichert"
+	cp "$ffout" /etc/openvpn/opennet_dsl/on_ugws.key
+elif [ -z "${ffout##*.crt}" ] && ! [ -f  /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+	echo "Zertifikat wurde hochgeladen und in  /etc/openvpn/opennet_dsl/ als Datei on_ugws.crt gespeichert"
+	cp "$ffout" /etc/openvpn/opennet_dsl/on_ugws.crt
+elif [ -z "${ffout##*.key}" ] || [ -z "${ffout##*.crt}" ]; then
+	rm -f /tmp/on_ugws_upload.key
+	rm -f /tmp/on_ugws_upload.crt
+	echo "<H1>"
+	if [ -z "${ffout##*.key}" ]; then 
+		cp $ffout /tmp/on_ugws_upload.key 
+		echo "Geheimer Schlüssel (Datei on_ugws.key im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
+	elif [ -z "${ffout##*.crt}" ]; then
+		cp $ffout /tmp/on_ugws_upload.crt
+		echo "Zertifikat (Datei on_ugws.crt im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
+	fi
+	echo "</H1>"
+cat<<EOF
+<FORM ACTION="on_ugws.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR>
+<TD>
+Es sollte nur in wenigen Fällen nötig sein, auf dem Router euren geheimen Schlüssel oder das Zertifikat zu überschreiben.
+Wenn Du den geheimen Schlüssel vorher nicht heruntergeladen hast, ist dieser <B>unwiederbringlich verloren, das Zertifikat wertlos</B>.
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="upload_force" TITLE="vorhandene Datei löschen." TYPE="SUBMIT" VALUE="Datei überschreiben">   <INPUT NAME="upload_abort" TITLE="Abbruch" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+else
+cat<<EOF
+	Dateibezeichnung endet nicht mit *.key oder *.crt. Hochladen abgebrochen.</TD>
+EOF
+fi
+rm -f "$ffout"
+
+
+cat<<EOF
+</TR></TBODY>
+</TABLE>
+<br>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Datei-Ladevorgang wurde nicht ausgef&uuml;hrt.</P>
+EOF
+
+fi
+
+. ${0%/*}/cgi-bin-post.sh
