@@ -24,9 +24,9 @@ case "$ACTION" in
 		ip route add default via $IPREMOTE table 4
 		
 		# set dns
-		nvram set wifi_dns_store=$(nvram get wifi_dns)
+		nvram set wifi_dns_store="$(nvram get wifi_dns)"
 		nvram set wifi_dns="$DNS1 $DNS2"
-		nvram set on_store_autodns=$(nvram get on_autodns)
+		nvram set on_store_autodns="$(nvram get on_autodns)"
 		nvram set on_autodns="off"
 		
 		mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
@@ -41,15 +41,8 @@ case "$ACTION" in
 		# restart portmapping to forward packets before filtering
 		/etc/init.d/S82portmapping restart
 		
-		# enable direct access to nagare
-		ip route flush table 5
-		nagare_ip=$(ping -c 1 nagare.on-i.de 2>/dev/null | grep PING);
-		nagare_ip=${nagare_ip#*\(};
-		nagare_ip=${nagare_ip%%\)*};
-		if [ -n "$nagare_ip" ]; then ip route add $nagare_ip via $IPREMOTE table 5; fi
-		
-		# start opennet_dsl tunnel
-		if [ -n "$nagare_ip" ]; then /etc/init.d/S80openvpn start opennet_dsl; fi
+		# enable direct access to nagare and start dsl tunnel
+		/usr/sbin/check_nagare.sh
 
                 ;;
         ifdown)
@@ -63,15 +56,14 @@ case "$ACTION" in
 		mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
 		chmod a+r /etc/resolv.conf
 		
-		nvram set on_autodns=$(nvram get on_store_autodns)
-		nvram set wifi_dns=$(nvram get wifi_dns_store)
+		nvram set on_autodns="$(nvram get on_store_autodns)"
+		nvram set wifi_dns="$(nvram get wifi_dns_store)"
+		nvram unset on_store_autodns
+		nvram unset wifi_dns_store
 		
 		# restart dhcp-server which forwards dns information
 		/etc/init.d/S50dnsmasq restart
 
-		# remove direct access to nagare
-		ip route flush table 5
-		
-		# stop opennet_dsl tunnel
-		/etc/init.d/S80openvpn stop opennet_dsl
+		# disable direct access to nagare and stop dsl tunnel
+		/usr/sbin/check_nagare.sh
 esac
