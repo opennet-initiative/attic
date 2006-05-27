@@ -62,7 +62,11 @@ start)
               echo -n " ($2 is still running)"
 	else
 		NAME=$2
-		start_vpn
+		if [ $NAME = "opennet_dsl" ] && ([ -z "$WANDEV" ] || [ "$(nvram get on_sharedsl)" != "on" ]); then
+			echo -n " (opennet_dsl not activated)"
+		else
+			start_vpn
+		fi
 	fi
     else
       echo -n " No such VPN: $2"
