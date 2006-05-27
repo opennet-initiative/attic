@@ -162,7 +162,7 @@ for on_gwaddr in $old_gwaddrs; do
 		
 				#
 		
-				/etc/init.d/S80openvpn restart
+				/etc/init.d/S80openvpn restart opennet_user
 				changed_gw="changed"
 				on_gwcount=0
 

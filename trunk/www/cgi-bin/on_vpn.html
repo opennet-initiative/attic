@@ -316,7 +316,7 @@ EOF
 echo -n "<PRE>"
 
 /etc/init.d/S60ntpclient start >/dev/null
-/etc/init.d/S80openvpn restart
+/etc/init.d/S80openvpn restart opennet_user
 echo "</PRE>"
 
 elif [ -n "$upload_abort" ]; then
