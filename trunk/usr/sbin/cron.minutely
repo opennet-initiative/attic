@@ -6,6 +6,9 @@ BEGIN {
 	# i like shell scripting better: check if gateway is recent
 	system("/usr/sbin/cron.minutely_ongateway")
 	
+	# check if nagare is still reached via WANDEV
+	system("/usr/sbin/check_nagare.sh quick")
+		
 	# Get counters of wifi for check
 	#while(getline<"/proc/net/wireless") {
 	#	if (/^$/) break
