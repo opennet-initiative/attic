@@ -4,21 +4,42 @@
 
 DEBUG=true
 
+# if dsl-sharing is temporary blocked, counter will be decreased every minute.
+on_sharedsl_blocked=$(nvram get on_sharedsl_blocked)
+if [ "$1" = "quick" ] && [ -n "$on_sharedsl_blocked" ]; then
+	nvram set on_sharedsl_blocked=$(($on_sharedsl_blocked-1))
+	# if counter reaches zero, dsl is (re)activated
+	if [ "$on_sharedsl_blocked" = "0" ]; then
+		nvram unset on_sharedsl_blocked
+		nvram set on_sharedsl="on"
+		nvram commit
+		/etc/init.d/S80openvpn start opennet_dsl
+	fi
+fi
+
+# check if special entr y in routing table is still available
 table_5=$(ip route show table 5)
-if [ "$1" = "quick" ] && [ -z "$table_5" ] && ! [ -e /var/run/openvpn.dsl.pid ]; then return; fi
+if [ -z "$table_5" ]; then
+	if [ -e /var/run/openvpn.opennet_dsl.pid ]; then
+		test $DEBUG && logger -t check_nagare "stopping opennet_dsl tunnel (route table 5 empty)"
+		/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+	fi
+fi
+
+if [ "$1" = "quick" ]; then return; fi
 
 eval $(netparam)
 
 ip_remote=$(route -n | awk '$8 == "'$WANDEV'"  && $1 == "0.0.0.0" { print $2; exit }')
 
-if [ -z "$WANDEV" ] || [ -z "$ip_remote" ] || [ -z "$table_5" ]; then
-	# es gibt kein WANDEV mehr, keine default route über WANDEV oder keine spezifische Route zu nagare
-	test $DEBUG && logger -t check_nagare "stoppe opennet_dsl tunnel (wenn gestartet)"
-	/etc/init.d/S80openvpn stop opennet_dsl
-	ip route flush table 5 2>/dev/null
-fi	
+#~ if [ -z "$WANDEV" ] || [ -z "$ip_remote" ] || [ -z "$table_5" ]; then
+	#~ # es gibt kein WANDEV mehr, keine default route über WANDEV oder keine spezifische Route zu nagare
+	#~ test $DEBUG && logger -t check_nagare "stoppe opennet_dsl tunnel (wenn gestartet)"
+	#~ /etc/init.d/S80openvpn stop opennet_dsl
+	#~ ip route flush table 5 2>/dev/null
+#~ fi	
 
-if [ "$1" = "quick" ] || [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then return; fi
+if [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then return; fi
 
 nagare_old_ip=$(echo $table_5 | cut -d' ' -f1)
 old_ip_remote=$(echo $table_5 | cut -d' ' -f3)

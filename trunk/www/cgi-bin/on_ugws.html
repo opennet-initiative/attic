@@ -7,7 +7,7 @@ export TITLE="Verwaltung: Internet-Freigabe"
 cat<<EOF
 <script type="text/javascript">document.getElementById('idx17').className="idx selected";</script>
 
-<H1>Verwaltung: DSL-Freigabe</H1>
+<H1>Verwaltung: Internet-Freigabe</H1>
 EOF
 
 if [ "$REQUEST_METHOD" = "POST" ]; then
@@ -22,15 +22,11 @@ openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
 openssl_organizationalUnitName="user gateways"
 
+on_sharedsl="$(nvram get on_sharedsl)"
+on_sharedsl_blocked="$(nvram get on_sharedsl_blocked)"
+
 cat<<EOF
 In diesem Bereich kannst Du Deinen Breitband-Anschluss für Opennet-Mitglieder zur Nutzung freigeben.<br />
-<TABLE BORDER="0" CLASS="note">
-<TBODY>
-<TR>
-<TD>Auf dieser Seite werden nur Schlüssel, Zertifikate und Anfragen für die DSL-Freigabe verwaltet. Die Konfiguration von OpenVPN für die Internet-Nutzung über Opennet findest du unter <a href="on_vpn.html">VPN Config</a>.</TD>
-</TR>
-</TBODY>
-</TABLE>
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
 <div id="description">
@@ -45,8 +41,82 @@ Um "nagare" einzubinden (und somit Internet freizugeben) musst Du also (genauso 
 </script>
 <!-- ----------------------------------------------------------- -->
 <br />
+EOF
+if [ -z "$on_sharedsl_blocked" ] && [ "$on_sharedsl" = "on" ] && [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] && [ -n  "$(ip route show table 5)" ]; then
+cat<<EOF
+<H2>Vorübergehende Deaktivierung</H2>
+<!-- show the following area only, if user likes more information -->
+<a id="switch3" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
+<div id="description3">
+Hier kannst Du für eine von Dir wählbare Zeit - maximal einen Tag - deine Internetfreigabe vorübergehend deaktivieren. Nach Ablauf dieser Zeit wird - wie zu erwarten - Dein Breitbandanschluss wieder für andere Opennet-Nutzer freigegeben. Du kannst während dieser Zeit selbstverständlich die Internet-Freigabe manuell reaktivieren.
+</div>
+<script type="text/javascript">
+	document.getElementById('switch3').style.display='inline';
+	document.getElementById('description3').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+<FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Vorübergehende Abschaltung der Internet-Unterverteilung">
+<TBODY>
+	<tr>
+	<TD>Internet-Freigabe für
+	<SELECT NAME="block_min" VALUE='30'>
+	<OPTION VALUE='10'>10 Minuten</OPTION>
+	<OPTION VALUE='20'>20 Minuten</OPTION>
+	<OPTION VALUE='30' SELECTED="true">30 Minuten</OPTION>
+	<OPTION VALUE='45'>45 Minuten</OPTION>
+	<OPTION VALUE='60'>1 Stunde</OPTION>
+	<OPTION VALUE='90'>1,5 Stunden</OPTION>
+	<OPTION VALUE='120'>2 Stunden</OPTION>
+	<OPTION VALUE='180'>3 Stunden</OPTION>
+	<OPTION VALUE='240'>4 Stunden</OPTION>
+	<OPTION VALUE='300'>5 Stunden</OPTION>
+	<OPTION VALUE='360'>6 Stunden</OPTION>
+	<OPTION VALUE='480'>8 Stunden</OPTION>
+	<OPTION VALUE='600'>10 Stunden</OPTION>
+	<OPTION VALUE='720'>12 Stunden</OPTION>
+	<OPTION VALUE='960'>16 Stunden</OPTION>
+	<OPTION VALUE='1200'>20 Stunden</OPTION>
+	<OPTION VALUE='1440'>einen Tag</OPTION>
+</SELECT>
+	</TD>
+	<TD><INPUT NAME="quick_block" TITLE="deaktivieren" TYPE="SUBMIT" VALUE="deaktivieren"></TD>
+	</tr>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+fi
+cat<<EOF
 <H2>Status</H2>
+EOF
+if [ -n "$on_sharedsl_blocked" ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD><b>ACHTUNG:</b> Die Internet-Freigabe wurde vorübergehend deaktiviert. <b>In $on_sharedsl_blocked Minuten</b> wird Dein Breitbandanschluss wieder <b>automatisch freigegeben</b>. Wenn Du die Internet-Freigabe wieder manuell aktivierst, wird die Deaktivierung sofort aufgehoben.</TD>
+</TR>
+</TBODY>
+</TABLE>
+<br />
+EOF
+fi
+cat<<EOF
 
+<!-- show the following area only, if user likes more information -->
+<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
+<div id="description2">
+<b>User-Gateway-Tunnel:</b> ist der Tunnel aktiv, teilst Du Deinen Internetzugang.
+<br /><br />
+<b>Internet-Freigabe möglich/nicht möglich:</b> Hier wird angezeigt, ob die Firmware auf dem AP einen Internetzugang am WAN-Anschluss erkannt hat, den Du teilen kannst. Dies wird stündlich geprüft, Du kannst den Test auch manuell starten. Wenn Du einen Breitbandzugang am WAN-Port angeschlossen hast, und hier angegeben wird, dass eine Freigabe nicht möglich ist, so solltest Du Dich im <a href="http://forum.on-i.de">Forum</a> melden, sehr wahrscheinlich sind nicht alle möglichen Verbindungsoptionen berücksichtigt worden.
+<br /><br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch2').style.display='inline';
+	document.getElementById('description2').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
 <FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
 TITLE="Informationen zu DSL-OpenVPN und nötigen Dateien">
@@ -55,9 +125,14 @@ TITLE="Informationen zu DSL-OpenVPN und nötigen Dateien">
 EOF
 if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
 	if [ -f  /tmp/openvpn_dsl_msg.txt ];then
-		echo "<tr /><tr><td>Tunnel zu "nagare" aktiv</td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td /></tr>"
+		echo "<tr /><tr><td>User-Gateway-Tunnel aktiv</td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td /></tr>"
 	else
-		echo "<tr /><tr><td>Tunnel zu "nagare" nicht aktiv</td><td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
+		if [ -f  /var/run/openvpn.opennet_dsl.pid ];then
+			echo "<tr /><tr><td>User-Gateway-Tunnel startend</td>"
+		else
+			echo "<tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
+		fi	
+		echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
 	fi
 fi
 	if [ -n  "$(ip route show table 5)" ];then
@@ -76,7 +151,7 @@ cat<<EOF
 	<TD><INPUT NAME="dsl_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen"></TD>
 	</tr>
 EOF
-on_sharedsl="$(nvram get on_sharedsl)"
+
 if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
 	if [ "$on_sharedsl" = "on" ];then
 cat<<EOF
@@ -99,18 +174,7 @@ fi
 cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
-<!-- show the following area only, if user likes more information -->
-<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
-<div id="description2">
-Tunnel zu "nagare" - ist der Tunnel aktiv, teilst Du Deinen Internetzugang.<br />
-Internet-Freigabe möglich/nicht möglich - Hier wird angezeigt, ob die Firmware auf dem AP einen Internetzugang am WAN-Anschluss erkannt hat, den Du teilen kannst. Dies wird stündlich geprüft, Du kannst den Test auch manuell starten. Wenn Du einen Breitbandzugang am WAN-Port angeschlossen hast, und hier angegeben wird, dass eine Freigabe nicht möglich ist, so solltest Du Dich im <a href="http://forum.on-i.de">Forum</a> melden, sehr wahrscheinlich sind nicht alle möglichen Verbindungsoptionen berücksichtigt worden.<br />
-</div>
-<script type="text/javascript">
-	document.getElementById('switch2').style.display='inline';
-	document.getElementById('description2').style.display='none';
-</script>
-<!-- ----------------------------------------------------------- -->
-<br />
+<br /><br />
 <FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
 TITLE="Informationen zu DSL-OpenVPN und nötigen Dateien">
@@ -143,11 +207,18 @@ if [ -f  /etc/openvpn/opennet_dsl/on_ugws.csr ] && ! [ -f /etc/openvpn/opennet_d
 	echo "Schicke die Zertifikatanfrage (CSR) <b> und nur diese Datei </b> an csr_dsl@opennet-initiative.de, um ein Zertifikat zu erhalten."
 fi
 
-
-#if ! [ -f /tmp/ap_XX.csr ]; then
 cat<<EOF
 
-<H2>Schlüssel-Verwaltung</H2>
+<br />
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD><b>ACHTUNG:</b> Auf dieser Seite werden nur Schlüssel, Zertifikate und Anfragen für die Internet-Freigabe verwaltet. Die Konfiguration von OpenVPN für die Internet-Nutzung über Opennet findest du unter <a href="on_vpn.html">VPN Config</a>.</TD>
+</TR>
+</TBODY>
+</TABLE>
+
+<H2>User-Gateway-Tunnel Schlüssel-Verwaltung</H2>
 EOF
 	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
 cat<<EOF
@@ -156,7 +227,7 @@ EOF
 	fi
 cat<<EOF
 <FORM ID="vpn_upload_form" ACTION="on_ugws_upload.html" ENCTYPE="multipart/form-data" METHOD="POST">
-<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="note"
 TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus">
 <TBODY>
 <TR>
@@ -178,13 +249,7 @@ EOF
 	fi
 cat<<EOF
 
-
-
-
-EOF
-#else
-cat<<EOF
-<H2>Schlüssel-Erstellung</H2>
+<H2>User-Gateway-Tunnel Schlüssel-Erstellung</H2>
 EOF
 	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
 cat<<EOF
@@ -194,7 +259,7 @@ EOF
 cat<<EOF
 
 <FORM ID="vpn_genkey_form" ACTION="on_ugws.html" CLASS="form" METHOD="POST">
-<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="note">
 <TBODY>
 <TR TITLE="Staat"><TD>Staat:</TD>
 <TD><INPUT NAME="openssl_countryName" SIZE="48" TYPE="TEXT" VALUE="$openssl_countryName" $(if [ -n "$openssl_countryName" ];then echo ' disabled="disabled"';fi)></TD>
@@ -226,6 +291,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 <TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
+
 EOF
 	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
 cat<<EOF
@@ -235,18 +301,26 @@ cat<<EOF
 </script>
 EOF
 	fi
-cat<<EOF
 
-
-EOF
-#fi
-cat<<EOF
-
-EOF
 else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
-if [ -n "$gen_csr" ]; then
+
+if [ -n "$quick_block" ]; then
+	nvram set on_sharedsl_blocked=$block_min
+	nvram set on_sharedsl="off"
+	nvram commit
+	/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Der Internetzugang wurde deaktiviert und wird automatisch in $block_min Minuten neu gestartet.</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+
+elif [ -n "$gen_csr" ]; then
 	if [ -f /etc/openvpn/opennet_dsl/on_ugws.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.csr ]; then
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
@@ -395,6 +469,7 @@ elif [ -n "$dsl_switch" ]; then
 	else
 		on_sharedsl="on"
 		/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+		nvram unset on_sharedsl_blocked
 	fi
 	nvram set on_sharedsl="$on_sharedsl"
 	nvram commit
