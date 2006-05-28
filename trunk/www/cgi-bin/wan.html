@@ -21,6 +21,7 @@ cat<<EOF
 <FORM ACTION="wan.html" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TBODY>
+<tr><td colspan="2"><b>Schnittstellen-Konfiguration</b></td></tr>
 <TR
 TITLE="Bestimmt die Betriebsart des Internet-Anschlusses (einzelne RJ45-Buchse). Ist PPPoE-Paket installiert, wird in der Betriebsart 'PPPoE' wird der PPPoE-Daemon automatisch gestartet.">
 <TD>WAN-Protokoll:</TD>
@@ -78,45 +79,99 @@ TITLE="MTU">
 <TD>PPP MTU:</TD>
 <TD><INPUT NAME="ppp_mtu" SIZE="32" TYPE="TEXT" VALUE="$(nvram get ppp_mtu)"$(if [ "$wan_proto" != "pppoe" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
-
+<tr><td colspan="2">
+<table class="form">
+<TR><TD colspan="2">Hinweis: die DNS-Einstellungen sind für alle Schnittstellen gültig.</td></tr>
+<TR>
+	<TD colspan="2">
+	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.lan_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
+	</TD>
+</TR>
 <TR
-TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen. Ist das Eingabefeld leer, wird eine voreingestellte Standard-Adresse verwendet.">
+TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen.">
 <TD>DNS-Server:</TD>
-<TD><INPUT NAME="wan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_dns)"></TD>
+<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
 </TR>
-<TR
-TITLE="Unter diesem Namen kann das Gerät angesprochen werden. Dieser Name wird auch auf der Kommandozeile angezeigt.">
-<TD>Rechnername:</TD>
-<TD><INPUT NAME="wan_hostname" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_hostname)"></TD>
-</TR>
-<TR
-TITLE="Internet-Namen in dieser Domain werden als lokale Rechner gewertet. Bitte eine Namen wählen, der nicht im Internet benutzt wird.">
-<TD>Domain:</TD>
-<TD><INPUT NAME="wan_domain" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wan_domain)"></TD>
+</table></td></tr>
+EOF
+	if [ -e /usr/sbin/ez-ipupdate ]; then
+cat<<EOF
+<tr><td colspan="2">
+<table class="form">
+<tr><td colspan="2">
+<b>Dynamischer IP DNS-Service</b><br />
+(es müssen nicht alle Felder ausgefüllt werden)
+</td></tr>
+<TR>
+	<TD>Service:</TD>
+	<TD>
+	<SELECT NAME="dyndns_service">
+EOF
+	service=$(awk 'BEGIN {FS="="} $1=="service-type" {print $2}' /etc/ez-ipupdate.conf)
+	if [ -z "$service" ]; then service="dyndns"; fi
+	ez-ipupdate -S dummy 2>&1 | awk 'BEGIN {RS=" "} $1 != "" {if(use) { res="<OPTION VALUE=\""$1"\""; if($1=="'$service'") res=res" SELECTED=\"true\""; res=res"\">"$1"</OPTION>"; print res}; if($1=="null"){ use=1;}}'
+	user=$(awk 'BEGIN {FS="=|:"} $1=="user" {print $2}' /etc/ez-ipupdate.conf)
+	pass=$(awk 'BEGIN {FS="=|:"} $1=="user" {print $3}' /etc/ez-ipupdate.conf)
+	host=$(awk 'BEGIN {FS="="} $1=="host" {print $2}' /etc/ez-ipupdate.conf)
+	server=$(awk 'BEGIN {FS="="} $1=="server" {print $2}' /etc/ez-ipupdate.conf)
+	partner=$(awk 'BEGIN {FS="="} $1=="partner" {print $2}' /etc/ez-ipupdate.conf)
+cat<<EOF
+	</SELECT>
+	</TD>
 </TR>
 <TR>
-<TD COLSPAN="2"> </TD>
+<TD>Nutzername:</TD>
+<TD><INPUT NAME="dyndns_user" SIZE="32" TYPE="TEXT" VALUE="$user" {print $2}' /etc/ez-ipupdate.conf)"></TD>
 </TR>
+<TR>
+<TD>Passwort:</TD>
+<TD><INPUT NAME="dyndns_pass" SIZE="32" TYPE="TEXT" VALUE="$pass"></TD>
+</TR>
+<TR>
+<TD>Hostname:</TD>
+<TD><INPUT NAME="dyndns_host" SIZE="32" TYPE="TEXT" VALUE="$host"></TD>
+</TR>
+<TR>
+<TD>Server:</TD>
+<TD><INPUT NAME="dyndns_server" SIZE="32" TYPE="TEXT" VALUE="$server"></TD>
+</TR>
+<TR>
+<TD>EasyDNS-Partner:</TD>
+<TD><INPUT NAME="dyndns_partner" SIZE="32" TYPE="TEXT" VALUE="$partner"></TD>
+</TR>
+</table></td></tr>
+EOF
+	fi
+cat<<EOF
+<tr><td colspan="2"></td></tr>
 <TR>
 <TD COLSPAN="2"><INPUT NAME="post_wan" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
-<P><B>Tipp</B>: F&uuml;r einen bequemen Netzzugriff
-sollte der <B>Rechnername</B> (einfacher Name ohne Punkte) und die
-interne <B>Domain</B> (mehrfacher Name mit Punkten getrennt) angegeben
-sein. Beispiel: Setze <B>Rechnername</B> auf &quot;meinwrt&quot; und <B>Domain</B>
-auf &quot;meinnetz.freifunk.net&quot; um die Seiten des Ger&auml;tes mit
-<A HREF="http://meinwrt.meinnetz.freifunk.net/">http://meinwrt.meinnetz.freifunk.net/</A>
-oder sogar nur mit <A HREF="http://meinwrt/">http://meinwrt/</A>
-aufzurufen.</P>
+<br />
 EOF
-
+	if ! [ -e /usr/sbin/ez-ipupdate ]; then
+cat<<EOF
+<b>HINWEIS: </b> Wenn Du nach der Internet-Einwahl einen dynamischen IP DNS-Service nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&pkg=ez-ipupdate">Paket ez-ipupdate installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>.<br />
+<br />
+EOF
+	fi
 else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_wan" ]; then
-for V in wan_proto wan_ipaddr wan_netmask wan_gateway wan_dns wan_hostname wan_domain ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu; do
+
+mv -f /etc/ez-ipupdate.conf /etc/ez-ipupdate.conf_bak
+if [ -n "$dyndns_service" ]; then echo "service-type=$dyndns_service" >>/etc/ez-ipupdate.conf; fi
+if [ -n "$dyndns_user" ] || [ -n $dyndns_pass ]; then echo "user=$dyndns_user:$dyndns_pass" >>/etc/ez-ipupdate.conf; fi
+if [ -n "$dyndns_host" ]; then echo "host=$dyndns_host" >>/etc/ez-ipupdate.conf; fi
+if [ -n "$dyndns_server" ]; then echo "server=$dyndns_server" >>/etc/ez-ipupdate.conf; fi
+if [ -n "$dyndns_partner" ]; then echo "partner=$dyndns_partner" >>/etc/ez-ipupdate.conf; fi
+awk 'BEGIN {FS="="} $1 !~ "service-type|user|host|server|partner" {print}' /etc/ez-ipupdate.conf_bak >>/etc/ez-ipupdate.conf
+
+for V in wan_proto wan_ipaddr wan_netmask wan_gateway lan_dns ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu; do
+
 if [ "$V" != "wan_proto" ]; then
 	if [ "$(nvram get wan_proto)" != "static" ]; then
 		if [ "$V" = "wan_ipaddr" ] || [ "$V" = "wan_netmask" ] || [ "$V" = "wan_gateway" ]; then
@@ -168,7 +223,7 @@ cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
 <TR>
-<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+<TD>Es wurden keine Einstellungen ge&auml;ndert. Wurden Einstellungen des dynamischen IP DNS-Service geändert, werden diese bei der nächsten (Re)Aktivierung des WAN-Anschlusses benutzt.</TD>
 </TR></TBODY>
 </TABLE>
 EOF
