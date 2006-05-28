@@ -56,7 +56,7 @@ map_all_ports() {
 	
 	# (un)Mapping Opennet Ports
 	
-	if [ -n "$WIFDEV" ]; then
+	if [ -n "$WIFIDEV" ]; then
 		echo "** Opennet (WLAN-Access) ports **"
 		for on_internal_mapping in $(nvram get on_intrlmap); do
 			port=$(echo $on_internal_mapping | cut -d'>' -f1)
