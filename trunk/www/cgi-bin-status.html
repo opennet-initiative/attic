@@ -464,6 +464,31 @@ cat<<EOF
 </TD>
 </TR>
 
+EOF
+if [ -n  "$(ip route show table 5)" ];then
+cat<<EOF
+<TR>
+<TR>
+<TD>Internet-Freigabe:</TD>
+<TD>
+EOF
+if [ -f  /tmp/openvpn_dsl_msg.txt ];then
+	echo "user-gateway active"
+else
+	echo "user-gateway inactive"
+	minutes=$(nvram get on_sharedsl_blocked)
+	if [ -n "$minutes" ]; then
+		echo " (Reaktivierung in $minutes Minuten)"
+	fi
+	echo "<img src="images/no.gif" alt="no" align="absmiddle">"
+fi
+cat<<EOF
+</TD>
+</TR>
+EOF
+fi
+cat<<EOF
+
 <TR>
 <TD>Ger&auml;telaufzeit:</TD>
 <TD>$(uptime)</TD>

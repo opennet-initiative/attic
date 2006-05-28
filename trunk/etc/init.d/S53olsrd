@@ -70,18 +70,6 @@ LoadPlugin "olsrd_dyn_gw_plain.so.0.3"
 EOM
 	fi
 
-	WAN_HOSTNAME=$(nvram get wan_hostname)
-	if [ -n "$WAN_HOSTNAME" ] && [ "$(nvram get ff_nameservice)" != "0" ]; then
-		cat>>/var/etc/olsrd.conf<<EOM
-LoadPlugin "olsrd_nameservice.so.0.2"
-{
-	PlParam	"name"		"$WAN_HOSTNAME"
-	PlParam	"hosts-file"	"/var/etc/hosts"
-	PlParam	"suffix"	".olsr"
-}
-EOM
-	fi
-
 	if [ "$(nvram get ff_httpinfo)" != "0" ]; then
 		HTTPINFO_PARA=
 		if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
