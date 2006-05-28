@@ -57,18 +57,20 @@ TITLE="Die Netzmaske ist ein Bitmuster. Die Netzmaske bestimmt, welche IP-Adress
 <TD>Netzmaske:</TD>
 <TD><INPUT NAME="wifi_netmask" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_netmask)"$(if [ "$wifi_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
-
+<tr><td colspan="2">
+<table class="form">
+<TR><TD colspan="2">Hinweis: die DNS-Einstellungen sind für alle Schnittstellen gültig.</td></tr>
 <TR>
 	<TD colspan="2">
-	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.wifi_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
+	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.lan_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
 	</TD>
 </TR>
 <TR
 TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen.">
-<TD>WLAN-DNS-Server:</TD>
-<TD><INPUT NAME="wifi_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get wifi_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
+<TD>DNS-Server:</TD>
+<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
 </TR>
-
+</table></td></tr>
 <TR>
 <TD COLSPAN="2"> </TD>
 </TR>
@@ -302,10 +304,10 @@ wl0_mode=sta
 wl0_infra=0
 ;;
 esac
-for V in wifi_proto wl0_mode wl0_infra wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns wifi_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_wep wl0_wep_bit wl0_key wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
+for V in wifi_proto wl0_mode wl0_infra wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns lan_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_wep wl0_wep_bit wl0_key wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
 eval "C=\$$V"
 C=$(unescape $C)
-if [ "$V" = "wifi_dns" ]; then
+if [ "$V" = "lan_dns" ]; then
 	if [ "$(nvram get on_autodns)" = "on" ]; then continue;
 	else
 		C="$(echo $C | awk '{gsub(","," ")} {print}')"
