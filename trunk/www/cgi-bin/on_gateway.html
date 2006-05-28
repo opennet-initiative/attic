@@ -107,10 +107,11 @@ TITLE="Gateway Konfiguration">
 <TD><b>OpenVPN-Test</b></TD>
 </TR>
 EOF
-change=
-reachable=0
+
+first_reachable_gw=	# indicates at which position there is a possible gateway
+is_a_better_gw="no"		# indicates that there is a 'better' gateway
 number=1
-gw_reachable="no"
+
 for on_gwaddr in $(nvram get on_gwaddrs); do
 	on_gw_addr=$(echo $on_gwaddr | cut -d":" -f1)
 	on_gw_status=$(echo $on_gwaddr | cut -d":" -f2)
@@ -122,29 +123,27 @@ cat<<EOF
 	<td id="route$number"> 
 EOF
 	blacklisted="$(nvram get on_gwblackaddrs | awk "/$on_gw_addr/"'{print}')"
+	reachable="$(route -n | cut -d" " -f1 | grep $on_gw_addr)"
  
-	if  [ "$(route -n | cut -d" " -f1 | grep $on_gw_addr)" = "$on_gw_addr" ]; then
+	#---------------------------------------------------------------------------------------------------------
+	if  [  -n "$reachable" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
-		if [ -z "$blacklisted" ]; then reachable=$(($reachable+1)); fi
 	else	
 		echo "<img src=\"../images/no.gif\" alt=\"no\">"
 	fi
 	
 	if [ "$(nvram get on_gw)" = "$on_gw_addr" ]; then
-		gw_reachable="yes"
 		if [ -f  /tmp/openvpn_msg.txt ];then
 			echo "Tunnel aktiv "
 		else
 			if [ -f /var/run/openvpn.opennet.pid ]; then echo "Tunnel startend "; fi
 		fi
-		if [ "$reachable" != "1" ] || [ -n "$blacklisted" ]; then change="yes"; fi
 	fi
 
 	if  [ -n "$blacklisted" ]; then echo "* gesperrt *"; fi
 
-	echo "</td>"
+	echo "</td><td id="vpntest$number">"
 	
-	echo "<td id="vpntest$number">"
 	if  [ "$on_gw_status" = "y" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
 	else	
@@ -152,16 +151,20 @@ EOF
 	fi
 	if  [ -n "$on_gw_status" ]; then echo " (vor $on_gw_age min)"; fi
 	echo "</td>"
+	#---------------------------------------------------------------------------------------------------------
 	
-	
+	if [ -z "$first_reachable_gw" ]; then
+		if [ -n "$reachable" ] && [ -z "$blacklisted" ] && [ "$on_gw_status" = "y" ]; then
+			first_reachable_gw="$number"
+			if [ "$(nvram get on_gw)" != "$on_gw_addr" ]; then
+				is_a_better_gw="yes"
+			fi
+		fi
+	fi
 	
 	number=$(($number+1))
 	echo "</TR>"
 done
-
-if [ "$gw_reachable" = "no" ] && [ "$reachable" != "0" ]; then
-	change="yes";
-fi
 
 cat<<EOF
 
@@ -240,7 +243,7 @@ cat<<EOF
 
 
 EOF
-if [ "$change" = "yes" ] && [ "$reachable" != "0" ]  && [ -n "$(nvram get on_gwcount)" ]; then
+if [ "$is_a_better_gw" = "yes" ]; then
 
 wait=$((6-$(nvram get on_gwcount)))
 
