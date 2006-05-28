@@ -9,9 +9,9 @@ if [ -n "$(nvram get on_store_autodns)" ]; then
 	nvram unset on_store_autodns
 fi
 	
-if [ -n "$(nvram get wifi_dns_store)" ]; then
-	nvram set wifi_dns="$(nvram get wifi_dns_store)"
-	nvram unset wifi_dns_store
+if [ -n "$(nvram get lan_dns_store)" ]; then
+	nvram set lan_dns="$(nvram get lan_dns_store)"
+	nvram unset lan_dns_store
 fi
 
 if [ "$(nvram get on_autodns)" = "on" ]; then
@@ -22,7 +22,7 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 		if [ -z "$dnsaddrs" ]; then
 			dnsaddrs=$gw_addr;
 		else
-			nvram set wifi_dns="$dnsaddrs $gw_addr"; break;
+			nvram set lan_dns="$dnsaddrs $gw_addr"; break;
 		fi
 	done
 fi

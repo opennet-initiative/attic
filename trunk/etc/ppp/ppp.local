@@ -24,8 +24,8 @@ case "$ACTION" in
 		ip route add default via $IPREMOTE table 4
 		
 		# set dns
-		nvram set wifi_dns_store="$(nvram get wifi_dns)"
-		nvram set wifi_dns="$DNS1 $DNS2"
+		nvram set lan_dns_store="$(nvram get lan_dns)"
+		nvram set lan_dns="$DNS1 $DNS2"
 		nvram set on_store_autodns="$(nvram get on_autodns)"
 		nvram set on_autodns="off"
 		
@@ -57,9 +57,9 @@ case "$ACTION" in
 		chmod a+r /etc/resolv.conf
 		
 		nvram set on_autodns="$(nvram get on_store_autodns)"
-		nvram set wifi_dns="$(nvram get wifi_dns_store)"
+		nvram set lan_dns="$(nvram get lan_dns_store)"
 		nvram unset on_store_autodns
-		nvram unset wifi_dns_store
+		nvram unset lan_dns_store
 		
 		# restart dhcp-server which forwards dns information
 		/etc/init.d/S50dnsmasq restart
