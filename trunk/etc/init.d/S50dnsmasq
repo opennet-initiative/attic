@@ -9,11 +9,6 @@ test -d /var/run || mkdir -p /var/run # create directory if not found
 
 write_config()
 {
-	WAN_DOMAIN_LOCAL=
-	WAN_DOMAIN_DOMAIN=
-	test -n "$WAN_DOMAIN" && WAN_DOMAIN_LOCAL="local=/.$WAN_DOMAIN/"
-	test -n "$WAN_DOMAIN" && WAN_DOMAIN_DOMAIN="domain=$WAN_DOMAIN"
-
 	cat>/var/etc/dnsmasq.conf<<EOF
 # filter what we send upstream
 bogus-priv
@@ -21,8 +16,6 @@ filterwin2k
 
 # allow /etc/hosts and dhcp lookups via *.lan
 addn-hosts=/etc/local.hosts
-$WAN_DOMAIN_LOCAL
-$WAN_DOMAIN_DOMAIN
 expand-hosts
 
 EOF
@@ -99,13 +92,6 @@ EOF
 		echo "dhcp-option=wlnat,6,$dnsaddrs" >>/var/etc/dnsmasq.conf
 	fi
 
-
-	WAN_HOSTNAME=$(nvram get wan_hostname)
-	if test -n "$WAN_HOSTNAME" && test -n "$LANADR"; then
-		echo "address=/$WAN_HOSTNAME/$LANADR">>/var/etc/dnsmasq.conf
-		echo "address=/$WAN_HOSTNAME.$WAN_DOMAIN/$LANADR">>/var/etc/dnsmasq.conf
-	fi
-
 	cat>>/var/etc/dnsmasq.conf<<EOF
 dhcp-leasefile=/var/run/dhcp.leases
 
@@ -128,7 +114,6 @@ EOF
 case $1 in
 	start)
 		echo "Starting dnsmasq..."
-		WAN_DOMAIN=$(nvram get wan_domain)
 		export NVRAM_wan_ifname
 		export NVRAM_lan_ifname
 		export NVRAM_lan_ifnames
@@ -136,7 +121,6 @@ case $1 in
 		write_config
 
 		rm -f /var/etc/resolv.conf
-		echo "search $WAN_DOMAIN">/var/etc/resolv.conf
 		echo "nameserver 127.0.0.1">>/var/etc/resolv.conf
 		# Compatibility with openwrt
 		ln -sf /var/etc/resolv.conf /tmp/resolv.conf
