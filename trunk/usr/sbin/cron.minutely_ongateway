@@ -40,11 +40,17 @@ old_gwaddrs=$(nvram get on_gwaddrs)
 # parameter is ip-address to test in $1
 test_vpngateway()
 {
+	# if there is no cert, no chance (and sense) to check the target gateways
+	if ! [ -e /etc/openvpn/opennet_user/on_aps.crt ]; then return; fi
+	
 	# never try to connect to blacklisted Gateways
 	if [ -n "$(nvram get on_gwblackaddrs | awk "/$on_gwaddr/"'{print}')" ]; then
 			return;
 	fi
 
+	# if gateway could only be reached over a local tunnel, dont use it.
+	if [ -n "$(route -n | awk '$1 == "'$gw'" && $8 ~ "^tap|^tun" { print $8; exit }')" ]; then return; fi
+	
 	# check if it is possible to open tunnel to the gateway (10 sec. maximum)
 	# test-parameters; '--dev null' will be prefaced
 	openvpn_test_parameters="--client --ns-cert-type server --remote $1 1600 --ca /etc/openvpn/opennet_user/opennet-ca.crt --cert /etc/openvpn/opennet_user/on_aps.crt --key /etc/openvpn/opennet_user/on_aps.key --inactive 10 --verb 3 --nice 3"
@@ -188,18 +194,18 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 		logger "cron.minutely.ongateway creating /etc/resolv.conf"
 		gw_addrs=$(/usr/sbin/working_gateways.sh)
 		dnsaddrs=
-		wifi_dns=
+		lan_dns=
 		for gw_addr in $gw_addrs; do
 			if [ -z "$dnsaddrs" ]; then
 				dnsaddrs="nameserver $gw_addr";
-				wifi_dns="$gw_addr";
+				lan_dns="$gw_addr";
 			else
 				dnsaddrs="$dnsaddrs\nnameserver $gw_addr";
-				wifi_dns="$wifi_dns $gw_addr";
+				lan_dns="$lan_dns $gw_addr";
 				break;
 			fi
 		done
-		nvram set wifi_dns="$wifi_dns"
+		nvram set lan_dns="$lan_dns"
 		echo -e $dnsaddrs > /etc/resolv.conf
 		chmod +r /etc/resolv.conf
 	# restart dhcp-server which forwards dns information
