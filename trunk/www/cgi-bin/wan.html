@@ -198,6 +198,9 @@ if [ "$wan_proto" = "pppoe" ]; then
 		# nvram set pppoe_ifname="$wan_ifname";
 		nvram set wan_device="$wan_ifname";
 		nvram set wan_ifname="ppp0";
+		
+		# setze maxfail bei /etc/ppp/options auf 0 (wenn noch nicht vorhanden)
+		if [ -z "$(grep maxfail /etc/ppp/options)" ]; then echo "maxfail 0" >>/etc/ppp/options; fi
 	fi;
 else
 	if [ "$wan_ifname" = "ppp0" ]; then
