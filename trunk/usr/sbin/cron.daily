@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Will run every day (at 00:00)
+# Will run every day (at 00:XX, depending on wifi ip-adress)
 if [ -n $(nvram get on_wldhcp) ]; then
 	nvram set on_wldhcp=""
 	nvram commit

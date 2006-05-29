@@ -14,7 +14,7 @@ write_config() {
 	cat>/etc/crontabs/root<<EOF
 0-59/1 * * * *	/usr/sbin/cron.minutely
 $check_time * * * *	/usr/sbin/cron.hourly
-0 0 * * *	/usr/sbin/cron.daily
+$check_time 0 * * *	/usr/sbin/cron.daily
 EOF
 }
 
