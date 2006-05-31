@@ -253,6 +253,9 @@ cat<<EOF
 EOF
 if [ $return_value = 0 ]; then
 	echo "Schlüssel und CSR-Erstellung erfolgreich abgeschlossen."
+	# blockiere Webfrontend zum Firmware-Update
+	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+	cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 else
 	echo "Schlüssel und CSR-Erstellung <b>fehlgeschlagen</b>"
 fi
@@ -274,6 +277,9 @@ EOF
 		echo "geheimer Schlüssel /etc/openvpn/opennet_user/on_aps.key wurde durch die hochgeladene Datei überschrieben"
 		mv /tmp/on_vpn_upload.key /etc/openvpn/opennet_user/on_aps.key
 		rm /etc/openvpn/opennet_user/on_aps.key_bak
+		# blockiere Webfrontend zum Firmware-Update
+		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+		cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 	elif [ -f /tmp/on_vpn_upload.crt ]; then
 		mv  /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/on_aps.crt_bak
 		echo "Zertifikat /etc/openvpn/opennet_user/on_aps.crt wurde durch die hochgeladene Datei überschrieben"
@@ -289,6 +295,10 @@ elif [ -n "$remove_key_csr" ]; then
 rm -f /etc/openvpn/opennet_user/on_aps.csr
 rm -f /etc/openvpn/opennet_user/on_aps.key
 rm -f /etc/openvpn/opennet_user/on_aps.crt
+# reaktiviere Webfrontend zum Firmware-Update
+if ! [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+fi
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>

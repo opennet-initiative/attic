@@ -40,6 +40,9 @@ EOF
 if [ -z "${ffout##*.key}" ] && ! [ -f  /etc/openvpn/opennet_user/on_aps.key ]; then
 	echo "geheimer Schlüssel wurde hochgeladen und in /etc/openvpn/opennet_user/ als Datei on_aps.key gespeichert"
 	cp "$ffout" /etc/openvpn/opennet_user/on_aps.key
+	# blockiere Webfrontend zum Firmware-Update
+	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+	cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 elif [ -z "${ffout##*.crt}" ] && ! [ -f  /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo "Zertifikat wurde hochgeladen und in  /etc/openvpn/opennet_user/ als Datei on_aps.crt gespeichert"
 	cp "$ffout" /etc/openvpn/opennet_user/on_aps.crt
