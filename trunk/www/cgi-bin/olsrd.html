@@ -58,7 +58,7 @@ cat<<EOF
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">Erläuterung</a>
 <div id="description">
 Das olsr-Programm (der olsr-Daemon) ist für die Berechnung und Verwaltung der Routen, also der Wege im Funknetz zuständig. An dieser Stelle können einige ausgewählte Erweiterungen (plugins) aktiviert bzw. deaktiviert werden. Eine weitergehende Konfiguration ist hier nicht möglich.<br />
-Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial.<br />
+Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich (abhängig von der Opennet-Adresse, bei diesem AP etwa $((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17)) nach der vollen Stunde) geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial.<br />
 Wurde die Konfiguration der plugins oder die Konfiguration auf dem Gateway geändert, wird das olsr-Programm neu gestartet. Dies geschieht nicht unmittelbar, sondern etwa mit (maximal) einer Minute Verzögerung.<br />
 </div>
 <script type="text/javascript">
