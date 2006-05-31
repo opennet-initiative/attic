@@ -57,9 +57,7 @@ if [ -n "$nagare_old_ip" ] && [ "$nagare_ip" != "$nagare_old_ip" ]; then
 	
 	# restart opennet_dsl tunnel
 	/etc/init.d/S80openvpn restart opennet_dsl
-fi
-
-if [ "$ip_remote" != "$old_ip_remote" ]; then
+elif [ "$ip_remote" != "$old_ip_remote" ]; then
 	test $DEBUG && logger -t check_nagare "route noch nicht vorhanden oder ziel-IP von WANDEV hat sich geändert"
 	# route noch nicht vorhanden oder ziel-IP von WANDEV hat sich geändert
 	
@@ -83,4 +81,8 @@ if [ "$ip_remote" != "$old_ip_remote" ]; then
 			ip route flush table 5
 		fi
 	fi
+elif ! [ -e /tmp/run/openvpn.opennet_dsl.pid ]; then
+	# maybe tunnel was not startet before cause there was some problem (no key?)
+	# (re)start opennet_dsl tunnel
+	/etc/init.d/S80openvpn start opennet_dsl
 fi
