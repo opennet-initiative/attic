@@ -173,7 +173,10 @@ else
 	if [ $cur_pwr -lt $MaximalPower ]; then
 		echo "increased transmission power from "$cur_pwr"mW to maximum ("$MaximalPower"mW)"
 		echo -e "wait $Wait seconds for neighbors to adapt to the changed situation\n"
-		sleep $Wait
+		while [ $Wait -gt 0 ]; do
+			sleep 5
+			Wait=$(($Wait-5))
+		done
 	elif [ $cur_pwr -gt $MaximalPower ]; then
 		echo -e "decreased transmission power from "$cur_pwr"mW to maximum ("$MaximalPower"mW)\n";
 	else	echo -e "current transmission power is still at maximum ("$MaximalPower"mW)\n";
