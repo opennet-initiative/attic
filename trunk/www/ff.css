@@ -252,3 +252,7 @@ H1.title {
 	padding: 3px;
 	margin: 5px 22px 5px 22px;
 }
+
+#firmware_update {
+	display: none
+}
