@@ -77,7 +77,9 @@ if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
 fi
 
 # activate automatic optimization of txpwr by default
-nvram set on_autoadapttxpwr=on
+if [ -z "$(nvram get on_autoadapttxpwr)" ]; then
+	nvram set on_autoadapttxpwr=on
+fi
 
 # if the list of possible gateways is empty switch auto-search on
 if [ -z "$(nvram get on_gwaddrs)" ]; then
