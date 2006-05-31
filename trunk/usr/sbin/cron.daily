@@ -7,3 +7,6 @@ if [ -n $(nvram get on_wldhcp) ]; then
 	/etc/init.d/S50dnsmasq restart >/dev/null
 	logger cron-daily switched wlan-dhcp off
 fi
+
+# hole aktuelle paketliste
+/usr/sbin/get_firmware_list.sh
