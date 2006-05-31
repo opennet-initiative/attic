@@ -81,17 +81,34 @@ TITLE="MTU">
 </TR>
 <tr><td colspan="2">
 <table class="form">
-<TR><TD colspan="2">Hinweis: die DNS-Einstellungen sind für alle Schnittstellen gültig.</td></tr>
-<TR>
+<TR><TD colspan="2">Hinweis: die DNS-Einstellungen sind global gültig.</td></tr>
+EOF
+	if [ -e /etc/resolv.conf_ppp ]; then
+		set_dns="none;"; pppoe_dns="block;"
+	else
+		set_dns="block;"; pppoe_dns="none;"
+	fi
+cat<<EOF
+<TR style="display:$pppoe_dns">
+	<TD colspan="2">
+	aktuelle DNS-Server: $(nvram get lan_dns) (PPPoE)
+	</TD>
+</TR>
+<TR style="display:$set_dns">
 	<TD colspan="2">
 	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.lan_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
 	</TD>
 </TR>
-<TR
+<TR style="display:$set_dns"
 TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen.">
-<TD>DNS-Server:</TD>
-<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
+	<TD>DNS-Server:</TD>
+	<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
 </TR>
+<TR
+TITLE="Ist diese Einstellung aktiviert, werden die bei der PPPOE-Einwahl übermittelten DNS-Server ignoriert">
+	<TD COLSPAN="2"><INPUT CLASS="checkbox" NAME="on_pppoe_keepdns" TYPE="checkbox" $(test "$(nvram get on_pppoe_keepdns)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>DNS-Server bei PPPoE-Einwahl nicht ändern</TD>
+</TR>
+
 </table></td></tr>
 EOF
 	if [ -e /usr/sbin/ez-ipupdate ]; then
@@ -170,7 +187,7 @@ if [ -n "$dyndns_server" ]; then echo "server=$dyndns_server" >>/etc/ez-ipupdate
 if [ -n "$dyndns_partner" ]; then echo "partner=$dyndns_partner" >>/etc/ez-ipupdate.conf; fi
 awk 'BEGIN {FS="="} $1 !~ "service-type|user|host|server|partner" {print}' /etc/ez-ipupdate.conf_bak >>/etc/ez-ipupdate.conf
 
-for V in wan_proto wan_ipaddr wan_netmask wan_gateway lan_dns ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu; do
+for V in wan_proto wan_ipaddr wan_netmask wan_gateway on_autodns lan_dns on_pppoe_keepdns ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu pppoe_keepdns; do
 
 if [ "$V" != "wan_proto" ]; then
 	if [ "$(nvram get wan_proto)" != "static" ]; then

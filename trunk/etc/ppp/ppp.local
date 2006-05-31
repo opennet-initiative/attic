@@ -24,20 +24,22 @@ case "$ACTION" in
 		ip route add default via $IPREMOTE table 4
 		
 		# set dns
-		nvram set lan_dns_store="$(nvram get lan_dns)"
-		nvram set lan_dns="$DNS1 $DNS2"
-		nvram set on_store_autodns="$(nvram get on_autodns)"
-		nvram set on_autodns="off"
+		if [ "$(nvram get on_pppoe_keepdns)" != "on" ]; then
+			nvram set lan_dns_store="$(nvram get lan_dns)"
+			nvram set lan_dns="$DNS1 $DNS2"
+			nvram set on_store_autodns="$(nvram get on_autodns)"
+			nvram set on_autodns="off"
+			
+			mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
+			
+			echo "nameserver $DNS1" >/etc/resolv.conf
+			echo "nameserver $DNS2" >>/etc/resolv.conf
+			chmod a+r /etc/resolv.conf
 		
-		mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
-		
-		echo "nameserver $DNS1" >/etc/resolv.conf
-		echo "nameserver $DNS2" >>/etc/resolv.conf
-		chmod a+r /etc/resolv.conf
-		
-		# restart dhcp-server which forwards dns information
-		/etc/init.d/S50dnsmasq restart
-		
+			# restart dhcp-server which forwards dns information
+			/etc/init.d/S50dnsmasq restart
+		fi
+			
 		# restart portmapping to forward packets before filtering
 		/etc/init.d/S82portmapping restart
 		
@@ -53,16 +55,18 @@ case "$ACTION" in
 		iptables -t nat -D POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 		
 		# reset dns
-		mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
-		chmod a+r /etc/resolv.conf
-		
-		nvram set on_autodns="$(nvram get on_store_autodns)"
-		nvram set lan_dns="$(nvram get lan_dns_store)"
-		nvram unset on_store_autodns
-		nvram unset lan_dns_store
-		
-		# restart dhcp-server which forwards dns information
-		/etc/init.d/S50dnsmasq restart
+		if [ -e /etc/resolv.conf_ppp ]; then
+			mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
+			chmod a+r /etc/resolv.conf
+			
+			nvram set on_autodns="$(nvram get on_store_autodns)"
+			nvram set lan_dns="$(nvram get lan_dns_store)"
+			nvram unset on_store_autodns
+			nvram unset lan_dns_store
+			
+			# restart dhcp-server which forwards dns information
+			/etc/init.d/S50dnsmasq restart
+		fi
 
 		# disable direct access to nagare and stop dsl tunnel
 		/usr/sbin/check_nagare.sh
