@@ -1,0 +1,198 @@
+#!/bin/sh
+
+export DATE="1.3.2005"
+export TITLE="Verwaltung: OLSR"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<script type="text/javascript">document.getElementById('idx16').className="idx selected";</script>
+
+<H1>Verwaltung: OLSR</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -n "$QUERY_STRING" ]; then
+	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+	DIRTY=
+	olsrd_restart=
+	if [ -n "$post_olsr" ]; then
+		for V in ff_dyngw ff_nameservice ff_httpinfo on_remoteconf; do
+			eval "C=\$$V"
+			C=$(unescape $C)
+			if [ "$C" != "$(nvram get $V)" ]; then
+				DIRTY=1
+				if [ "$V" != "on_remoteconf" ]; then
+					olsrd_restart=1
+				fi
+				nvram set $V="$C"
+			fi
+		done
+	elif [ -n "$rm_remotecfg" ]; then
+		rm -rf /etc/olsrd.conf_new
+		logger "webinterface: removed retrieved olsrd configuration"
+		olsrd_restart=1
+	fi
+	if [ -n "$DIRTY" ]; then nvram commit>/dev/null 2>&1; fi
+	if [ -n "$olsrd_restart" ]; then 
+		# restarting olsrd is now done by cron-minutely
+		echo "restart olsrd" > /tmp/restart_olsrd
+		# /etc/init.d/S53olsrd restart >/dev/null; 
+	fi
+fi
+if [ -f /tmp/restart_olsrd ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Das olsr-Programm wird in wenigen Sekunden neu gestartet. Die veränderten Konfigurationen werden dann übernommen. </TD>
+</TR>
+</TBODY>
+</TABLE>
+<br />
+EOF
+fi
+cat<<EOF
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">Erläuterung</a>
+<div id="description">
+Das olsr-Programm (der olsr-Daemon) ist für die Berechnung und Verwaltung der Routen, also der Wege im Funknetz zuständig. An dieser Stelle können einige ausgewählte Erweiterungen (plugins) aktiviert bzw. deaktiviert werden. Eine weitergehende Konfiguration ist hier nicht möglich.<br />
+Da die meisten Optionen dieses Programs nur netzweit sinnvoll konfigurierbar sind, wird empfohlen, die automatische Synchronisation der Einstellungen zu aktivieren. Dabei wird stündlich (abhängig von der Opennet-Adresse, bei diesem AP etwa $((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17)) nach der vollen Stunde) geprüft, ob eine aktualisierte Konfigurationsdatei auf dem Gateway vorliegt und diese wird dann auf den AccesPoint kopiert. Konfigurationsoptionen in dieser Datei haben Priorität gegenüber der auf dem Accesspoint vorhandenen olsrd.conf_initial.<br />
+Wurde die Konfiguration der plugins oder die Konfiguration auf dem Gateway geändert, wird das olsr-Programm neu gestartet. Dies geschieht nicht unmittelbar, sondern etwa mit (maximal) einer Minute Verzögerung.<br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+<H2>Einstellungen</H2>
+<FORM ACTION="olsrd.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+
+<TR
+TITLE="Ist diese Einstellung aktiviert, werden Veränderungen der Konfiguration von einer Datei des Gateways auf diesen AccessPoint übernommen.">
+<TD COLSPAN="3"><INPUT CLASS="checkbox" NAME="on_remoteconf" TYPE="checkbox" $(test "$(nvram get on_remoteconf)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>Synchronisation der Konfiguration mit Gateway (empfohlen)</TD>
+</TR>
+
+<TR>
+<TD COLSPAN="3"> <HR /></TD>
+</TR>
+
+<TR>
+<TD COLSPAN="3"><b>Plugins:</b></TD>
+</TR>
+
+<TR>
+<TD></TD>
+<TD>Einschalten</TD>
+<TD>Ausschalten</TD>
+</TR>
+
+
+<TR
+TITLE="Dieses Plugin sendet kündigt automatisch HNA4 an, wenn eine Default-Route aktiv ist.">
+<TD>DynGW:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_dyngw)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_dyngw)" = "0" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+<TR
+TITLE="Dieses Plugin sendet und empfängt DNS-Namen über OLSR-Nachrichten.">
+<TD>Nameservice:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_nameservice)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_nameservice)" = "0" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+<TR
+TITLE="Dieses Plugin zeigt die OLSR-Konfiguration an (nur über LAN, Port 8080)">
+<TD>Httpinfo:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_httpinfo)" != "0" ];then echo ' checked="checked"';fi)></TD>
+<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_httpinfo)" = "0" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+
+
+<TR>
+<TD COLSPAN="3"> <HR /></TD>
+</TR>
+<TR>
+<TD COLSPAN="3" NOWRAP="nowrap"><INPUT NAME="post_olsr" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+
+<H2>aktuelle Konfigurationsdateien</H2>
+<FORM ACTION="olsrd.html" METHOD="POST">
+<TABLE id="olsrd_configs" CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form" TITLE="Konfigurations-Dateien">
+<TBODY>
+EOF
+		if [ -f /etc/olsrd.conf_new ]; then
+cat<<EOF
+	<TR><TD>vom Gateway erhaltene Konfiguration (
+EOF
+	date -r /etc/olsrd.conf_new
+cat <<EOF
+	)   <a id="switch_1" href="#" onclick="document.getElementById('textarea_1').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_1">
+		<TD>
+		<textarea name="log" cols="70" rows="10" readonly>
+EOF
+		cat /etc/olsrd.conf_new
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+	<TR>
+	<TD ALIGN="RIGHT"><INPUT NAME="rm_remotecfg" TITLE="Die vom Gateway erhaltene Konfiguration wird gelöscht. Danach wird der olsrd mit der bestehenden Konfiguration neu gestartet" TYPE="SUBMIT" VALUE="Vom Gateway erhaltene Konfiguration löschen und olsrd neu starten"></TD>
+	</TR>
+EOF
+		fi
+cat<<EOF
+	<TR><TD></TD></TR>
+	<TR><TD>initiale Konfiguration     <a id="switch_2" href="#" onclick="document.getElementById('textarea_2').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_2">
+		<TD>
+		<textarea name="log" cols="70" rows="10" readonly>
+EOF
+		cat /etc/olsrd.conf_initial
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+	<TR><TD></TD></TR>
+	<TR><TD>aktuelle olsrd-Konfiguration      <a id="switch_3" href="#" onclick="document.getElementById('textarea_3').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a></TD></TR>
+	<TR id="textarea_3">
+		<TD>
+		<textarea name="log" cols="70" rows="10" readonly>
+EOF
+		cat /var/etc/olsrd.conf
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+EOF
+		if [ -f /etc/olsrd.conf_new ]; then
+cat<<EOF
+<script type="text/javascript">
+	document.getElementById('switch_1').style.display='inline';
+	document.getElementById('textarea_1').style.display='none';
+</script>
+EOF
+		fi
+cat<<EOF
+<script type="text/javascript">
+	document.getElementById('switch_2').style.display='inline';
+	document.getElementById('textarea_2').style.display='none';
+	document.getElementById('switch_3').style.display='inline';
+	document.getElementById('textarea_3').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+
+
+
+EOF
+
+
+. ${0%/*}/cgi-bin-post.sh
