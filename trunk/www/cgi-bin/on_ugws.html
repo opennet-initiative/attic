@@ -129,10 +129,12 @@ if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl
 	else
 		if [ -f  /var/run/openvpn.opennet_dsl.pid ];then
 			echo "<tr /><tr><td>User-Gateway-Tunnel startend</td>"
+			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
 		else
 			echo "<tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
+			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+			echo "<TD><INPUT NAME="dsl_start" TITLE="start" TYPE="SUBMIT" VALUE="starten"></TD></tr>"
 		fi	
-		echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
 	fi
 fi
 	if [ -n  "$(ip route show table 5)" ];then
@@ -319,7 +321,15 @@ cat<<EOF
 	</TR></TBODY>
 	</TABLE>
 EOF
-
+elif [ -n "$dsl_start" ]; then
+	/usr/sbin/check_nagare.sh
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY><TR><TD>
+Versuch, einen Tunnel zum externen Gateway aufzubauen, gestartet.
+<TD></TR></TBODY>
+</TABLE>
+EOF
 elif [ -n "$gen_csr" ]; then
 	if [ -f /etc/openvpn/opennet_dsl/on_ugws.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.csr ]; then
 cat<<EOF
@@ -405,6 +415,9 @@ cat<<EOF
 EOF
 if [ $return_value = 0 ]; then
 	echo "Schlüssel und CSR-Erstellung erfolgreich abgeschlossen."
+	# blockiere Webfrontend zum Firmware-Update
+	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+	cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 else
 	echo "Schlüssel und CSR-Erstellung <b>fehlgeschlagen</b>"
 fi
@@ -426,6 +439,9 @@ EOF
 		echo "geheimer Schlüssel /etc/openvpn/opennet_dsl/on_ugws.key wurde durch die hochgeladene Datei überschrieben"
 		mv /tmp/on_ugws_upload.key /etc/openvpn/opennet_dsl/on_ugws.key
 		rm /etc/openvpn/opennet_dsl/on_ugws.key_bak
+		# blockiere Webfrontend zum Firmware-Update
+		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+		cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 	elif [ -f /tmp/on_ugws_upload.crt ]; then
 		mv  /etc/openvpn/on_ugws.crt /etc/openvpn/opennet_dsl/on_ugws.crt_bak
 		echo "Zertifikat /etc/openvpn/opennet_dsl/on_ugws.crt wurde durch die hochgeladene Datei überschrieben"
@@ -441,6 +457,10 @@ elif [ -n "$remove_key_csr" ]; then
 rm -f /etc/openvpn/opennet_dsl/on_ugws.csr
 rm -f /etc/openvpn/opennet_dsl/on_ugws.key
 rm -f /etc/openvpn/opennet_dsl/on_ugws.crt
+# reaktiviere Webfrontend zum Firmware-Update
+if ! [ -f /etc/openvpn/opennet_user/on_aps.key ]; then
+	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+fi
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
