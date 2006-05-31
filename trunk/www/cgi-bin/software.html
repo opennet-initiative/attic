@@ -39,7 +39,9 @@ installieren</TD>
 <TD><INPUT NAME="post_ipk" TITLE="Die ausgewählte Software-Datei übertragen und im Verzeichnis /tmp ablegen." TYPE="SUBMIT" VALUE="Software laden">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
-
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">Erläuterung zu manueller Installation</a>
+<div id="description">
 <H2>Manuell Installieren</H2>
 
 <P>Eine Software-Datei muss m&ouml;glicherweise manuell
@@ -98,8 +100,15 @@ Links in die schreibgesch&uuml;tzte ROM-Partition. Um diese Dateien zu &auml;nde
 muss zun&auml;chst der Link gel&ouml;scht werden (<CODE>rm
 /etc/sample.conf</CODE>). Danach die aktuelle Datei aus der ROM-Partition
 kopieren (<CODE>cp /rom/etc/sample.conf /etc</CODE>).</P>
-EOF
 
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+
+EOF
 elif ! eval $(./freifunk-upload -e 2>&1); then
 
 cat<<EOF
