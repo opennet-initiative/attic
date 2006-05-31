@@ -21,4 +21,8 @@ rm -f /www/index.html
 rm -f /etc/ppp/ip-up
 rm -f /etc/ppp/ip-down
 
+# restoring Webinterface (be)for firmware-update/upgrade
+mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+mv -f /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories
+
 echo "  removing files to replace - done"
