@@ -119,7 +119,7 @@ cat<<EOF
 <!-- ----------------------------------------------------------- -->
 <FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
-TITLE="Informationen zu DSL-OpenVPN und nötigen Dateien">
+TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 	<tr>
 EOF
@@ -179,7 +179,7 @@ cat<<EOF
 <br /><br />
 <FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
-TITLE="Informationen zu DSL-OpenVPN und nötigen Dateien">
+TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 EOF
 if [ -f  /etc/openvpn/opennet_dsl/on_ugws.csr ];then
@@ -222,7 +222,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Verwaltung</H2>
 EOF
-	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <a id="switch1" href="#" onclick="document.getElementById('vpn_upload_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -241,7 +241,7 @@ TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch1').style.display='inline';
@@ -253,7 +253,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Erstellung</H2>
 EOF
-	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <a id="switch2" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -295,7 +295,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 
 
 EOF
-	if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch2').style.display='inline';
@@ -476,7 +476,7 @@ cat<<EOF
 	<TBODY>
 	<TR>
 	<TD>
-	Test wurde durchgeführt. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">DSL-Freigabe</a>- Seite.
+	Test wurde durchgeführt. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">Internet-Freigabe</a>- Seite.
 	</TD>
 	</TR></TBODY>
 	</TABLE>
@@ -501,9 +501,9 @@ cat<<EOF
 	<TD>
 EOF
 	if [ "$on_sharedsl" = "off" ]; then
-		echo "DSL-Freigabe wurde deaktiviert."
+		echo "Internet-Freigabe wurde deaktiviert."
 	else
-		echo "DSL-Freigabe wurde aktiviert."
+		echo "Internet-Freigabe wurde aktiviert."
 	fi
 cat<<EOF
 	</TD>
