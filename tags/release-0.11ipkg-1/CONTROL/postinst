@@ -105,6 +105,21 @@ if [ -z "$(nvram get wan_device)" ]; then
 	fi;
 fi
 
+if [ -e /etc/openvpn/on_aps.key ]; then
+	echo " ACHTUNG: verschiebe Geheimen Schlüssel in Verzeichnis /etc/openvpn/opennet_user/"
+	mv -f /etc/openvpn/on_aps.key /etc/openvpn/opennet_user/
+fi
+if [ -e /etc/openvpn/on_aps.crt ]; then
+	echo " ACHTUNG: verschiebe Zertifikat in Verzeichnis /etc/openvpn/opennet_user/"
+	mv -f /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/
+fi
+if [ -e /etc/openvpn/on_aps.csr ]; then
+	echo " ACHTUNG: verschiebe Zertifikatanfrage in Verzeichnis /etc/openvpn/opennet_user/"
+	mv -f /etc/openvpn/on_aps.csr /etc/openvpn/opennet_user/
+fi
+
+
+
 # set firmware-version to nvram variables
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
