@@ -79,15 +79,8 @@ EOF
 		echo "dhcp-option=wlnat,1,$DHCPWIFIMSK" >>/var/etc/dnsmasq.conf
 		echo "dhcp-option=wlnat,3,$DHCPWIFIADR" >>/var/etc/dnsmasq.conf
 		
-		# use the two first gateways as possible dns-servers
-		dnsaddrs=
-		gw_addrs=$(/usr/sbin/working_gateways.sh)
-		for gw_addr in $gw_addrs; do
-			if [ -z "$dnsaddrs" ]; then dnsaddrs=$gw_addr;
-			else dnsaddrs="$dnsaddrs,$gw_addr"; break;
-			fi
-		done
-		
+		# use the defined dns-addresses as resolver
+		dnsaddrs=$(nvram get lan_dns | awk 'gsub(" ",",")')
 		test -z "$dnsaddrs" && dnsaddrs=",195.50.140.250"
 		echo "dhcp-option=wlnat,6,$dnsaddrs" >>/var/etc/dnsmasq.conf
 	fi
