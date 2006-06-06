@@ -5,7 +5,9 @@ test -n "$FAILSAFE" && exit
 
 . /etc/functions.sh
 
-DEBUG=true	# Dump dropped packets to klog, show with "dmesg -c"
+DEBUG=false	# Dump dropped packets to klog, show with "dmesg -c"
+if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
+if [ -z "lsmod | grep ipt_LOG" ]; then DEBUG=false; fi
 
 set_masq() {
 	# Ignore OLSR packets directly from these stations, e.g.
