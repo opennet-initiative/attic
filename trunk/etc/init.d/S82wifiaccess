@@ -2,9 +2,9 @@
 
 test -n "$FAILSAFE" && exit
 
-DEBUG=false	# Dump dropped packets to klog, show with "dmesg -c"
+DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
-if [ -z "lsmod | grep ipt_LOG" ]; then DEBUG=false; fi
+if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
 # takes one argument: 'create' or ('remove' or anything else - doesn't actually matter)
 mac_access() {
@@ -54,12 +54,18 @@ eval $(/usr/bin/netparam)
 
 case $1 in
         start)
-        echo "enabling access to tunnel"
-        mac_access "create"
+        if [ -n "$(lsmod | grep ipt_mac)" ]; then
+		echo "enabling access to tunnel"
+		mac_access "create"
+	else
+		echo "localaccess disabled (iptables-extra not installed)"
+	fi
         ;;
         stop)
-        echo "removing access to tunnel"
-        mac_access "remove"
+        if [ -n "$(lsmod | grep ipt_mac)" ]; then
+		echo "removing access to tunnel"
+		mac_access "remove"
+	fi
         ;;
         restart)
                 $0 stop

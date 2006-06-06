@@ -1,8 +1,8 @@
 # Place your firewall addons here
 
-DEBUG=false	# Dump dropped packets to klog, show with "dmesg -c"
+DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
-if [ -z "lsmod | grep ipt_LOG" ]; then DEBUG=false; fi
+if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
 case $1 in
         start)

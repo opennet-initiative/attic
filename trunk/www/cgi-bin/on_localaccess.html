@@ -80,9 +80,9 @@ Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch
 </script>
 <!-- ----------------------------------------------------------- -->
 EOF
-	if ! [ -z "lsmod | grep ipt_mac" ]; then
+	if [ -z "$(lsmod | grep ipt_mac)" ]; then
 cat<<EOF
-<b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
 <br />
 EOF
 	else
