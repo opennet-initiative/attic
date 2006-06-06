@@ -80,6 +80,9 @@ TITLE="Ist diese Einstellung aktiviert, werden Veränderungen der Konfiguration v
 <TD COLSPAN="3"> <HR /></TD>
 </TR>
 
+EOF
+	if [ -e  /usr/lib/olsrd_dyn_gw* ] || [ -e  /usr/lib/olsrd_httpinfo* ] || [ -e  /usr/lib/olsrd_nameservice* ]; then
+cat<<EOF
 <TR>
 <TD COLSPAN="3"><b>Plugins:</b></TD>
 </TR>
@@ -89,28 +92,39 @@ TITLE="Ist diese Einstellung aktiviert, werden Veränderungen der Konfiguration v
 <TD>Einschalten</TD>
 <TD>Ausschalten</TD>
 </TR>
-
-
+EOF
+	fi
+	if [ -e  /usr/lib/olsrd_dyn_gw* ]; then
+cat<<EOF
 <TR
 TITLE="Dieses Plugin sendet kündigt automatisch HNA4 an, wenn eine Default-Route aktiv ist.">
 <TD>DynGW:</TD>
 <TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_dyngw)" != "0" ];then echo ' checked="checked"';fi)></TD>
 <TD><INPUT CLASS="radio" NAME="ff_dyngw" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_dyngw)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
+EOF
+	fi
+	if [ -e  /usr/lib/olsrd_nameservice* ]; then
+cat<<EOF
 <TR
 TITLE="Dieses Plugin sendet und empfängt DNS-Namen über OLSR-Nachrichten.">
 <TD>Nameservice:</TD>
 <TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_nameservice)" != "0" ];then echo ' checked="checked"';fi)></TD>
 <TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_nameservice)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
+EOF
+	fi
+	if [ -e  /usr/lib/olsrd_httpinfo* ]; then
+cat<<EOF
 <TR
 TITLE="Dieses Plugin zeigt die OLSR-Konfiguration an (nur über LAN, Port 8080)">
 <TD>Httpinfo:</TD>
 <TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ff_httpinfo)" != "0" ];then echo ' checked="checked"';fi)></TD>
 <TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ff_httpinfo)" = "0" ];then echo ' checked="checked"';fi)></TD>
 </TR>
-
-
+EOF
+	fi
+cat<<EOF
 <TR>
 <TD COLSPAN="3"> <HR /></TD>
 </TR>
