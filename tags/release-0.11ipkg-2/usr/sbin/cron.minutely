@@ -1,0 +1,91 @@
+#!/usr/bin/awk -f
+
+# Will run every minute (at 00:00, 00:01, ...)
+
+BEGIN {
+	# i like shell scripting better: check if gateway is recent
+	system("/usr/sbin/cron.minutely_ongateway")
+	
+	# check if nagare is still reached via WANDEV
+	system("/usr/sbin/check_nagare.sh quick")
+		
+	# Get counters of wifi for check
+	#while(getline<"/proc/net/wireless") {
+	#	if (/^$/) break
+	#	if (sub(":", "")) wdev = $1
+	#}
+	if ("" == wdev) "nvram get wl0_ifname"|getline wdev
+        while(getline<"/proc/net/dev") {
+		if (/^$/) break
+		if (sub(wdev":", "")) {
+			wstat=$0
+			break
+		}
+	}
+	getline ostat<"/var/run/status."wdev
+	if (0 == ERRNO) close("/var/run/status."wdev)
+	print wstat>"/var/run/status."wdev
+	while("iwconfig "wdev|getline) {
+		if (/^$/) break
+		if (sub("Mode:", "")) mode=$1
+		if (sub("Channel:", "")) chan=$2
+	}
+	"nvram get wl0_channel"|getline wl0c
+
+	srand()
+	if (("pidof -s olsrd"|getline && "" == $0) || ( system("test ! -f /tmp/restart_olsrd") )) {
+		system("logger -t cron.minutely restarting olsrd")
+		system("rm -rf /tmp/restart_olsrd")
+		system("/etc/init.d/S*olsrd stop")
+		system("/usr/sbin/olsrd-clearroutes")
+		system("/etc/init.d/S*olsrd start")
+	}
+	#else if (("" != ostat && ostat == wstat) || ("Ad-Hoc" == mode && chan != wl0c)) {
+	#	# Wifi dead? Try restart
+	#	system("logger -t cron.minutely restarting wifi="wdev)
+	#	system("wlconf "wdev" up")
+	#}
+	else if (0 == system("grep olsrd_dyn_gw_plain.so /var/etc/olsrd.conf>/dev/null 2>&1")) {
+		# Defroute here?
+		def=""
+		tab=""
+		while("ip route list exact 0/0 table all"|getline) {
+			if ("default"==$1 && "via"==$2 && ("metric"!=$(NF-1) || 0==$NF)) {
+				if ("dyngw"==tab) {
+					# New defroute in tab main
+					system("ip route flush table dyngw")
+				}
+				tab=("table"==$(NF-1)?$NF:"")
+				def=$3
+			}
+		}
+		if (""!=def) {
+			ok=0
+			split("198.41.0.4 192.33.4.12 128.8.10.90 192.5.5.241 192.36.148.17 192.58.128.30 193.0.14.129 198.32.64.12 202.12.27.33", ip)
+			cmd="traceroute -w 10 -m 4 -n "ip[1+int(9*rand())]
+			while(cmd|getline) {
+				if (0 < $1 && $2 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) ok++
+			}
+			if (2<ok) {
+				if ("dyngw"==tab) {
+					system("logger -t cron.minutely activated HNA4 for "def)
+					system("ip route flush table dyngw")
+					system("ip route add default via "def)
+				}
+			}
+			else if ("dyngw"!=tab) {
+				system("logger -t cron.minutely deactivated HNA4 for "def)
+				system("ip route flush table dyngw")
+
+				# Terminate lookup in tab dyngw for dest IPs
+				# handled in tab main. Otherwise *all* packets will
+				# go to the defroute activated here.
+				while("ip route list proto kernel"|getline) {
+					system("ip route add throw "$1" table dyngw")
+				}
+				system("ip route add default via "def" table dyngw")
+				system("ip route del default")
+			}
+		}
+	}
+}
