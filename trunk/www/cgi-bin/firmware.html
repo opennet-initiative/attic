@@ -46,6 +46,7 @@ Ein downgrade der Firmware wird an dieser Stelle nicht unterstützt.<br />
 EOF
 if [ -e /tmp/firmware-packages ]; then
 cat<<EOF
+	<b>ACHTUNG: </b> Bitte informiere Dich im <a href="http://forum.on-i.de/board.php?boardid=15&sid=">Forum</a>, ob es Probleme bei der Aktualisierung auf eine neue Firmware gibt. Nach einer Aktualisierung musst Du den AccessPoint neu starten, dabei werden alle Internet-Verbindungen unterbrochen.<br /><br />
 	gefundene Firmware-Pakete (Stand $(date -r /tmp/firmware-packages)):
 	<FORM ACTION="firmware_remove_key.html" ENCTYPE="multipart/form-data" METHOD="GET">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
