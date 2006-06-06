@@ -79,6 +79,14 @@ Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch
 	document.getElementById('description').style.display='none';
 </script>
 <!-- ----------------------------------------------------------- -->
+EOF
+	if ! [ -z "lsmod | grep ipt_mac" ]; then
+cat<<EOF
+<b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br />
+EOF
+	else
+cat<<EOF
 	<br/>Hinweis: Die automatische Vergabe von IP-Adressen per WLAN wird täglich gegen Mitternacht deaktiviert.
 	<FORM NAME="localaccess" ACTION="on_localaccess.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
@@ -170,7 +178,7 @@ cat<<EOF
 	</TBODY>
 	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 	</FORM>
-
 EOF
+	fi
 
 . ${0%/*}/cgi-bin-post.sh
