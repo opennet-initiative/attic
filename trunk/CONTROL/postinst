@@ -63,32 +63,40 @@ nvram set dhcp_num=50
 
 
 # activate automatic olsrd configuration
-nvram set on_remoteconf="on"
+if [ -z "$(nvram get on_remoteconf)" ]; then
+	nvram set on_remoteconf="on"
+	echo " ACHTUNG: Remote-Konfiguration von olsrd wurde aktiviert."
+fi
+
 
 # limit txpwr, assume always a external Antenna
 on_ant_dbi=$(nvram get on_ant_dbi)
 ff_txpwr=$(nvram get ff_txpwr)
-if [ -z "$on_ant_dbi" ] || [ $on_ant_dbi -lt 8 ]; then
+if [ -z "$on_ant_dbi" ]; then
 	nvram set on_ant_dbi=8
+	echo " ACHTUNG: Antennenverstärkung wurde auf 8dBi festgelegt."
 fi
-if [ -z "$ff_txpwr" ] || [ $ff_txpwr -gt 15 ]; then
+if [ -z "$ff_txpwr" ]; then
 	nvram set ff_txpwr=15
 	echo " ACHTUNG: Sendeleistung wurde auf 15mW festgelegt."
 fi
 
-# activate automatic optimization of txpwr by default
-if [ -z "$(nvram get on_autoadapttxpwr)" ]; then
+# activate automatic optimization of txpwr by default if not deactivated
+if [ -z "$(nvram show 2>/dev/null | grep on_autoadapttxpwr)" ]; then
 	nvram set on_autoadapttxpwr=on
+	echo " ACHTUNG: Antennenverstärkung wurde auf 8dBi festgelegt."
 fi
 
 # if the list of possible gateways is empty switch auto-search on
 if [ -z "$(nvram get on_gwaddrs)" ]; then
 	nvram set on_gwauto=on
+	echo " ACHTUNG: Automatische Gateway-Wahl wurde aktiviert."
 fi
 
 # activate automatic selection of DNS-Servers by default
 if [ -z "$(nvram get on_autodns)" ]; then
 	nvram set on_autodns=on
+	echo " ACHTUNG: Automatische Auswahl der DNS-Server wurde aktiviert."
 fi
 
 
