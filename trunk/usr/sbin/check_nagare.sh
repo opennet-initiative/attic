@@ -1,5 +1,5 @@
 #!/bin/sh
-# scritp to check, if nagare is reachable via WANDEV or if IP of nagare has changed
+# script to check, if nagare is reachable via WANDEV or if IP of nagare has changed
 # if called with parameter "quick", only availablility of WANDEV and special routes are checked
 
 DEBUG=true
@@ -17,7 +17,7 @@ if [ "$1" = "quick" ] && [ -n "$on_sharedsl_blocked" ]; then
 	fi
 fi
 
-# check if special entr y in routing table is still available
+# check if special entry in routing table is still available
 table_5=$(ip route show table 5)
 if [ -z "$table_5" ]; then
 	if [ -e /var/run/openvpn.opennet_dsl.pid ]; then
