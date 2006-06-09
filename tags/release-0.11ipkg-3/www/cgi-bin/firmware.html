@@ -1,0 +1,395 @@
+#!/bin/sh
+export DATE="5.9.2005"
+export TITLE="Verwaltung: Firmware"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<script type="text/javascript">document.getElementById('idx19').className="idx selected";</script>
+
+<H1>Verwaltung: Firmware</H1>
+
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+if [ "$REQUEST_METHOD" = "GET" ]; then
+	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+	if [ "$action" = "refresh_firmware_list" ]; then
+		/usr/sbin/get_firmware_list.sh
+		QUERY_STRING=
+	elif [ "$action" = "refresh_ipkg_list" ]; then
+		echo "<pre>"
+		ipkg update
+		echo "</pre>"
+		QUERY_STRING=
+	fi
+fi
+
+if [ -z "$QUERY_STRING" ]; then
+cat<<EOF
+<H2>Aktualisierung des Opennet-Firmware-Paketes</H2>
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<div id="description">
+Da die "Opennet-Firmware" nun als Paket angeboten wird, brauchst Du nicht mehr ein komplettes Firmware-Update zu machen, um deinen AccessPoint auf den neuesten Stand zu bringen. Du findest hier die Liste der verfügbaren Firmware-Versionen, wenn Du eine auswählst, wird diese sofort installiert. Einmal erstellte OpenVPN-Keys gehen bei dieser Form der Aktualisierung nicht verloren.<br />
+Die Liste der vorhandenen Firmware-Pakete wird automatisch täglich gegen Mitternacht aktualisiert. Du kannst die Aktualisierung natürlich auch manuell vornehmen.<br />
+Möglicherweise ist für die Aktualisierung des Firmware-Paketes eine Aktualisierung aller für OpenWrt verfügbaren Pakete notwendig. Durch einen Klick auf den entsprechenden Link kannst du auch diese Aktualisierung durchführen<br />
+Ein downgrade der Firmware wird an dieser Stelle nicht unterstützt.<br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+<br />
+EOF
+if [ -e /tmp/firmware-packages ]; then
+cat<<EOF
+	<b>ACHTUNG: </b> Bitte informiere Dich im <a href="http://forum.on-i.de/board.php?boardid=15&sid=">Forum</a>, ob es Probleme bei der Aktualisierung auf eine neue Firmware gibt. Nach einer Aktualisierung musst Du den AccessPoint neu starten, dabei werden alle Internet-Verbindungen unterbrochen.<br /><br />
+	gefundene Firmware-Pakete (Stand $(date -r /tmp/firmware-packages)):
+	<FORM ACTION="firmware_remove_key.html" ENCTYPE="multipart/form-data" METHOD="GET">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+	TITLE="Firmware-Pakete">
+	<TBODY>
+EOF
+	count=1
+	old=
+	recent=$(ipkg list_installed opennet-firmware | awk 'BEGIN {FS="-|\\."} /opennet-firmware/ {str = sprintf("%03d%03d%03d%03d", $3, $4, $5, $6); print str }')
+	for line in $(cat /tmp/firmware-packages); do
+		if [ $count -gt 10 ]; then break; fi
+		version=$(echo $line | cut -d':' -f1)
+		paket=$(echo $line | cut -d':' -f2)
+		if [ $version -le $recent ]; then
+			if [ -z "$old" ]; then
+				if [ "$count" != "1" ]; then echo "<TR><TD colspan=\"2\"><hr /></TD></TR>"; fi
+				echo "<TR><TD colspan=\"2\">alte Firmware-Pakete, nicht installierbar</TD></TR>"
+				old="true"
+			fi
+		else
+			if [ "$count" = "1" ]; then
+				echo "<TR><TD colspan=\"2\">neue Firmware-Pakete, ein Klick auf den Namen installiert das Paket sofort.</TD><TD></TD></TR>"
+			fi
+		fi
+		echo "<TR><TD>$count.</TD><TD>"
+		if [ -z "$old" ]; then
+			echo "<a href=\"firmware.html?install=$paket\">$paket</a>"
+		else	echo "$paket"
+		fi
+		echo "</TD><TD>"
+		#if [ -n "$(grep \"$paket.info\" /tmp/firmware-packages.html)" ]; then
+		#	echo "<a href=\"$paket.info\">info</a>"
+		#fi
+		echo "</TD></TR>"
+		count=$(($count+1))
+	done
+cat<<EOF	
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+	<a href="firmware.html?action=refresh_firmware_list">aktualisiere Liste der Firmware-Pakete</a><br />
+	<a href="firmware.html?action=refresh_ipkg_list">aktualisiere allgemeine Paketliste (ipkg update)</a><br />
+EOF
+else
+cat<<EOF	
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Konnte keine Firmware-Liste vom Server holen. Du solltest Deinen AP mit dem Internet verbinden und die <a href="firmware.html?action=refresh_firmware_list">Liste der Firmware-Pakete aktualisieren</a>.</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+fi
+
+cat<<EOF
+<br /><br />
+<H2>Komplettes Firmware-Update</H2>
+EOF
+if [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
+	echo "<b>Hinweis: </b> Das OpenWrt-Webfrontend zur Firmware-Aktualisierung ist deaktiviert, da sich geheime Schlüssel auf dem AccesPoint befinden.<br /><br />"
+fi
+cat<<EOF
+
+<a id="switch2" href="#" onclick="document.getElementById('firmware_container').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
+
+<div id="firmware_container">
+EOF
+if [ -f /etc/openvpn/opennet_user/on_aps.key ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TBODY><TR><TD>ACHTUNG: Firmware-update nicht möglich</TD></TR></TBODY></TABLE>
+
+<b>Auf dem Rechner befindet sich noch ein geheimer Schlüssel.</b> Diesen kannst du unter dem Punkt <a href="on_vpn.html">OpenVPN</a> herunterladen. Speicher diesen, aber <b>auch dein öffentliches Zertifikat</b>, an einem sicheren Ort. Erst wenn der geheime Schlüssel von diesem Rechner gelöscht ist, kannst du die Firmware aktualisieren.<br><br>
+Das <b>Löschen des geheimen Schlüssels</b> auf diesem Accesspoint bestätigst du mit dem Heraufladen deines geheimen Schlüssels.<br>
+<FORM ACTION="firmware_remove_key.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle deinen geheimen Schlüssel (*.key) und lade ihn hoch">
+<TBODY>
+<TR>
+<TD colspan="2">Geheimen Schlüssel (*.key) zur Bestätigung des Löschvorgangs auf den Accesspoint laden</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="opensslfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+<TD><INPUT NAME="remove_key" TITLE="Stimmt der hochgeladene Schlüssel mit deinem geheimen Schlüssel auf dem AccessPoint überein, wird dieser auf dem Accesspoint gelöscht" TYPE="SUBMIT" VALUE="geheimen Schlüssel auf dem Accesspoint löschen"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+EOF
+elif [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TBODY><TR><TD>ACHTUNG: Firmware-update nicht möglich</TD></TR></TBODY></TABLE>
+<b>Auf dem Rechner befindet sich noch ein geheimer Schlüssel vom User-Gateway-Tunnel.</b> Diesen kannst du unter dem Punkt <a href="on_ugws.html">Inet Freigabe</a> herunterladen. Speicher diesen, aber <b>auch dein öffentliches User-Gateway-Tunnel-Zertifikat</b>, an einem sicheren Ort. Erst wenn der geheime Schlüssel von diesem Rechner gelöscht ist, kannst du die Firmware aktualisieren.<br><br>
+Das <b>Löschen des geheimen User-Gateway-Tunnel-Schlüssels</b> auf diesem Accesspoint bestätigst du mit dem Heraufladen deines geheimen User-Gateway-Tunnel-Schlüssels.<br>
+<FORM ACTION="firmware_remove_ugw_key.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle deinen geheimen Schlüssel (*.key) und lade ihn hoch">
+<TBODY>
+<TR>
+<TD colspan="2">Geheimen User-Gateway-Tunnel-Schlüssel (*.key) zur Bestätigung des Löschvorgangs auf den Accesspoint laden</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="opensslfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+<TD><INPUT NAME="remove_key" TITLE="Stimmt der hochgeladene Schlüssel mit deinem geheimen Schlüssel auf dem AccessPoint überein, wird dieser auf dem Accesspoint gelöscht" TYPE="SUBMIT" VALUE="geheimen Schlüssel auf dem Accesspoint löschen"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+
+
+
+EOF
+else
+# (re)aktiviere OpenWRT-Webfrontend zum Firmware-Update
+if ! [ -f /www/cgi-bin/webif/upgrade.sh ]; then
+	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh
+fi
+cat<<EOF
+<b>WARNUNG: Ein Firmware-update kann deinen Router zerstören.</b>
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Wichtig falls das Firmware-update fehlschlägt:
+<ul>
+<li>ASUS: Unbedingt die Adresse des Routers im lokalen Netzwerk<b>
+EOF
+echo $(nvram get lan_ipaddr)
+cat<<EOF
+</b>aufschreiben. Wenn das firmware-update fehlschlägt, ist der Router vielleicht nur unter dieser Adresse (und nicht unter 192.168.1.1) erreichbar.
+</li>
+EOF
+if [ -z "$(nvram get boot_wait)" ] || [ $(nvram get boot_wait) != "on" ]; then
+	echo "<li>Option boot_wait ist nicht aktiviert. Aus Sicherheitsgründen ;) wird diese Option bei einem firmware-update automatisch gesetzt.</li>"
+fi
+cat<<EOF
+</ul>
+<b>Wenn Du auf Firmware laden drückst, wird nicht mehr nachgefragt!</b>
+</TD>
+</TR></TBODY>
+</TABLE><br>
+
+<FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle eine Prüfsummen-Datei oder eine Firmware-Datei. Die Opennet-Firmware kann nur als *.trx-Datei geladen werden.">
+<TBODY>
+<TR>
+<TD>Firmware-Datei (*.trx) oder Prüfsummen-Datei (*.md5):</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="firmfile" SIZE="60" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+</TR>
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+<TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Prüfsummen-Datei oder Firmware laden" CLASS="note"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen. Benutze für andere Firmware-Dateien das <a href="webif/upgrade.sh">OpenWrt Webinterface</a>.<br />
+<b>Hinweis:</b> Es ist sinnvoll, vorher eine passende Prüfsummen-Datei auf den AccessPoint zu laden. Wird der Name der heraufgeladenden Firmware in der Prüfsummendatei gefunden, wird der AccessPoint nur geflasht, wenn die Firmware-Datei fehlerfrei ist. Wird der Name nicht gefunden, wird die Datei nicht geprüft und einfach auf den AccessPoint geschrieben. Firmware-Dateien sollten darum nicht umbenannt werden.
+
+
+EOF
+	if [ -f /tmp/firmware.md5 ]; then
+cat<<EOF
+<H2>Prüfsummen-Datei</H2>
+<FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Prüfsummen-Datei">
+<TBODY>
+<TR>
+	<TD>
+	<textarea name="log" cols="80" rows="5" readonly>
+EOF
+	cat /tmp/firmware.md5
+cat<<EOF
+	</textarea>
+	</TD>
+</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+
+
+EOF
+fi
+
+fi
+cat<<EOF
+
+</div>
+<script type="text/javascript">
+	document.getElementById('switch2').style.display='inline';
+	document.getElementById('firmware_container').style.display='none';
+</script>
+EOF
+
+elif [ "$REQUEST_METHOD" = "GET" ]; then
+	error=
+	echo "<b>HINWEIS: </b> Den AccessPoint erst neu starten, wenn die Installation mit \"Successfully terminated.\" abgeschlossen ist. Dies kann durchaus eine Weile dauern, bitte Geduld haben."
+	
+	echo "<pre>"
+	cd /tmp
+	echo -n "lade Firmware-Paket vom server herunter "
+	wget -q http://www.opennet-initiative.de/firmware/packages/$install
+	if ! [ -f  /tmp/$install ]; then
+		error="Datei http://www.opennet-initiative.de/firmware/packages/$install konnte nicht heruntergeladen werden."
+	else
+		echo "[ok]"
+		echo -n "lade Paket-Prüfsumme vom server herunter "
+		wget -q http://www.opennet-initiative.de/firmware/packages/$install.md5
+		if ! [ -f  /tmp/$install.md5 ]; then
+			error="Datei http://www.opennet-initiative.de/firmware/packages/$install.md5 konnte nicht heruntergeladen werden."
+		else
+			echo "[ok]"
+			if [ "$(cat /tmp/$install.md5 | cut -d' ' -f1)" != "$(md5sum /tmp/$install | cut -d' ' -f1)" ]; then
+				error="Prüfsumme des Firmware-Paketes nicht in Ordnung."
+			else
+				echo "Prüfsumme des Firmware-Paketes in Ordnung."
+				ipkg -force-defaults install /tmp/$install
+			fi
+		fi
+	fi
+
+	echo "</pre>"
+	rm -f /tmp/$install.md5
+	rm -f /tmp/$install
+	echo "<TABLE BORDER=\"0\" CLASS=\"note\"><TBODY><TR><TD>"
+	if [ -n "$error" ]; then
+		echo "$error Installation abgebrochen"
+	else
+		echo "Installation abgeschlossen, bitte starte den AP jetzt neu"
+		rm -f /www/on.css
+	fi
+	echo "</TD></TR></TBODY></TABLE>"
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif  [ -n "$ffout" ]; then
+	end=$ffout
+	while [ -n "$(echo $end | cut -s -d'.' -f2-)" ]; do end=$(echo $end | cut -s -d'.' -f2-); done;
+	if [ "$end" = "md5" ]; then
+		mv $ffout /tmp/firmware.md5
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Prüfsummen-Datei gespeichert.</TD>
+		</TR></TBODY>
+		</TABLE>
+EOF
+	else
+	
+	# prüfe Checksumme
+	bad_checksum=
+	firmware=$ffout
+	while [ -n "$(echo $firmware | cut -s -d'/' -f2-)" ]; do firmware=$(echo $firmware | cut -s -d'/' -f2-); done;
+	if [ -f /tmp/firmware.md5 ] && [ -n "$(grep $firmware /tmp/firmware.md5)" ]; then
+		if [ "$(awk -v firmware="$firmware" '$2 ~ firmware {print $1; exit}'  /tmp/firmware.md5)" != "$(md5sum $ffout | cut -d" " -f1)" ]; then
+			bad_checksum="yes"
+		else
+cat<<EOF
+			<P>Prüfsumme der Firmware-Datei in Ordnung.</P>
+EOF
+		fi
+	fi
+	
+	MAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
+	if [ -z "$bad_checksum" ] && [ "HDR0" = "$MAGIC" ]; then
+cat<<EOF		
+		
+		
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Schreibe die Firmware-Datei $ffout in den
+		Flash-Speicher. Bitte warten...</TD>
+		</TR></TBODY>
+		</TABLE><IMG
+		ALT="300 Sekunden..."
+		HEIGHT="8" SRC="../images/progress270.gif" VSPACE="10" WIDTH="255" TITLE="300 Sekunden...">
+		
+		<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+		setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 300000);
+		//--></SCRIPT>
+EOF
+		echo -n "<PRE>"
+		if [ $(nvram get boot_wait) != "on" ]; then
+			echo "setze boot_wait auf on"
+			nvram set boot_wait=on
+			nvram commit
+		fi		
+		echo "Neue Firmware wird installiert. Hab etwas Geduld, das kann durchaus einige Minuten (etwa 5) dauern."
+		echo "Der Fortschrittsbalken ist nicht direkt mit dem Update-Vorgang gekoppelt - Fehler in der Darstellung "
+		echo "sind nicht mit Fehlern im Update-Vorgang gleichzusetzen, bitte einfach weiterwarten"
+		mtd -e linux -r write $ffout linux &>/dev/null
+		echo "</PRE>"
+	else
+		rm -f "$ffout"
+
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>
+EOF
+		if [ -z "$bad_checksum" ]; then
+			echo "Datei hat falsches Format."
+		else
+			echo "Prüfsumme der heraufgeladenen Datei stimmt nicht."
+		fi
+cat<<EOF
+		</TD>
+		</TR></TBODY>
+		</TABLE>
+		
+		<P>Bitte eine korrekte *.md5-Prüfsummen-Datei oder *.trx-Firmware-Datei
+		heraufladen.</P>
+EOF
+
+	fi
+	
+	fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Vorgang wurde nicht ausgef&uuml;hrt.</P>
+EOF
+
+fi
+
+. ${0%/*}/cgi-bin-post.sh
