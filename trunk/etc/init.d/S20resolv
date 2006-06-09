@@ -19,10 +19,11 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 	gw_addrs=$(/usr/sbin/working_gateways.sh)
 	dnsaddrs=
 	for gw_addr in $gw_addrs; do
-		if [ -z "$dnsaddrs" ]; then
-			dnsaddrs=$gw_addr;
-		else
-			nvram set lan_dns="$dnsaddrs $gw_addr"; break;
-		fi
-	done
+                if [ -z "$dnsaddrs" ]; then
+                        dnsaddrs=$gw_addr;
+                else
+                        dnsaddrs="$dnsaddrs $gw_addr"; break;
+                fi
+        done
+        nvram set lan_dns="$dnsaddrs";
 fi

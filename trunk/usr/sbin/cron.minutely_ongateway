@@ -33,6 +33,7 @@ testcount=5 # how often it will be tried to establish a connection till gateway
             # is decalred as not to work
 
 old_gwaddrs=$(nvram get on_gwaddrs)
+if [ -z "old_gwaddrs" ]; then update_dns=true; else false; fi
 
 #################################################################################
 # try to establish openvpn tunnel
@@ -188,7 +189,7 @@ on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
 
 if [ "$(nvram get on_autodns)" = "on" ]; then
-	if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ]; then
+	if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ] || $update_dns ; then
 	# update dns entries
 		# use the two first gateways as possible dns-servers
 		logger "cron.minutely.ongateway creating /etc/resolv.conf"
