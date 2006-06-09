@@ -4,6 +4,11 @@
 # dependend on recent WIFI-IP-address
 # see /var/spool/cron/crontabs/root for details
 
+# check if there are more than 3 routes going to a single address,
+# thus indicating that olsrd ist running.
+# if not, tell cron.minutely to restart olsrd
+if [ $(route -n | awk 'BEGIN { c=0 } /255.255.255.255/ { c++ } END {print c}') -le 3 ]; then echo "restart olsrd" > /tmp/restart_olsrd; fi
+
 if [ "$(nvram get on_autoadapttxpwr )" = "on" ]; then
 	if ( ! [ -f /tmp/adapt_txpwr.log ] || [ -f /tmp/adapt_txpwr.failed ] ) && ! [ -f /tmp/adapt_txpwr_running.log ]; then
 		ff_txpwr=$(nvram get ff_txpwr)
