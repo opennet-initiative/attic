@@ -1,12 +1,13 @@
 #!/bin/sh
 eval $(/usr/bin/netparam)
 
-nagare_ip=$(ping -c 1 nagare.on-i.de 2>/dev/null | grep PING);
-nagare_ip=${nagare_ip#*\(};
-nagare_ip=${nagare_ip%%\)*};
+# cause nagare might be unreachable and WAN might be down its better to search for the rules to remove
 
 # dont use dsl-tunnel for user-tunneld packages
-iptables -t nat -D POSTROUTING -o $WANDEV -s $WIFINET/$WIFIPRE -d $nagare_ip -p udp --dport 1600 -j SNAT --to-source $WANADR
-iptables -t nat -D PREROUTING -d 192.168.0.251  -p udp --dport 1600 -j DNAT --to-destination $nagare_ip
+RULENUM=$(iptables -L POSTROUTING -t nat --line-numbers -n | awk "/$WIFINET\/$WIFIPRE/"'&& /dpt:1600/ {print $1; exit}')
+iptables -D POSTROUTING $RULENUM -t nat
+
+RULENUM=$(iptables -L PREROUTING -t nat --line-numbers -n | awk '/192.168.0.251/ && /dpt:1600/ {print $1; exit}')
+iptables -D POSTROUTING $RULENUM -t nat
 
 rm -f /tmp/openvpn_dsl_msg.txt	# removing running message
