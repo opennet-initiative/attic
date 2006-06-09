@@ -82,7 +82,7 @@ BEGIN {
 		if (/:/) ifconfig[$2] = 1
 	}
 	while("ip addr show primary"|getline) {
-		if (match($0, "^[1-9]+:[ \t]+[^ \t@:]+")) {
+		if (match($0, "^[0-9]+:[ \t]+[^ \t@:]+")) {
 			dev = $2
 			sub("@.*","",dev)
 			if ($4 == "mtu") {
