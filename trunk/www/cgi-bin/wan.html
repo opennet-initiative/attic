@@ -179,13 +179,13 @@ eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_wan" ]; then
 
-mv -f /etc/ez-ipupdate.conf /etc/ez-ipupdate.conf_bak
+if [ -e /etc/ez-ipupdate.conf ] && ! [ -e /etc/ez-ipupdate.conf_bak ]; then mv -f /etc/ez-ipupdate.conf /etc/ez-ipupdate.conf_bak; fi
 if [ -n "$dyndns_service" ]; then echo "service-type=$dyndns_service" >>/etc/ez-ipupdate.conf; fi
 if [ -n "$dyndns_user" ] || [ -n $dyndns_pass ]; then echo "user=$dyndns_user:$dyndns_pass" >>/etc/ez-ipupdate.conf; fi
 if [ -n "$dyndns_host" ]; then echo "host=$dyndns_host" >>/etc/ez-ipupdate.conf; fi
 if [ -n "$dyndns_server" ]; then echo "server=$dyndns_server" >>/etc/ez-ipupdate.conf; fi
 if [ -n "$dyndns_partner" ]; then echo "partner=$dyndns_partner" >>/etc/ez-ipupdate.conf; fi
-awk 'BEGIN {FS="="} $1 !~ "service-type|user|host|server|partner" {print}' /etc/ez-ipupdate.conf_bak >>/etc/ez-ipupdate.conf
+if [ -e /etc/ez-ipupdate.conf_bak ]; then awk 'BEGIN {FS="="} $1 !~ "service-type|user|host|server|partner" {print}' /etc/ez-ipupdate.conf_bak >>/etc/ez-ipupdate.conf; fi
 
 for V in wan_proto wan_ipaddr wan_netmask wan_gateway on_autodns lan_dns on_pppoe_keepdns ppp_username ppp_passwd ppp_redialperiod ppp_idletime ppp_mtu pppoe_keepdns; do
 
@@ -217,7 +217,10 @@ if [ "$wan_proto" = "pppoe" ]; then
 		nvram set wan_ifname="ppp0";
 		
 		# setze maxfail bei /etc/ppp/options auf 0 (wenn noch nicht vorhanden)
-		if [ -z "$(grep maxfail /etc/ppp/options)" ]; then echo "maxfail 0" >>/etc/ppp/options; fi
+		if [ -z "$(grep maxfail /etc/ppp/options)" ]; then
+			if [ -h /etc/ppp/options ]; then cp -f /etc/ppp/options /etc/ppp/options; fi;
+			echo "maxfail 0" >>/etc/ppp/options;
+		fi
 	fi;
 else
 	if [ "$wan_ifname" = "ppp0" ]; then
