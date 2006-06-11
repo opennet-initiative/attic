@@ -26,7 +26,6 @@ if [ -n "$post_on_wifiaccess" ]; then
 	MACLIST_CHANGED=
 	if [ "$maclist" != "$(nvram get on_wifi_access)" ]; then
 		MACLIST_CHANGED=1;
-		nvram set on_wifi_access="$maclist";
 	fi;
 	
 	DIRTY=
@@ -48,6 +47,7 @@ if [ -n "$post_on_wifiaccess" ]; then
 	if [ -n "$DIRTY" ]; then /etc/init.d/S50dnsmasq restart >/dev/null; fi
 
 	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifiaccess stop >/dev/null; fi
+	nvram set on_wifi_access="$maclist";
 	nvram commit>/dev/null 2>&1
 	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifiaccess start >/dev/null; fi
 fi
@@ -138,7 +138,7 @@ for dhcp_addr in $dhcp_addrs; do
 	### if ip-adress is found, check if it is in the right network
 	dhcp_ipaddr=$(echo $dhcp_addr|cut -d'*' -f2)
 	if [ -n "$dhcp_ipaddr" ]; then 
-		dhcp_ipaddr_net="$(ipcalc $dhcp_ipaddr 2>/dev/null |grep "NETWORK"| cut -d'=' -f2)"
+		dhcp_ipaddr_net="$(ipcalc $dhcp_ipaddr $DHCPWIFIMSK 2>/dev/null |grep "NETWORK"| cut -d'=' -f2)"
 		if [ -n "$dhcp_ipaddr_net" ] && [ "$dhcp_ipaddr_net" != "$DHCPWIFINET" ]; then continue; fi
 	fi
 	
