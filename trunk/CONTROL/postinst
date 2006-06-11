@@ -3,6 +3,7 @@
 ########################################################################
 #--------------- initialization formerly done in firstboot -------------
 echo "  initializing opennet-values"
+
 ssid=$(nvram get wl0_ssid)
 if [ -z $(nvram get wl0_on_init_override) ] ; then
 	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
@@ -20,12 +21,16 @@ if [ -z $(nvram get wl0_on_init_override) ] ; then
 		nvram set wl0_gmode_protection=auto
 		# deactivate ff dyngw functionality
 		nvram set ff_dyngw=0
-		echo " ACHTUNG: WLAN SSID wurde für opennet angepasst."
+		# disable any wpa-settings
+		nvram set wl_wpa_psk=
+		nvram set wl_wpa_gtk_rekey=
+		nvram set wl0_wpa_gtk_rekey=
+		nvram set wl0_wpa_psk=
+		echo " ACHTUNG: WLAN Einstellungen / SSID wurde für opennet angepasst."
 	fi
 fi
 
-lan_ip=$(nvram get lan_ipaddr)
-if [ $lan_ip = "192.168.1.1" ] || [ $lan_ip = "192.168.001.001" ] || [ $lan_ip = "192.168.2.1" ]; then
+if [ -n "$(nvram get lan_ipaddr | grep ^192.168)" ]; then
 	nvram set lan_ipaddr=172.16.0.1
 	nvram set lan_netmask=255.240.0.0
 	nvram set lan_proto=static
@@ -33,7 +38,7 @@ if [ $lan_ip = "192.168.1.1" ] || [ $lan_ip = "192.168.001.001" ] || [ $lan_ip =
 	echo " ACHTUNG: LAN Netzmaske wurde zu 255.240.0.0 geändert."
 fi
 
-eval $(/usr/bin/netparam)
+WIFIDEV="$(awk '$1 ~ ":$" {gsub(":",""); print $1; exit} ' /proc/net/wireless)"
 if [ -z $(nvram get wifi_ifname) ]; then
 	nvram set wifi_ipaddr=192.168.33.127
 	nvram set wifi_netmask=255.255.0.0
@@ -50,7 +55,7 @@ fi
 # remove wifi device from list of bridged devices
 ifnames=
 for if in $(nvram get lan_ifnames); do
-	if [ "$if" != $WIFIDEV ]; then
+	if [ "$if" != "$WIFIDEV" ]; then
 		ifnames="$ifnames $if"
 	fi
 done
@@ -61,13 +66,11 @@ nvram set lan_ifnames="$ifnames"
 nvram set dhcp_start=100
 nvram set dhcp_num=50
 
-
 # activate automatic olsrd configuration
 if [ -z "$(nvram get on_remoteconf)" ]; then
 	nvram set on_remoteconf="on"
 	echo " ACHTUNG: Remote-Konfiguration von olsrd wurde aktiviert."
 fi
-
 
 # limit txpwr, assume always a external Antenna
 on_ant_dbi=$(nvram get on_ant_dbi)
@@ -98,7 +101,6 @@ if [ -z "$(nvram get on_autodns)" ]; then
 	nvram set on_autodns=on
 	echo " ACHTUNG: Automatische Auswahl der DNS-Server wurde aktiviert."
 fi
-
 
 # always set boot_wait
 nvram set boot_wait=on
@@ -153,10 +155,25 @@ cp /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories
 
 echo "##WEBIF:category:Opennet-Interface" >>/www/cgi-bin/webif/.categories
 
+########################################################################
+### bugfixes section (repairing of old bugs) ###########################
+if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
+	cd /www/cgi-bin/webif/
+	upgrade_sh_on_md5=$(md5sum upgrade.sh_on 2>/dev/null| cut -d" " -f1)
+	if [ -e upgrade.sh_bak ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh_bak|cut -d" " -f1)" ]; then
+			echo "repairing broken (but hidden) firmware-update interface"
+			ln -sf /rom/www/cgi-bin/webif/upgrade.sh upgrade.sh_bak
+	elif [ -e upgrade.sh ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh|cut -d" " -f1)" ]; then
+			echo "repairing broken firmware-update interface"
+			ln -sf /rom/www/cgi-bin/webif/upgrade.sh .
+	fi
+fi
+########################################################################
+	
 # wenn key's auf dem AP, blockiere OpenWrt-Interface zum firmware-update
-if [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+if ! [ -e upgrade.sh_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
 	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-	cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+	ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 fi
 
 echo " ################################################### "

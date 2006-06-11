@@ -278,8 +278,10 @@ EOF
 		mv /tmp/on_vpn_upload.key /etc/openvpn/opennet_user/on_aps.key
 		rm /etc/openvpn/opennet_user/on_aps.key_bak
 		# blockiere Webfrontend zum Firmware-Update
-		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-		cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+		if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
+			mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+			ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+		fi
 	elif [ -f /tmp/on_vpn_upload.crt ]; then
 		mv  /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/on_aps.crt_bak
 		echo "Zertifikat /etc/openvpn/opennet_user/on_aps.crt wurde durch die hochgeladene Datei überschrieben"

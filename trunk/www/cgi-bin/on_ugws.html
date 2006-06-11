@@ -416,8 +416,10 @@ EOF
 if [ $return_value = 0 ]; then
 	echo "Schlüssel und CSR-Erstellung erfolgreich abgeschlossen."
 	# blockiere Webfrontend zum Firmware-Update
-	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-	cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+	if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
+		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+		ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+	fi
 else
 	echo "Schlüssel und CSR-Erstellung <b>fehlgeschlagen</b>"
 fi
@@ -440,8 +442,10 @@ EOF
 		mv /tmp/on_ugws_upload.key /etc/openvpn/opennet_dsl/on_ugws.key
 		rm /etc/openvpn/opennet_dsl/on_ugws.key_bak
 		# blockiere Webfrontend zum Firmware-Update
-		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-		cp -f /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+		if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
+			mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
+			ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+		fi
 	elif [ -f /tmp/on_ugws_upload.crt ]; then
 		mv  /etc/openvpn/on_ugws.crt /etc/openvpn/opennet_dsl/on_ugws.crt_bak
 		echo "Zertifikat /etc/openvpn/opennet_dsl/on_ugws.crt wurde durch die hochgeladene Datei überschrieben"

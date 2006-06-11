@@ -157,9 +157,7 @@ TITLE="Wähle deinen geheimen Schlüssel (*.key) und lade ihn hoch">
 EOF
 else
 # (re)aktiviere OpenWRT-Webfrontend zum Firmware-Update
-if ! [ -f /www/cgi-bin/webif/upgrade.sh ]; then
-	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh
-fi
+mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 cat<<EOF
 <b>WARNUNG: Ein Firmware-update kann deinen Router zerstören.</b>
 <TABLE BORDER="0" CLASS="note">
