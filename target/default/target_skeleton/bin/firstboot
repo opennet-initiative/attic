@@ -18,6 +18,7 @@ if [ -z $(nvram get wl0_on_init_override) ] ; then
 		nvram set wl0_frag=512
 		nvram set wl0_rts=250
 		nvram set wl0_gmode_protection=auto
+		nvram unset wl0_akm
 		# deactivate ff dyngw functionality
 		nvram set ff_dyngw=0
 	fi
