@@ -26,6 +26,7 @@ if [ -z $(nvram get wl0_on_init_override) ] ; then
 		nvram set wl_wpa_gtk_rekey=
 		nvram set wl0_wpa_gtk_rekey=
 		nvram set wl0_wpa_psk=
+		nvram unset wl0_akm
 		echo " ACHTUNG: WLAN Einstellungen / SSID wurde für opennet angepasst."
 	fi
 fi
