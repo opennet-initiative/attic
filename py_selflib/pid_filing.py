@@ -41,6 +41,7 @@ def file_pid(pid_filename=os.path.basename(sys.argv[0]) + '.pid'):
       return pid_file
 
 def release_pid_file(pidfile=None):
+   global pid_file
    if not (pidfile):
       pidfile = pid_file
    

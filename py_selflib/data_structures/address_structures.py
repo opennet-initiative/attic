@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#Copyright 2004 Sebastian Hagen
+#Copyright 2004, 2005, 2006 Sebastian Hagen
 # This file is part of py_selflib.
 
 # py_selflib is free software; you can redistribute it and/or modify
@@ -44,7 +44,10 @@ def ip_make(ip_data):
    
    raise ValueError('Unable to convert argument %r to a v4 or v6 ip address.' % (ip_data,))
 
+
 class ip_address_base(object):
+   __slots__ = ['ip']
+   
    def __init__(self, ip_int):
       if (ip_int < self.ip_minimum):
          raise ValueError('Value %r for argument ip_int is smaller than %s.' % (ip_int, self.ip_minimum))
@@ -60,18 +63,49 @@ class ip_address_base(object):
       
    def __hash__(self):
       return hash(self.ip)
-   
-   def __eq__(self, other):
-      if (isinstance(other, self.__class__) and (other.ip == self.ip)):
-         return True
-      else:
-         return False
       
-   def __ne__(self, other):
-      if (self.__eq__(other)):
-         return False
+   
+   def __add__(self, other):
+      return self.__class__(int(self)+int(other))
+      
+   def __sub__(self, other):
+      return self.__class__(int(self)-int(other))
+      
+   def __or__(self, other):
+      return self.__class__(int(self) | int(other))
+      
+   def __xor__(self, other):
+      return self.__class__(int(self) ^ int(other))
+      
+   def __and__(self, other):
+      return self.__class__(int(self) & int(other))
+      
+   __radd__ = __add__
+   __rsub__ = __sub__
+   __ror__ = __or__
+   __rxor__ = __xor__
+   __rand__ = __and__
+      
+   def __not__(self):
+      return self.__class__(~int(self))
+      
+   def __lshift__(self, other):
+      return self.__class__(int(self) << other)
+   
+   def __rshift__(self, other):
+      return self.__class__(int(self) >> other)
+      
+   def __nonzero__(self):
+      return bool(self.ip)
+      
+   def __cmp__(self, other):
+      (self, other) = (int(self), int(other))
+      if (self < other):
+         return -1
+      elif (other < self):
+         return 1
       else:
-         return True
+         return 0
   
    def __list__(self):
       elements = []
@@ -98,6 +132,11 @@ class ip_address_base(object):
    def __long__(self):
       return long(self.ip)
    
+   def __getstate__(self):
+      return self.ip
+   
+   def __setstate__(self, ip):
+      self.ip = ip
 
 class ip_address_v4(ip_address_base):
    separator = '.'

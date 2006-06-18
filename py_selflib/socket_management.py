@@ -41,6 +41,7 @@ except ImportError:
    termios = None
    
 import init_misc
+from process_reload import picklablesocket as socket_object
 
 defaults = {}
 defaults['class_defaults'] = {}
@@ -207,7 +208,7 @@ class asynchronous_transfer_base:
       self.logger.log(10, 'Closing fd %s which is an interface to %s.' % (fd, repr(self.target)))
       if (fd in self.file_objects):
          file_object = self.file_objects[fd]
-         if (type(file_object) == socket.SocketType):
+         if (isinstance(file_object, socket.socket)):
             try:
                file_object.shutdown(2)
             except socket.error:
@@ -244,7 +245,7 @@ class sock_stream_connection_binary(asynchronous_transfer_base):
       """Open a tcp connection to the target ip and port."""
       self.logger.log(10, 'Connecting to %s.' % (address,))
       self.target = self.address = address
-      socket_new = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      socket_new = socket_object(socket.AF_INET, socket.SOCK_STREAM)
       socket_new.connect(address)
       socket_new.setblocking(0)
       fd = socket_new.fileno()
@@ -302,7 +303,7 @@ class sock_server:
 
    def socket_init(self):
       """Open the server socket, set its options and register the fd."""
-      self.socket = socket.socket(self.address_family, self.socket_type)
+      self.socket = socket_object(self.address_family, self.socket_type)
       self.socket.bind((self.host, self.port))
       self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       self.socket.listen(self.backlog)
@@ -353,7 +354,7 @@ class sock_server:
 class sock_nonstream(asynchronous_transfer_base):
    def connection_init(self, sock_protocol, sock_af=socket.AF_INET, sock_type=socket.SOCK_DGRAM, bind_target=None):
       """Open a socket to the target ip."""
-      socket_new = socket.socket(sock_af, sock_type, sock_protocol)
+      socket_new = socket_object(sock_af, sock_type, sock_protocol)
       socket_new.setblocking(0)
       if (bind_target != None):
          socket_new.bind(bind_target)
