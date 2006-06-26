@@ -204,8 +204,8 @@ case $1 in
 			# I had several cases where some netparams weren't set from the beginning.
 			# So I'll check if they are set and if not wait a little while
 			count=
-			sleep=
 			while [ $((count++)) -lt 10 ]; do
+				sleep=
 				for V in LODEV LONET LOPRE LANDEV LANNET LANPRE WIFIDEV WIFINET WIFIPRE; do
 					if [ -z "$(eval echo \$$V)" ]; then
 						logger "S45firewall $V not set, sleeping for ten seconds"
