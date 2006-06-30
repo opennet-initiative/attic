@@ -241,11 +241,11 @@ class asynchronous_transfer_base:
 
 
 class sock_stream_connection_binary(asynchronous_transfer_base):
-   def connection_init(self, address):
+   def connection_init(self, address, address_family=socket.AF_INET):
       """Open a tcp connection to the target ip and port."""
       self.logger.log(10, 'Connecting to %s.' % (address,))
       self.target = self.address = address
-      socket_new = socket_object(socket.AF_INET, socket.SOCK_STREAM)
+      socket_new = socket_object(address_family, socket.SOCK_STREAM)
       socket_new.connect(address)
       socket_new.setblocking(0)
       fd = socket_new.fileno()
@@ -285,17 +285,16 @@ class sock_stream_connection_linebased(sock_stream_connection_binary):
          sock_stream_connection_binary.input_process(self, fd)
       else:
          assert (len(self.buffers_input[fd]) == 0)
-         
-                   
+
+
 class sock_server:
    """Tcp server socket class. Accepts connections and instantiates their classes as needed."""
-   def __init__(self, port, handler, connection_class=sock_stream_connection_linebased, address_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, host='', backlog=2):
+   def __init__(self, bindargs, handler, connection_class=sock_stream_connection_linebased, address_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, backlog=2):
       self.logger = logging.getLogger('socket_listen')
       self.backlog = backlog
       self.handler = handler
       self.connection_class = connection_class
-      self.host = host
-      self.port = port
+      self.bindargs = bindargs
       self.address_family = address_family
       self.socket_type = socket_type
       self.backlog = backlog
@@ -304,7 +303,7 @@ class sock_server:
    def socket_init(self):
       """Open the server socket, set its options and register the fd."""
       self.socket = socket_object(self.address_family, self.socket_type)
-      self.socket.bind((self.host, self.port))
+      self.socket.bind(*self.bindargs)
       self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       self.socket.listen(self.backlog)
       self.fd = fd = self.socket.fileno()
@@ -352,7 +351,7 @@ class sock_server:
 
       
 class sock_nonstream(asynchronous_transfer_base):
-   def connection_init(self, sock_protocol, sock_af=socket.AF_INET, sock_type=socket.SOCK_DGRAM, bind_target=None):
+   def connection_init(self, sock_protocol, address_family=socket.AF_INET, sock_type=socket.SOCK_DGRAM, bind_target=None):
       """Open a socket to the target ip."""
       socket_new = socket_object(sock_af, sock_type, sock_protocol)
       socket_new.setblocking(0)
