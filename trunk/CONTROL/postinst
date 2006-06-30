@@ -5,7 +5,7 @@
 echo "  initializing opennet-values"
 
 ssid=$(nvram get wl0_ssid)
-if [ -z $(nvram get wl0_on_init_override) ] ; then
+if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
 		nvram set wl0_mode=sta
 		nvram set wl0_infra=0
@@ -68,14 +68,14 @@ nvram set dhcp_start=100
 nvram set dhcp_num=50
 
 # activate automatic olsrd configuration
-if [ -z "$(nvram get on_remoteconf)" ]; then
+if [ -z "$(nvram show 2>/dev/null | grep on_remoteconf)" ]; then
 	nvram set on_remoteconf="on"
 	echo " ACHTUNG: Remote-Konfiguration von olsrd wurde aktiviert."
 fi
 
 # limit txpwr, assume always a external Antenna
-on_ant_dbi=$(nvram get on_ant_dbi)
-ff_txpwr=$(nvram get ff_txpwr)
+on_ant_dbi=$(nvram show 2>/dev/null | grep on_ant_dbi)
+ff_txpwr=$(nvram show 2>/dev/null | grep ff_txpwr)
 if [ -z "$on_ant_dbi" ]; then
 	nvram set on_ant_dbi=8
 	echo " ACHTUNG: Antennenverstärkung wurde auf 8dBi festgelegt."
@@ -92,13 +92,13 @@ if [ -z "$(nvram show 2>/dev/null | grep on_autoadapttxpwr)" ]; then
 fi
 
 # if the list of possible gateways is empty switch auto-search on
-if [ -z "$(nvram get on_gwaddrs)" ]; then
+if [ -z "$(nvram show 2>/dev/null | grep on_gwaddrs)" ]; then
 	nvram set on_gwauto=on
 	echo " ACHTUNG: Automatische Gateway-Wahl wurde aktiviert."
 fi
 
 # activate automatic selection of DNS-Servers by default
-if [ -z "$(nvram get on_autodns)" ]; then
+if [ -z "$(nvram show 2>/dev/null | grep on_autodns)" ]; then
 	nvram set on_autodns=on
 	echo " ACHTUNG: Automatische Auswahl der DNS-Server wurde aktiviert."
 fi
@@ -135,7 +135,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-3"
+nvram set on_fw_pkgversion="0.11ipkg-4pre"
 
 nvram commit
 
@@ -148,7 +148,7 @@ echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.11ipkg-3 ------- " >>/etc/banner
+echo " -- modified with opennet-package 0.11ipkg-4pre ---- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 mv -f /www/cgi-bin/webif/.categories /www/cgi-bin/webif/.categories_bak
@@ -169,6 +169,8 @@ if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
 			ln -sf /rom/www/cgi-bin/webif/upgrade.sh .
 	fi
 fi
+
+rm -f /usr/sbin/check_nagare.sh
 ########################################################################
 	
 # wenn key's auf dem AP, blockiere OpenWrt-Interface zum firmware-update
