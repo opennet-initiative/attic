@@ -128,8 +128,8 @@ for central_gw in $central_gateways; do
 		# prüfe ob gateway über wan erreicht werden kann
 		if $(ping -c 1 $central_gw_ip >/dev/null 2>/dev/null); then
 			test $DEBUG && logger -t check_usergateway "ok, $central_gw kann extern erreicht werden"
-			# (re)start opennet_dsl tunnel
-			/etc/init.d/S80openvpn restart opennet_dsl
+			# start opennet_dsl tunnel
+			/etc/init.d/S80openvpn start opennet_dsl
 		else
 			test $DEBUG && logger -t check_usergateway "no, nagare kann nicht extern erreicht werden"
 			/etc/init.d/S80openvpn stop opennet_dsl
