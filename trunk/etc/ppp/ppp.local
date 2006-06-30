@@ -17,11 +17,11 @@ case "$ACTION" in
 		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
 		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 
-		# activate policy routing
-		ip route flush table 4
-		ip route add throw $LANNET/$LANPRE table 4
-		ip route add throw $WIFINET/$WIFIPRE table 4
-		ip route add default via $IPREMOTE table 4
+		# activate policy routing (now done in check nagare to be independent of ppp)
+		#~ ip route flush table 4
+		#~ ip route add throw $LANNET/$LANPRE table 4
+		#~ ip route add throw $WIFINET/$WIFIPRE table 4
+		#~ ip route add default via $IPREMOTE table 4
 		
 		# set dns
 		if [ "$(nvram get on_pppoe_keepdns)" != "on" ]; then
@@ -44,7 +44,7 @@ case "$ACTION" in
 		/etc/init.d/S82portmapping restart
 		
 		# enable direct access to nagare and start dsl tunnel
-		/usr/sbin/check_nagare.sh
+		/usr/sbin/check_usergateway.sh
 
                 ;;
         ifdown)
@@ -69,5 +69,5 @@ case "$ACTION" in
 		fi
 
 		# disable direct access to nagare and stop dsl tunnel
-		/usr/sbin/check_nagare.sh
+		/usr/sbin/check_usergateway.sh
 esac

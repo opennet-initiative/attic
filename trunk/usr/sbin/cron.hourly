@@ -56,4 +56,4 @@ if [ -n "$(nvram get on_remoteconf)" ]; then
 fi
 
 # check if nagare_ip is still the same
-/usr/sbin/check_nagare.sh
+/usr/sbin/check_usergateway.sh

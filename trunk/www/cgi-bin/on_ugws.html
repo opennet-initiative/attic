@@ -322,7 +322,7 @@ cat<<EOF
 	</TABLE>
 EOF
 elif [ -n "$dsl_start" ]; then
-	/usr/sbin/check_nagare.sh
+	/usr/sbin/check_usergateway.sh
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY><TR><TD>
@@ -474,13 +474,13 @@ cat<<EOF
 </TABLE>
 EOF
 elif [ -n "$dsl_check" ]; then
-	check_nagare.sh >/dev/null
+	check_usergateway.sh >/dev/null
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
 	<TD>
-	Test wurde durchgeführt. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">Internet-Freigabe</a>- Seite.
+	Test wurde durchgeführt. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">Internet-Freigabe</a>- Seite. Das kann durchaus noch etwas (~1min.) dauern.
 	</TD>
 	</TR></TBODY>
 	</TABLE>
