@@ -57,7 +57,17 @@ class PointByCoordinates:
    def __sub__(self,other):
       if not (isinstance(other, self.__class__)):
          raise TypeError("Can't subtract object %r from myself %r of class %r." % (other, self, self.__class__))
-      return self.__class__(self.latitude-other.latitude, self.longitude-other.longitude)
+      return DeltaByCoordinates(self.latitude-other.latitude, self.longitude-other.longitude)
+
+
+class DeltaByCoordinates(PointByCoordinates):
+   def __init__(self, latitude, longitude):
+      if not (-180 <= latitude <= 180):
+         raise ValueError('Invalid value %r for latitude.' % (latitude,))
+      if not (-360 <= longitude <= 360):
+         raise ValueError('Invalid value %r for longitude.' % (longitude,))
+      self.latitude = float(latitude)
+      self.longitude = float(longitude)
 
 
 class CoordsToOffsetConverter:
