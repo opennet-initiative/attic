@@ -80,7 +80,7 @@ def log_init():
             
          if (target_filename and (type(target_filename) == str)):
             target_dirname = os.path.dirname(target_filename)
-            if not os.path.exists(target_dirname):
+            if (target_dirname and (not os.path.exists(target_dirname))):
                os.makedirs(target_dirname, 0755)
       
       handler = handler_class(*handler_args, **handler_kwargs)
