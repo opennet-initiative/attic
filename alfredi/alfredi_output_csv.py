@@ -36,10 +36,10 @@ class CSVFileWriter(LQColorMap):
       else:
          o_lq = lq
 
-      self.outdata.append('V,%f,%f,%f,%s,%s' % (coord.latitude, coord.longitude, o_lq, self.color_calculate(lq),text))
+      self.outdata.append('V,%f,%f,%s, %f,%s,%s' % (coord.latitude, coord.longitude, node_ip, o_lq, self.color_calculate(lq), text))
    
    def edge_draw(self, coord1, coord2, lq, node1_ip, node2_ip):
-      self.outdata.append('E,%f,%f,%f,%f,%f,%s' % (coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude, lq, self.color_calculate(lq)))
+      self.outdata.append('E,%f,%f,%f,%f,%s,%s,%f,%s' % (coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude, node1_ip, node2_ip, lq, self.color_calculate(lq)))
 
    def save(self, filename):
       outfile = file(filename, 'w')
