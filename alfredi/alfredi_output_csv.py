@@ -30,7 +30,7 @@ class CSVFileWriter(LQColorMap):
             raise StandardError('Got invalid color %r from LQColorMap.color_calculate on calling it with %r %r.' % (color, args, kwargs))
       return '#%.2X%.2X%.2x' % color
 
-   def node_draw(self, coord, lq, text):
+   def node_draw(self, coord, lq, text, node_ip):
       if (lq is None):
          o_lq = -1
       else:
@@ -38,7 +38,7 @@ class CSVFileWriter(LQColorMap):
 
       self.outdata.append('V,%f,%f,%f,%s,%s' % (coord.latitude, coord.longitude, o_lq, self.color_calculate(lq),text))
    
-   def edge_draw(self, coord1, coord2, lq):
+   def edge_draw(self, coord1, coord2, lq, node1_ip, node2_ip):
       self.outdata.append('E,%f,%f,%f,%f,%f,%s' % (coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude, lq, self.color_calculate(lq)))
 
    def save(self, filename):

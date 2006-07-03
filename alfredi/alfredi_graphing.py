@@ -39,7 +39,7 @@ class MapManipulator(alfredi_color.LQColorMap):
    def position_calculate(self, coords):
       return tuple([int(round(number)) for number in self.ctoc(coords, sanity=self.off_map_checks)])
 
-   def node_draw(self, coords, lq, width=4, height=4, text=''):
+   def node_draw(self, coords, lq, width=4, height=4, text='', **kwargs):
       position = self.position_calculate(coords)
       point_zero = (position[0]-width, position[1]-height)
       point_one = (position[0]+width, position[1]+height)
@@ -70,7 +70,7 @@ class MapManipulator(alfredi_color.LQColorMap):
          raise ValueError('Bounding sizes (%d,%d,%d,%d) would corrupt PIL image.' % (x1,y1,x2,y2))
       return self.image.copy().crop((max(self.x_min-x_margin, 0), max(self.y_min-y_margin, 0), min(self.x_max+x_margin, self.image.size[0]), min(self.y_max+y_margin, self.image.size[1])))
 
-   def edge_draw(self, coords1, coords2, lq):
+   def edge_draw(self, coords1, coords2, lq, **kwargs):
       pos1 = self.position_calculate(coords1)
       pos2 = self.position_calculate(coords2)
       self.position_register(pos1)

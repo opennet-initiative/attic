@@ -47,11 +47,11 @@ class ShapefileWriter(LQColorMap):
             raise StandardError('Got invalid color %r from LQColorMap.color_calculate on calling it with %r %r.' % (color, args, kwargs))
       return '#%.2X%.2X%.2x' % color
 
-   def node_draw(self, coord_node, lq, text):
+   def node_draw(self, coord_node, lq, text, **kwargs):
       object_id = self.outfile_nodes_shp.write_object(-1, SHPObject(SHPT_POINT, -1, (((coord_node.longitude, coord_node.latitude),),)))
       self.outfile_nodes_dbf.write_record(object_id, {'LQ':lq, 'color': self.color_calculate(lq), 'Text':text})
 
-   def edge_draw(self, coord_node1, coord_node2, lq):
+   def edge_draw(self, coord_node1, coord_node2, lq, **kwargs):
       object_id = self.outfile_links_shp.write_object(-1, SHPObject(SHPT_ARC, -1, (((coord_node1.longitude, coord_node1.latitude), (coord_node2.longitude, coord_node2.latitude)),)))
       self.outfile_links_dbf.write_record(object_id, {'LQ':lq, 'color':self.color_calculate(lq)})
 
