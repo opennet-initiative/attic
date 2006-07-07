@@ -9,7 +9,7 @@ case $1 in
 #variable defintions;
         TUNDEV="tun0"
 	TAPDEV="tap+"
-        PPPDEV="ppp+"
+	PPPDEV="$(nvram get wan_ifname)"
 	
 #### CHAIN INPUT
 	##### opennet_user tunnel ######################################################
