@@ -1,4 +1,11 @@
 #!/bin/sh
+
+# arp-table might be to small in some cases, so give the arp-table more RAM
+# see http://forum.openwrt.org/viewtopic.php?pid=14277
+echo 1024 > /proc/sys/net/ipv4/neigh/default/gc_thresh1
+echo 2048 > /proc/sys/net/ipv4/neigh/default/gc_thresh2
+echo 4096 > /proc/sys/net/ipv4/neigh/default/gc_thresh3
+
 case "$1" in
   start|restart)
     ifup lan
