@@ -189,10 +189,18 @@ on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
 
 if [ "$(nvram get on_autodns)" = "on" ]; then
-	if [ -n "$changed_gw" ] || ! [ -f /etc/resolv.conf ] || $update_dns ; then
+	# check if recent dns-server's are overwritten with ppp-values
+	if [ -e /tmp/resolv.conf_ppp ]; then
+		RESOLV_CONF="/tmp/resolv.conf_ppp"
+		DNS_VAR="lan_dns_store"
+	else
+		RESOLV_CONF="/tmp/resolv.conf"
+		DNS_VAR="lan_dns"
+	fi
+	if [ -n "$changed_gw" ] || ! [ -f $RESOLV_CONF ] || $update_dns ; then
 	# update dns entries
 		# use the two first gateways as possible dns-servers
-		logger "cron.minutely.ongateway creating /etc/resolv.conf"
+		logger -t "cron.minutely.ongateway" "creating $RESOLV_CONF"
 		gw_addrs=$(/usr/sbin/working_gateways.sh)
 		dnsaddrs=
 		lan_dns=
@@ -206,11 +214,9 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 				break;
 			fi
 		done
-		nvram set lan_dns="$lan_dns"
-		echo -e $dnsaddrs > /etc/resolv.conf
-		chmod +r /etc/resolv.conf
-	# restart dhcp-server which forwards dns information
-		/etc/init.d/S50dnsmasq restart
+		nvram set $DNS_VAR="$lan_dns"
+		echo -e $dnsaddrs > $RESOLV_CONF
+		chmod +r $RESOLV_CONF
 	fi
 fi
 
