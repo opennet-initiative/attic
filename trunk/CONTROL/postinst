@@ -135,7 +135,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-4pre"
+nvram set on_fw_pkgversion="0.11ipkg-4pre2"
 
 nvram commit
 
@@ -148,10 +148,11 @@ echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.11ipkg-4pre ---- " >>/etc/banner
+echo " -- modified with opennet-package 0.11ipkg-4pre2 --- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
-mv -f /www/cgi-bin/webif/.categories /www/cgi-bin/webif/.categories_bak
+awk '!/Opennet-Interface/ {print}' /www/cgi-bin/webif/.categories >/www/cgi-bin/webif/.categories_bak
+rm /www/cgi-bin/webif/.categories
 cp /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories
 
 echo "##WEBIF:category:Opennet-Interface" >>/www/cgi-bin/webif/.categories

@@ -3,6 +3,8 @@ echo "  removing files to replace"
 
 rm -f /bin/login
 
+rm -f /etc/functions.sh
+
 rm -f /etc/init.d/S40network
 rm -f /etc/init.d/S45firewall
 rm -f /etc/init.d/S50telnet

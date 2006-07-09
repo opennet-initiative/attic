@@ -3,6 +3,8 @@ echo "  restoring replaced files"
 
 ln -sf /rom/bin/login /bin/login
 
+ln -sf /rom/etc/functions.sh /etc/functions.sh
+
 ln -sf /rom/etc/init.d/S40network /etc/init.d/S40network
 ln -sf /rom/etc/init.d/S45firewall /etc/init.d/S45firewall
 ln -sf /rom/etc/init.d/S50telnet /etc/init.d/S50telnet
