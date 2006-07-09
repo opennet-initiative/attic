@@ -27,17 +27,14 @@ case "$ACTION" in
 		if [ "$(nvram get on_pppoe_keepdns)" != "on" ]; then
 			nvram set lan_dns_store="$(nvram get lan_dns)"
 			nvram set lan_dns="$DNS1 $DNS2"
-			nvram set on_store_autodns="$(nvram get on_autodns)"
-			nvram set on_autodns="off"
+			#nvram set on_store_autodns="$(nvram get on_autodns)"
+			#nvram set on_autodns="off"
 			
-			mv /etc/resolv.conf /etc/resolv.conf_ppp 2>/dev/null
+			mv /tmp/resolv.conf /tmp/resolv.conf_ppp 2>/dev/null
 			
-			echo "nameserver $DNS1" >/etc/resolv.conf
-			echo "nameserver $DNS2" >>/etc/resolv.conf
-			chmod a+r /etc/resolv.conf
-		
-			# restart dhcp-server which forwards dns information
-			/etc/init.d/S50dnsmasq restart
+			echo "nameserver $DNS1" >/tmp/resolv.conf
+			echo "nameserver $DNS2" >>/tmp/resolv.conf
+			chmod a+r /tmp/resolv.conf
 		fi
 			
 		# restart portmapping to forward packets before filtering
@@ -55,17 +52,14 @@ case "$ACTION" in
 		iptables -t nat -D POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 		
 		# reset dns
-		if [ -e /etc/resolv.conf_ppp ]; then
-			mv /etc/resolv.conf_ppp /etc/resolv.conf 2>/dev/null
-			chmod a+r /etc/resolv.conf
+		if [ -e /tmp/resolv.conf_ppp ]; then
+			mv /tmp/resolv.conf_ppp /tmp/resolv.conf 2>/dev/null
+			chmod a+r /tmp/resolv.conf
 			
-			nvram set on_autodns="$(nvram get on_store_autodns)"
+			#nvram set on_autodns="$(nvram get on_store_autodns)"
 			nvram set lan_dns="$(nvram get lan_dns_store)"
-			nvram unset on_store_autodns
+			#nvram unset on_store_autodns
 			nvram unset lan_dns_store
-			
-			# restart dhcp-server which forwards dns information
-			/etc/init.d/S50dnsmasq restart
 		fi
 
 		# disable direct access to nagare and stop dsl tunnel
