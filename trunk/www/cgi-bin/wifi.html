@@ -61,7 +61,7 @@ TITLE="Die Netzmaske ist ein Bitmuster. Die Netzmaske bestimmt, welche IP-Adress
 <table class="form">
 <TR><TD colspan="2">Hinweis: die DNS-Einstellungen sind global gültig.</td></tr>
 EOF
-	if [ -e /etc/resolv.conf_ppp ]; then
+	if [ -e /tmp/resolv.conf_ppp ]; then
 		set_dns="none;"; pppoe_dns="block;"
 	else
 		set_dns="block;"; pppoe_dns="none;"
@@ -328,10 +328,10 @@ if [ "$V" = "lan_dns" ]; then
 	if [ "$(nvram get on_autodns)" = "on" ]; then continue;
 	else
 		C="$(echo $C | awk '{gsub(","," ")} {print}')"
-		rm -rf /etc/resolv.conf
+		rm -rf /tmp/resolv.conf
 		for dns in $C; do
-			logger -t "wifi.htm" "replacing /etc/resolv.conf"
-			echo "nameserver $dns" >> /etc/resolv.conf
+			logger -t "wifi.htm" "replacing /tmp/resolv.conf"
+			echo "nameserver $dns" >> /tmp/resolv.conf
 		done
 	fi;
 fi;
