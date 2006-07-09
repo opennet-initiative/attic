@@ -116,12 +116,15 @@ case $1 in
 		rm -f /var/etc/resolv.conf
 		echo "nameserver 127.0.0.1">>/var/etc/resolv.conf
 		# Compatibility with openwrt
-		ln -sf /var/etc/resolv.conf /tmp/resolv.conf
-
-		/usr/sbin/dnsmasq -C /var/etc/dnsmasq.conf
+		ln -sf /var/etc/resolv.conf /etc/resolv.conf
+		/usr/sbin/dnsmasq -C /var/etc/dnsmasq.conf -r /tmp/resolv.conf
 	;;
 	stop)
 		echo "Stopping dnsmasq..."
+		rm -f /var/etc/resolv.conf
+		# Compatibility with openwrt
+		ln -sf /tmp/resolv.conf /etc/resolv.conf
+
 		killall dnsmasq
 	;;
 	restart)
