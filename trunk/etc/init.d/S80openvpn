@@ -37,7 +37,7 @@ stop_vpn () {
   rm $PIDFILE
 }
 
-eval $(netparam)
+WANDEV=$(nvram get wan_ifname)
 
 case "$1" in
 start)
