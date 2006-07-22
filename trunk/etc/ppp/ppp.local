@@ -48,9 +48,17 @@ case "$ACTION" in
                 logger "running ppp.local script ifdown ppp"
 		
 		# SNAT
-		iptables -t nat -D POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
-		iptables -t nat -D POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
+		#iptables -t nat -D POSTROUTING -o $IFNAME -s $LANNET/$LANPRE -j SNAT --to-source $IPLOCAL
+		#iptables -t nat -D POSTROUTING -o $IFNAME -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $IPLOCAL
 		
+		# simply remove all SNAT-rules for the ppp device tunnel
+		get_rulenum() {
+			iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "'$IFNAME'" {print $1; exit}'
+		}
+		while [ -n "$(get_rulenum)" ]; do
+			iptables -D POSTROUTING $(get_rulenum) -t nat
+		done
+
 		# reset dns
 		if [ -e /tmp/resolv.conf_ppp ]; then
 			mv /tmp/resolv.conf_ppp /tmp/resolv.conf 2>/dev/null
