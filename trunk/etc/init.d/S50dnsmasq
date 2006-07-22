@@ -79,9 +79,8 @@ EOF
 		echo "dhcp-option=wlnat,1,$DHCPWIFIMSK" >>/var/etc/dnsmasq.conf
 		echo "dhcp-option=wlnat,3,$DHCPWIFIADR" >>/var/etc/dnsmasq.conf
 		
-		# use the defined dns-addresses as resolver
-		dnsaddrs=$(nvram get lan_dns | awk 'gsub(" ",",")')
-		test -z "$dnsaddrs" && dnsaddrs=",195.50.140.250"
+		# use localhost for resolving
+		dnsaddrs=$(nvram get wifi_ipaddr)
 		echo "dhcp-option=wlnat,6,$dnsaddrs" >>/var/etc/dnsmasq.conf
 	fi
 
