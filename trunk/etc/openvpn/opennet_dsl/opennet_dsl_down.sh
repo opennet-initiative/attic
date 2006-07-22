@@ -1,6 +1,15 @@
 #!/bin/sh
 eval $(/usr/bin/netparam)
 
+# simply remove all SNAT-rules for the opennet_usergateway tunnel
+get_rulenum() {
+	iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "tap0" {print $1; exit}'
+}
+while [ -n "$(get_rulenum)" ]; do
+	iptables -D POSTROUTING $(get_rulenum) -t nat
+done
+
+
 # cause nagare might be unreachable and WAN might be down its better to search for the rules to remove
 
 # dont use dsl-tunnel for user-tunneld packages

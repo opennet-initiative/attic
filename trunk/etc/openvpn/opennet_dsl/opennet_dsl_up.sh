@@ -1,6 +1,9 @@
 #!/bin/sh
 eval $(/usr/bin/netparam)
 
+iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $ifconfig_local
+iptables -t nat -A POSTROUTING -o $dev -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $ifconfig_local
+
 nagare_ip=$(nslookup nagare.on-i.de 2>/dev/null | tail -n 1 | awk '{ print $2 }')
 #nagare_ip=$(ping -c 1 nagare.on-i.de 2>/dev/null | grep PING);
 #nagare_ip=${nagare_ip#*\(};
