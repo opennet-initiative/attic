@@ -17,7 +17,7 @@ map_port_to_ip() {
                 # if we have a destination with port change, use the given port as internal (after NAT) dport
                 intrldport=$(echo $2 | cut -d':' -f2)
         fi
-        if [ $4 = "map" ]; then
+        if [ "$4" = "map" ]; then
                 echo "forwarding port(s) "$1" to "$2
                 ACT_APPEND="A"; ACT_INSERT="I"; rulenum="2"
                 echo "accepting packets to $intrldestip port(s) $intrldport"
@@ -28,8 +28,14 @@ map_port_to_ip() {
         fi
         iptables -t nat -$ACT_APPEND PREROUTING -p udp -i $3 --dport $1 -j DNAT --to-destination $2
         iptables -t nat -$ACT_APPEND PREROUTING -p tcp -i $3 --dport $1 -j DNAT --to-destination $2
-        iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
-        iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
+        
+	if [ "$3" = "$WIFIDEV" ]; then # new connections from DHCPWIFINET are handled separately in S82wifiaccess
+		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
+		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
+	else
+		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET_PRE -d $LANNET_PRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
+		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET_PRE -d $LANNET_PRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
+	fi
 }
 
 # takes one argument: 'map' or ('unmap' or anything else - doesn't actually matter)
@@ -37,7 +43,7 @@ map_all_ports() {
         
 	# (un)Mapping Internet Ports
 	
-	echo "**Internet (VPN-Tunnel) ports**"
+	echo "** Internet (VPN-Tunnel) ports **"
 	#calculate the port base
         port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
         last_port=$(($port+9))
@@ -72,28 +78,41 @@ map_all_ports() {
 		for on_wan_mapping in $(nvram get on_wanmap); do
 			port=$(echo $on_wan_mapping | cut -d'>' -f1)
 			ip=$(echo $on_wan_mapping | cut -d'>' -f2)
-			map_port_to_ip $port $ip $WANDEV $1
+			map_port_to_ip $port $ip $WIFIDEV $1
 		done
 	fi
 }
 
+# get network parameter (formerly done in netparam)
 TUNDEV=tun+
-eval $(/usr/bin/netparam)
+
+dhcpwl_ipaddr=$(nvram get dhcpwl_ipaddr)
+if [ -n "$dhcpwl_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $dhcpwl_ipaddr $(nvram get dhcpwl_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
+	
+lan_ipaddr=$(nvram get lan_ipaddr)
+if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
+
+WIFIDEV=$(nvram get wifi_ifname)
+WANDEV=$(nvram get wan_ifname)
 
 case $1 in
         start)
-        echo "Mapping ports"
-        map_all_ports "map"
-        echo "."
-        ;;
+		map_all_ports "unmap" >/dev/null 2>/dev/null
+		echo "Mapping ports"
+		map_all_ports "map"
+		echo "."
+	;;
         stop)
-        echo "Un-Mapping ports"
-        map_all_ports "unmap"
-        echo "."
+		echo "Un-Mapping ports"
+		map_all_ports "unmap"
+		echo "."
         ;;
         restart)
-                $0 stop
-                $0 start
+		echo "Un-Mapping ports"
+		map_all_ports "unmap"
+		echo "Mapping ports"
+		map_all_ports "map"
+		echo "."
         ;;
         *)
                 echo "Usage: $0 start|stop|restart"
