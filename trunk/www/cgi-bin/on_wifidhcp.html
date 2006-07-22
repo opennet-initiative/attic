@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export DATE="18.2.2006"
-export TITLE="Verwaltung: Localer Zugriff"
+export TITLE="Verwaltung: Zugriff per WIFI DHCP"
 . ${0%/*}/cgi-bin-pre.sh
 
 
@@ -11,12 +11,12 @@ fi
 
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 
-if [ -n "$post_on_wifiaccess" ]; then
+if [ -n "$post_on_wifidhcp" ]; then
 	maclist=
 	number=1
-	while [ -n "$(eval echo \$on_wifi_mac$number)" ]; do
-		if [ "$(eval echo \$on_wifi_access$number)" = "on" ]; then
-			maclist="$maclist $(unescape $(eval echo \$on_wifi_mac$number))";
+	while [ -n "$(eval echo \$on_wifidhcp_mac$number)" ]; do
+		if [ "$(eval echo \$on_wifidhcp_access$number)" = "on" ]; then
+			maclist="$maclist $(unescape $(eval echo \$on_wifidhcp_mac$number))";
 		fi;
 		number=$(($number+1))
 	done;
@@ -24,17 +24,17 @@ if [ -n "$post_on_wifiaccess" ]; then
 	maclist=$(echo $maclist $(unescape $on_new_macaddr))
 	
 	MACLIST_CHANGED=
-	if [ "$maclist" != "$(nvram get on_wifi_access)" ]; then
+	if [ "$maclist" != "$(nvram get on_wifidhcp_macaddrs)" ]; then
 		MACLIST_CHANGED=1;
 	fi;
 	
 	DIRTY=
-	if [ "$on_wldhcp" != "$(nvram get on_wldhcp)" ]; then
+	if [ "$on_wifidhcp" != "$(nvram get on_wifidhcp)" ]; then
 		DIRTY=1;
-		nvram set on_wldhcp=$on_wldhcp;
+		nvram set on_wifidhcp=$on_wifidhcp;
 	fi
-	if [ "$on_wldhcp" = "on" ]; then
-		for V in on_wldhcp_start on_wldhcp_num on_wldhcp_lease; do
+	if [ "$on_wifidhcp" = "on" ]; then
+		for V in on_wifidhcp_start on_wifidhcp_num on_wifidhcp_lease; do
 			eval "C=\$$V"
 			C=$(unescape $C)
 			if [ "$C" != "$(nvram get $V)" ]; then
@@ -46,18 +46,18 @@ if [ -n "$post_on_wifiaccess" ]; then
 	
 	if [ -n "$DIRTY" ]; then /etc/init.d/S50dnsmasq restart >/dev/null; fi
 
-	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifiaccess stop >/dev/null; fi
-	nvram set on_wifi_access="$maclist";
+	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifidhcp stop >/dev/null; fi
+	nvram set on_wifidhcp_macaddrs="$maclist";
 	nvram commit>/dev/null 2>&1
-	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifiaccess start >/dev/null; fi
+	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifidhcp start >/dev/null; fi
 fi
 	eval $(netparam)
-	on_wldhcp=$(nvram get on_wldhcp)
+	on_wifidhcp=$(nvram get on_wifidhcp)
 cat<<EOF
 
 <script type="text/javascript">document.getElementById('idx18').className="idx selected";</script>
 
-	<H1>Verwaltung: Lokaler Zugriff über WLAN</H1>
+	<H1>Verwaltung: Zugriff über WLAN per DHCP</H1>
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
@@ -88,11 +88,11 @@ EOF
 	else
 cat<<EOF
 	<br/>Hinweis: Die automatische Vergabe von IP-Adressen per WLAN wird täglich gegen Mitternacht deaktiviert.
-	<FORM NAME="localaccess" ACTION="on_localaccess.html" CLASS="form" METHOD="POST">
+	<FORM NAME="wifidhcp" ACTION="on_wifidhcp.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD>
-	<INPUT CLASS="checkbox" NAME="on_wldhcp" TYPE="checkbox" $(test "$on_wldhcp" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="on_wldhcp_start.disabled=(0==this.checked);on_wldhcp_num.disabled=(0==this.checked);on_wldhcp_lease.disabled=(0==this.checked);"></TD>
+	<INPUT CLASS="checkbox" NAME="on_wifidhcp" TYPE="checkbox" $(test "$on_wifidhcp" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="on_wifidhcp_start.disabled=(0==this.checked);on_wifidhcp_num.disabled=(0==this.checked);on_wifidhcp_lease.disabled=(0==this.checked);"></TD>
 	<TD colspan="3">automatische IP-Vergabe per WLAN heute erlauben (DHCP)
 	</TD></TR>
 
@@ -104,20 +104,20 @@ cat<<EOF
 EOF
 	echo "$(echo $DHCPWIFINET|cut -d'.' -f1-2)"."$(($(echo $DHCPWIFINET|cut -d'.' -f3)+1))."
 cat<<EOF	
-	<INPUT NAME="on_wldhcp_start" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wldhcp_start)"$(if [ "$on_wldhcp" != "on" ];then echo ' disabled="disabled"';fi)></TD>
+	<INPUT NAME="on_wifidhcp_start" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wifidhcp_start)"$(if [ "$on_wifidhcp" != "on" ];then echo ' disabled="disabled"';fi)></TD>
 	</TR>
 	
 	<TR
 	TITLE="Anzahl der vom DHCP-Server verwalteten IP-Adressen. Die Summe aus Startwert und Anzahl sollte kleiner als 255 sein.">
 	<TD></TD>
 	<TD>DHCP-Benutzeranzahl:</TD>
-	<TD><INPUT NAME="on_wldhcp_num" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wldhcp_num)" $(if [ "$on_wldhcp" != "on" ];then echo ' disabled="disabled"';fi)></TD>
+	<TD><INPUT NAME="on_wifidhcp_num" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wifidhcp_num)" $(if [ "$on_wifidhcp" != "on" ];then echo ' disabled="disabled"';fi)></TD>
 	</TR>
 	<TR
 	TITLE="Zeit (in Sekunden) nach der eine vergebene IP-Adresse neu vergeben werden kann. Für die Vorgabe von 12 Stunden (43200) das Eingabefeld leer oder auf 0 lassen.">
 	<TD></TD>
 	<TD>DHCP-Lease-Dauer:</TD>
-	<TD><INPUT NAME="on_wldhcp_lease" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wldhcp_lease)" $(if [ "$on_wldhcp" != "on" ];then echo ' disabled="disabled"';fi)>
+	<TD><INPUT NAME="on_wifidhcp_lease" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wifidhcp_lease)" $(if [ "$on_wifidhcp" != "on" ];then echo ' disabled="disabled"';fi)>
 	Sekunden</TD>
 	</TR>
 	<TR>
@@ -127,7 +127,7 @@ cat<<EOF
 	<TR><TD></TD><TD><B>MAC-Adresse</B></TD><TD><B>IP-Adresse</B></TD><TD><B>Name</B></TD></TR>	
 EOF
 
-maclist=$(nvram get on_wifi_access)
+maclist=$(nvram get on_wifidhcp_macaddrs)
 
 # ergänze die liste der Gateways um die per dhcp erkannten Gateways
 new_maclist=$maclist
@@ -152,9 +152,9 @@ for addr in $new_maclist; do
 	allow=$(echo $maclist | grep $addr)
 	echo "<TR>"
 cat<<EOF	
-	<TD><INPUT CLASS="checkbox" NAME="on_wifi_access$number" TYPE="checkbox" $(test -n "$allow" && echo "CHECKED='on'" && echo "VALUE='on'")></TD>
+	<TD><INPUT CLASS="checkbox" NAME="on_wifidhcp_access$number" TYPE="checkbox" $(test -n "$allow" && echo "CHECKED='on'" && echo "VALUE='on'")></TD>
 EOF
-	echo "</TD><TD><INPUT NAME="on_wifi_mac$number" VALUE="$addr" TYPE="hidden">$addr</TD>"
+	echo "</TD><TD><INPUT NAME="on_wifidhcp_mac$number" VALUE="$addr" TYPE="hidden">$addr</TD>"
 	echo "<TD>"$(if [ -f /var/run/dhcp.leases ]; then awk -v addr="$addr" '$2 == addr {print $3}' /var/run/dhcp.leases; fi)"</TD>"
 	echo "<TD>"$(if [ -f /var/run/dhcp.leases ]; then awk -v addr="$addr" '$2 == addr {print $4}' /var/run/dhcp.leases; fi)"</TD></TR>"
 	: $((number++))
@@ -173,7 +173,7 @@ cat<<EOF
 </TR>	
 <TR><TD colspan="4"><HR /></TD></TR>
 <TR>
-<TD> </TD><TD colspan="2"><INPUT NAME="post_on_wifiaccess" TITLE="Zurgiffsverwaltung aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+<TD> </TD><TD colspan="2"><INPUT NAME="post_on_wifidhcp" TITLE="Zurgiffsverwaltung aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
 </TR>
 	</TBODY>
 	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>

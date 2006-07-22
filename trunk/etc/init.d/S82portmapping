@@ -29,7 +29,7 @@ map_port_to_ip() {
         iptables -t nat -$ACT_APPEND PREROUTING -p udp -i $3 --dport $1 -j DNAT --to-destination $2
         iptables -t nat -$ACT_APPEND PREROUTING -p tcp -i $3 --dport $1 -j DNAT --to-destination $2
         
-	if [ "$3" = "$WIFIDEV" ]; then # new connections from DHCPWIFINET are handled separately in S82wifiaccess
+	if [ "$3" = "$WIFIDEV" ]; then # new connections from DHCPWIFINET are handled separately in S82wifidhcp
 		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
 		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
 	else
@@ -86,14 +86,15 @@ map_all_ports() {
 # get network parameter (formerly done in netparam)
 TUNDEV=tun+
 
-dhcpwl_ipaddr=$(nvram get dhcpwl_ipaddr)
-if [ -n "$dhcpwl_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $dhcpwl_ipaddr $(nvram get dhcpwl_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
+on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
+if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 	
 lan_ipaddr=$(nvram get lan_ipaddr)
 if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 
 WIFIDEV=$(nvram get wifi_ifname)
 WANDEV=$(nvram get wan_ifname)
+LANDEV=$(nvram get lan_ifname)
 
 case $1 in
         start)

@@ -12,12 +12,12 @@ case "$1" in
     ifup wifi
     wifi up
 
-    if [ -z $(nvram get on_wifiaccess_route_override) ] && [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" != "33" ]; then
-	nvram set dhcpwl_ifname="$(nvram get wifi_ifname):0"
-	nvram set dhcpwl_ipaddr="192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
-	nvram set dhcpwl_netmask="255.255.254.0"
-	nvram set dhcpwl_proto=static
-	ifup dhcpwl
+    if [ -z $(nvram get on_wifidhcp_route_override) ] && [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" != "33" ]; then
+	nvram set on_wifidhcp_ifname="$(nvram get wifi_ifname):0"
+	nvram set on_wifidhcp_ipaddr="192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
+	nvram set on_wifidhcp_netmask="255.255.254.0"
+	nvram set on_wifidhcp_proto=static
+	ifup on_wifidhcp
     fi
     
     # bring up wan as the latest device to have all other device-parameters for calling ip-up

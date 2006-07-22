@@ -59,18 +59,18 @@ EOF
 #		fi
 #	done
 
-	WLDHCP=$(nvram get on_wldhcp)
-	WLDHCPEND=$(nvram get on_wldhcp_num)
+	WLDHCP=$(nvram get on_wifidhcp)
+	WLDHCPEND=$(nvram get on_wifidhcp_num)
 	test -z "$WLDHCPEND" && WLDHCPEND=4
 	if [ "$WLDHCP" = "on" ] && [ $WLDHCPEND -gt 0 ]; then
-		WLDHCPLEASE=$(nvram get on_wldhcp_lease)
+		WLDHCPLEASE=$(nvram get on_wifidhcp_lease)
 		test -z "$WLDHCPLEASE" && WLDHCPLEASE=12h
 		test "$WLDHCPLEASE" = "0" && WLDHCPLEASE=12h
 		
 		# changed the net to separate it from AP adresses
 		# WLDHCPNET=$(echo $DHCPWIFINET|cut -d'.' -f1-3)
 		WLDHCPNET=$(echo $DHCPWIFINET|cut -d'.' -f1-2)"."$(($(echo $DHCPWIFINET|cut -d'.' -f3)+1))
-		WLDHCPBEG=$(nvram get on_wldhcp_start)
+		WLDHCPBEG=$(nvram get on_wifidhcp_start)
 		WLDHCPBEG=${WLDHCPBEG##*.}
 		test -z "$WLDHCPBEG" && WLDHCPBEG=100
 		WLDHCPEND=$(( $WLDHCPBEG + $WLDHCPEND - 1 ))

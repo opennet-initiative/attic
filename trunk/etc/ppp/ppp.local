@@ -6,8 +6,8 @@ PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
 # get network parameter (formerly done in netparam)
-dhcpwl_ipaddr=$(nvram get dhcpwl_ipaddr)
-if [ -n "$dhcpwl_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $dhcpwl_ipaddr $(nvram get dhcpwl_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
+on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
+if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 	
 lan_ipaddr=$(nvram get lan_ipaddr)
 if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
