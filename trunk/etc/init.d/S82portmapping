@@ -78,7 +78,7 @@ map_all_ports() {
 		for on_wan_mapping in $(nvram get on_wanmap); do
 			port=$(echo $on_wan_mapping | cut -d'>' -f1)
 			ip=$(echo $on_wan_mapping | cut -d'>' -f2)
-			map_port_to_ip $port $ip $WIFIDEV $1
+			map_port_to_ip $port $ip $WANDEV $1
 		done
 	fi
 }
