@@ -189,6 +189,22 @@ if [ -n "$(nvram get on_wifiaccess_route_override)" ]; then
 	nvram unset on_wifiaccess_route_override
 fi
 
+if [ -e /etc/openvpn/opennet_dsl ]; then
+	if [ -e /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+		echo " ACHTUNG: verschiebe Geheimen Usergateway-Schlüssel in Verzeichnis /etc/openvpn/opennet_ugw/"
+		mv -f /etc/openvpn/opennet_dsl/on_ugws.key /etc/openvpn/opennet_ugw/on_ugws.key
+	fi
+	if [ -e /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+		echo " ACHTUNG: verschiebe Usergateway-Zertifikat in Verzeichnis /etc/openvpn/opennet_ugw/"
+		mv -f /etc/openvpn/opennet_dsl/on_ugws.crt /etc/openvpn/opennet_ugw/on_ugws.crt
+	fi
+	if [ -e /etc/openvpn/opennet_dsl/on_ugws.csr ]; then
+		echo " ACHTUNG: verschiebe Usergateway-Zertifikatanfrage in Verzeichnis /etc/openvpn/opennet_ugw/"
+		mv -f /etc/openvpn/opennet_dsl/on_ugws.csr /etc/openvpn/opennet_ugw/on_ugws.csr
+	fi
+	rm -rf /etc/openvpn/opennet_dsl
+fi
+
 nvram set on_share_internet=$(nvram get on_sharedsl)
 nvram unset on_sharedsl
 nvram unset on_sharedsl_blocked
