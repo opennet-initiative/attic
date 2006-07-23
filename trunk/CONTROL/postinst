@@ -135,9 +135,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-4pre2"
-
-nvram commit
+nvram set on_fw_pkgversion="0.11ipkg-5"
 
 echo "  initializing opennet-values - done"
 
@@ -148,7 +146,7 @@ echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.11ipkg-4pre2 --- " >>/etc/banner
+echo " -- modified with opennet-package 0.11ipkg-5 ------- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 awk '!/Opennet-Interface/ {print}' /www/cgi-bin/webif/.categories >/www/cgi-bin/webif/.categories_bak
@@ -172,10 +170,33 @@ if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
 fi
 
 rm -f /usr/sbin/check_nagare.sh
+
+rm -f /www/cgi-bin/18-localaccess
+rm -f /www/cgi-bin/on_localaccess.html
+rm -f /etc/init.d/S83wifiaccess
+nvram unset on_wldhcp_num
+nvram unset on_wldhcp
+nvram unset on_wldhcp_start
+nvram unset on_wldhcp_lease
+nvram unset dhcpwl_proto
+nvram unset dhcpwl_ipaddr
+nvram unset dhcpwl_ifname
+nvram unset dhcpwl_netmask
+nvram unset on_wifi_access
+
+if [ -n "$(nvram get on_wifiaccess_route_override)" ]; then
+	nvram set on_wifidhcp_route_override=$(nvram get on_wifiaccess_route_override)
+	nvram unset on_wifiaccess_route_override
+fi
+
+nvram set on_share_internet=$(nvram get on_sharedsl)
+nvram unset on_sharedsl
+nvram unset on_sharedsl_blocked
+
 ########################################################################
 	
 # wenn key's auf dem AP, blockiere OpenWrt-Interface zum firmware-update
-if ! [ -e upgrade.sh_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+if ! [ -e upgrade.sh_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
 	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
 	ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 fi
@@ -185,3 +206,5 @@ echo " #         please reboot after installation        # "
 echo " #      bitte AP nach Installation neu starten     # "
 echo " #  (warte bis Meldung 'Successfully terminated')  # "
 echo " ################################################### "
+
+nvram commit
