@@ -49,8 +49,8 @@ start)
       if test -e /var/run/openvpn.$NAME.pid ; then
               echo -n " ($NAME is still running)"
       else
-	      if [ $NAME = "opennet_dsl" ] && ([ -z "$WANDEV" ] || [ "$(nvram get on_sharedsl)" != "on" ]); then
-		      echo -n " (opennet_dsl not activated)"
+	      if [ $NAME = "opennet_ugw" ] && ([ -z "$WANDEV" ] || [ "$(nvram get on_share_internet)" != "on" ]); then
+		      echo -n " (opennet_usergateway not activated)"
 	      else
 		      start_vpn
 	      fi
@@ -62,8 +62,8 @@ start)
               echo -n " ($2 is still running)"
 	else
 		NAME=$2
-		if [ $NAME = "opennet_dsl" ] && ([ -z "$WANDEV" ] || [ "$(nvram get on_sharedsl)" != "on" ]); then
-			echo -n " (opennet_dsl not activated)"
+		if [ $NAME = "opennet_ugw" ] && ([ -z "$WANDEV" ] || [ "$(nvram get on_share_internet)" != "on" ]); then
+			echo -n " (opennet_usergateway not activated)"
 		else
 			start_vpn
 		fi

@@ -74,7 +74,7 @@ map_all_ports() {
 	# (un)Mapping WAN Ports
 	
 	if [ -n "$WANDEV" ]; then
-		echo "** DSL (WAN-Access) ports **"
+		echo "** Internet (WAN-Access) ports **"
 		for on_wan_mapping in $(nvram get on_wanmap); do
 			port=$(echo $on_wan_mapping | cut -d'>' -f1)
 			ip=$(echo $on_wan_mapping | cut -d'>' -f2)

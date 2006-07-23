@@ -1,4 +1,4 @@
 #!/bin/sh
 echo "Content-type: text/opennet_crt"  
 echo                      
-cat /etc/openvpn/opennet_dsl/on_ugws.crt
+cat /etc/openvpn/opennet_ugw/on_ugws.crt

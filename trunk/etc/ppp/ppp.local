@@ -45,7 +45,7 @@ case "$ACTION" in
 		# restart portmapping to forward packets before filtering
 		/etc/init.d/S82portmapping restart
 		
-		# enable direct access to nagare and start dsl tunnel
+		# enable direct access to nagare and start usergateway tunnel
 		/usr/sbin/check_usergateway.sh
 
                 ;;
@@ -71,6 +71,6 @@ case "$ACTION" in
 			nvram unset lan_dns_store
 		fi
 
-		# disable direct access to nagare and stop dsl tunnel
+		# disable direct access to nagare and stop usergateway tunnel
 		/usr/sbin/check_usergateway.sh
 esac

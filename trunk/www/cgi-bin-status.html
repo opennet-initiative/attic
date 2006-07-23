@@ -472,11 +472,11 @@ cat<<EOF
 <TD>Internet-Freigabe:</TD>
 <TD>
 EOF
-if [ -f  /tmp/openvpn_dsl_msg.txt ];then
+if [ -f  /tmp/openvpn_ugw_msg.txt ];then
 	echo "user-gateway active"
 else
 	echo "user-gateway inactive"
-	minutes=$(nvram get on_sharedsl_blocked)
+	minutes=$(nvram get on_share_internet_blocked)
 	if [ -n "$minutes" ]; then
 		echo " (Reaktivierung in $minutes Minuten)"
 	fi

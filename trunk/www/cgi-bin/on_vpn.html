@@ -298,7 +298,7 @@ rm -f /etc/openvpn/opennet_user/on_aps.csr
 rm -f /etc/openvpn/opennet_user/on_aps.key
 rm -f /etc/openvpn/opennet_user/on_aps.crt
 # reaktiviere Webfrontend zum Firmware-Update
-if ! [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+if ! [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
 	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 fi
 cat<<EOF

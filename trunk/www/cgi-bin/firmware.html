@@ -133,7 +133,7 @@ TITLE="Wähle deinen geheimen Schlüssel (*.key) und lade ihn hoch">
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
 EOF
-elif [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+elif [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
 cat<<EOF
 <TABLE BORDER="0" CLASS="note"><TBODY><TR><TD>ACHTUNG: Firmware-update nicht möglich</TD></TR></TBODY></TABLE>
 <b>Auf dem Rechner befindet sich noch ein geheimer Schlüssel vom User-Gateway-Tunnel.</b> Diesen kannst du unter dem Punkt <a href="on_ugws.html">Inet Freigabe</a> herunterladen. Speicher diesen, aber <b>auch dein öffentliches User-Gateway-Tunnel-Zertifikat</b>, an einem sicheren Ort. Erst wenn der geheime Schlüssel von diesem Rechner gelöscht ist, kannst du die Firmware aktualisieren.<br><br>

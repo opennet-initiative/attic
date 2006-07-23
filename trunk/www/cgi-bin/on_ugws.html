@@ -22,8 +22,8 @@ openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
 openssl_organizationalUnitName="user gateways"
 
-on_sharedsl="$(nvram get on_sharedsl)"
-on_sharedsl_blocked="$(nvram get on_sharedsl_blocked)"
+on_share_internet="$(nvram get on_share_internet)"
+on_share_internet_blocked="$(nvram get on_share_internet_blocked)"
 
 cat<<EOF
 In diesem Bereich kannst Du Deinen Breitband-Anschluss für Opennet-Mitglieder zur Nutzung freigeben.<br />
@@ -42,7 +42,7 @@ Um "nagare" einzubinden (und somit Internet freizugeben) musst Du also (genauso 
 <!-- ----------------------------------------------------------- -->
 <br />
 EOF
-if [ -z "$on_sharedsl_blocked" ] && [ "$on_sharedsl" = "on" ] && [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] && [ -n  "$(ip route show table 5)" ]; then
+if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n  "$(ip route show table 5)" ]; then
 cat<<EOF
 <H2>Vorübergehende Deaktivierung</H2>
 <!-- show the following area only, if user likes more information -->
@@ -90,12 +90,12 @@ fi
 cat<<EOF
 <H2>Status</H2>
 EOF
-if [ -n "$on_sharedsl_blocked" ]; then
+if [ -n "$on_share_internet_blocked" ]; then
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
 <TR>
-<TD><b>ACHTUNG:</b> Die Internet-Freigabe wurde vorübergehend deaktiviert. <b>In $on_sharedsl_blocked Minuten</b> wird Dein Breitbandanschluss wieder <b>automatisch freigegeben</b>. Wenn Du die Internet-Freigabe wieder manuell aktivierst, wird die Deaktivierung sofort aufgehoben.</TD>
+<TD><b>ACHTUNG:</b> Die Internet-Freigabe wurde vorübergehend deaktiviert. <b>In $on_share_internet_blocked Minuten</b> wird Dein Breitbandanschluss wieder <b>automatisch freigegeben</b>. Wenn Du die Internet-Freigabe wieder manuell aktivierst, wird die Deaktivierung sofort aufgehoben.</TD>
 </TR>
 </TBODY>
 </TABLE>
@@ -123,17 +123,17 @@ TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 	<tr>
 EOF
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
-	if [ -f  /tmp/openvpn_dsl_msg.txt ];then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	if [ -f  /tmp/openvpn_ugw_msg.txt ];then
 		echo "<tr /><tr><td>User-Gateway-Tunnel aktiv</td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td /></tr>"
 	else
-		if [ -f  /var/run/openvpn.opennet_dsl.pid ];then
+		if [ -f  /var/run/openvpn.opennet_ugw.pid ];then
 			echo "<tr /><tr><td>User-Gateway-Tunnel startend</td>"
 			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
 		else
 			echo "<tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
 			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
-			echo "<TD><INPUT NAME="dsl_start" TITLE="start" TYPE="SUBMIT" VALUE="starten"></TD></tr>"
+			echo "<TD><INPUT NAME="ugw_start" TITLE="start" TYPE="SUBMIT" VALUE="starten"></TD></tr>"
 		fi	
 	fi
 fi
@@ -150,17 +150,17 @@ cat<<EOF
 EOF
 	fi
 cat<<EOF
-	<TD><INPUT NAME="dsl_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen"></TD>
+	<TD><INPUT NAME="ugw_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen"></TD>
 	</tr>
 EOF
 
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
-	if [ "$on_sharedsl" = "on" ];then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	if [ "$on_share_internet" = "on" ];then
 cat<<EOF
 		<tr>
 		<td>Internet-Freigabe aktiviert </td>
 		<td> <img src="../images/yes.gif" alt="yes" align="absmiddle"></td>
-		<TD><INPUT NAME="dsl_switch" TITLE="deaktivieren" TYPE="SUBMIT" VALUE="deaktivieren"></TD>
+		<TD><INPUT NAME="ugw_switch" TITLE="deaktivieren" TYPE="SUBMIT" VALUE="deaktivieren"></TD>
 		</tr>
 EOF
 	else
@@ -168,7 +168,7 @@ cat<<EOF
 		<tr>
 		<td>Internet-Freigabe deaktiviert </td>
 		<td> <img src="../images/no.gif" alt="no" align="absmiddle"></td>
-		<TD><INPUT NAME="dsl_switch" TITLE="aktivieren" TYPE="SUBMIT" VALUE="aktivieren"></TD>
+		<TD><INPUT NAME="ugw_switch" TITLE="aktivieren" TYPE="SUBMIT" VALUE="aktivieren"></TD>
 		</tr>
 EOF
 	fi
@@ -182,19 +182,19 @@ cat<<EOF
 TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 EOF
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.csr ];then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.csr ];then
 	echo "<tr><td>Zertifikatanfrage (CSR) vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_ugws.csr">herunterladen</a></td></tr>"
-elif ! [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && ! [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+elif ! [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && ! [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
 	echo "<tr><td>Zertifikatanfrage (CSR) fehlt </td><td></td></tr>"
 fi
 echo "<tr>"
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ];then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ];then
 	echo "<td>Schlüssel vorhanden </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_ugws.key">herunterladen</a></td>"
 else
 	echo "<td>Schlüssel fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
 fi
 echo "</tr><tr>"
-if [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ];then
+if [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ];then
 	echo "<td>Zertifikat vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_ugws.crt">herunterladen</a></td>"
 else
 	echo "<td>Zertifikat fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
@@ -205,8 +205,8 @@ cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.csr ] && ! [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
-	echo "Schicke die Zertifikatanfrage (CSR) <b> und nur diese Datei </b> an csr_dsl@opennet-initiative.de, um ein Zertifikat zu erhalten."
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.csr ] && ! [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	echo "Schicke die Zertifikatanfrage (CSR) <b> und nur diese Datei </b> an csr_ugw@opennet-initiative.de, um ein Zertifikat zu erhalten."
 fi
 
 cat<<EOF
@@ -222,7 +222,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Verwaltung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <a id="switch1" href="#" onclick="document.getElementById('vpn_upload_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -237,11 +237,11 @@ TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus
 </TR>
 <TR>
 <TD><INPUT NAME="opensslfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
-<TD><INPUT NAME="post_opensslfile" TITLE="Die ausgewählte Datei wird übertragen und im Verzeichnis /etc/openvpn/opennet_dsl/ gespeichert" TYPE="SUBMIT" VALUE="Datei auf den Accesspoint laden"></TD>
+<TD><INPUT NAME="post_opensslfile" TITLE="Die ausgewählte Datei wird übertragen und im Verzeichnis /etc/openvpn/opennet_ugw/ gespeichert" TYPE="SUBMIT" VALUE="Datei auf den Accesspoint laden"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch1').style.display='inline';
@@ -253,7 +253,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Erstellung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <a id="switch2" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -295,7 +295,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 
 
 EOF
-	if ( [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ] && [ -f /etc/openvpn/opennet_dsl/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch2').style.display='inline';
@@ -309,10 +309,10 @@ eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 
 if [ -n "$quick_block" ]; then
-	nvram set on_sharedsl_blocked=$block_min
-	nvram set on_sharedsl="off"
+	nvram set on_share_internet_blocked=$block_min
+	nvram set on_share_internet="off"
 	nvram commit
-	/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+	/etc/init.d/S80openvpn stop opennet_ugw >/dev/null
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
@@ -321,7 +321,7 @@ cat<<EOF
 	</TR></TBODY>
 	</TABLE>
 EOF
-elif [ -n "$dsl_start" ]; then
+elif [ -n "$ugw_start" ]; then
 	/usr/sbin/check_usergateway.sh
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
@@ -331,7 +331,7 @@ Versuch, einen Tunnel zum externen Gateway aufzubauen, gestartet.
 </TABLE>
 EOF
 elif [ -n "$gen_csr" ]; then
-	if [ -f /etc/openvpn/opennet_dsl/on_ugws.key ] || [ -f /etc/openvpn/opennet_dsl/on_ugws.csr ]; then
+	if [ -f /etc/openvpn/opennet_ugw/on_ugws.key ] || [ -f /etc/openvpn/opennet_ugw/on_ugws.csr ]; then
 cat<<EOF
 <TABLE BORDER="0" CLASS="note">
 <TBODY>
@@ -339,11 +339,11 @@ cat<<EOF
 <TD>
 EOF
 	echo "<H1>"
-		if [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
-			echo "Geheimer Schlüssel (Datei on_ugws.key im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden.<br>"
+		if [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
+			echo "Geheimer Schlüssel (Datei on_ugws.key im Verzeichnis /etc/openvpn/opennet_ugw/) auf dem Accesspoint schon vorhanden.<br>"
 		fi
-		if [ -f /etc/openvpn/opennet_dsl/on_ugws.csr ]; then
-			echo "Anfrage zur Zertifizierung (Datei on_ugws.csr im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden.<br>"
+		if [ -f /etc/openvpn/opennet_ugw/on_ugws.csr ]; then
+			echo "Anfrage zur Zertifizierung (Datei on_ugws.csr im Verzeichnis /etc/openvpn/opennet_ugw/) auf dem Accesspoint schon vorhanden.<br>"
 		fi
 		echo "Was soll ich machen?<br>"
 	echo "</H1>"
@@ -360,7 +360,7 @@ Wenn Du den geheimen Schlüssel vorher nicht heruntergeladen hast, ist dieser <B>
 das Zertifikat, sofern du es schon beantragt hast, wertlos.
 Soll der geheime Schlüssel und/oder die Anfrage zur Zertifizierung gelöscht werden?
 EOF
-if [ -f  /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
 	echo " (Da das aufgespielte Zertifkat dann auch nicht mehr zum neuen Schlüssel passt, wird dieses gleichfalls gelöscht)"
 fi
 cat<<EOF
@@ -398,11 +398,11 @@ openssl_organizationalUnitName=$(unescape "$openssl_organizationalUnitName"); ex
 openssl_commonName=$(unescape "$openssl_commonName"); export openssl_commonName
 openssl_EmailAddress=$(unescape "$openssl_EmailAddress"); export openssl_EmailAddress
 
-openssl req -days 3650 -nodes -new -keyout /etc/openvpn/opennet_dsl/on_ugws.key -out /etc/openvpn/opennet_dsl/on_ugws.csr
+openssl req -days 3650 -nodes -new -keyout /etc/openvpn/opennet_ugw/on_ugws.key -out /etc/openvpn/opennet_ugw/on_ugws.csr
 
 return_value=$?
 
-#openssl req -noout -text -in /etc/openvpn/opennet_dsl/on_ugws.csr
+#openssl req -noout -text -in /etc/openvpn/opennet_ugw/on_ugws.csr
 
 
 
@@ -437,20 +437,20 @@ cat<<EOF
 <TD>
 EOF
 	if [ -f /tmp/on_ugws_upload.key ]; then
-		mv /etc/openvpn/opennet_dsl/on_ugws.key /etc/openvpn/opennet_dsl/on_ugws.key_bak
-		echo "geheimer Schlüssel /etc/openvpn/opennet_dsl/on_ugws.key wurde durch die hochgeladene Datei überschrieben"
-		mv /tmp/on_ugws_upload.key /etc/openvpn/opennet_dsl/on_ugws.key
-		rm /etc/openvpn/opennet_dsl/on_ugws.key_bak
+		mv /etc/openvpn/opennet_ugw/on_ugws.key /etc/openvpn/opennet_ugw/on_ugws.key_bak
+		echo "geheimer Schlüssel /etc/openvpn/opennet_ugw/on_ugws.key wurde durch die hochgeladene Datei überschrieben"
+		mv /tmp/on_ugws_upload.key /etc/openvpn/opennet_ugw/on_ugws.key
+		rm /etc/openvpn/opennet_ugw/on_ugws.key_bak
 		# blockiere Webfrontend zum Firmware-Update
 		if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
 			mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
 			ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 		fi
 	elif [ -f /tmp/on_ugws_upload.crt ]; then
-		mv  /etc/openvpn/on_ugws.crt /etc/openvpn/opennet_dsl/on_ugws.crt_bak
-		echo "Zertifikat /etc/openvpn/opennet_dsl/on_ugws.crt wurde durch die hochgeladene Datei überschrieben"
-		mv /tmp/on_ugws_upload.crt /etc/openvpn/opennet_dsl/on_ugws.crt
-		rm /etc/openvpn/opennet_dsl/on_ugws.crt_bak
+		mv  /etc/openvpn/on_ugws.crt /etc/openvpn/opennet_ugw/on_ugws.crt_bak
+		echo "Zertifikat /etc/openvpn/opennet_ugw/on_ugws.crt wurde durch die hochgeladene Datei überschrieben"
+		mv /tmp/on_ugws_upload.crt /etc/openvpn/opennet_ugw/on_ugws.crt
+		rm /etc/openvpn/opennet_ugw/on_ugws.crt_bak
 	fi
 cat<<EOF
 </TD>
@@ -458,9 +458,9 @@ cat<<EOF
 </TABLE>
 EOF
 elif [ -n "$remove_key_csr" ]; then
-rm -f /etc/openvpn/opennet_dsl/on_ugws.csr
-rm -f /etc/openvpn/opennet_dsl/on_ugws.key
-rm -f /etc/openvpn/opennet_dsl/on_ugws.crt
+rm -f /etc/openvpn/opennet_ugw/on_ugws.csr
+rm -f /etc/openvpn/opennet_ugw/on_ugws.key
+rm -f /etc/openvpn/opennet_ugw/on_ugws.crt
 # reaktiviere Webfrontend zum Firmware-Update
 if ! [ -f /etc/openvpn/opennet_user/on_aps.key ]; then
 	mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
@@ -473,7 +473,7 @@ cat<<EOF
 </TR></TBODY>
 </TABLE>
 EOF
-elif [ -n "$dsl_check" ]; then
+elif [ -n "$ugw_check" ]; then
 	check_usergateway.sh >/dev/null
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
@@ -485,26 +485,26 @@ cat<<EOF
 	</TR></TBODY>
 	</TABLE>
 EOF
-elif [ -n "$dsl_switch" ]; then
-	on_sharedsl="$(nvram get on_sharedsl)"
-	if [ "$on_sharedsl" = "on" ]; then
-		on_sharedsl="off"
-		/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+elif [ -n "$ugw_switch" ]; then
+	on_share_internet="$(nvram get on_share_internet)"
+	if [ "$on_share_internet" = "on" ]; then
+		on_share_internet="off"
+		/etc/init.d/S80openvpn stop opennet_ugw >/dev/null
 	else
-		on_sharedsl="on"
-		/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
-		nvram unset on_sharedsl_blocked
+		on_share_internet="on"
+		/etc/init.d/S80openvpn stop opennet_ugw >/dev/null
+		nvram unset on_share_internet_blocked
 	fi
-	nvram set on_sharedsl="$on_sharedsl"
+	nvram set on_share_internet="$on_share_internet"
 	nvram commit
-	if [ "$on_sharedsl" = "on" ]; then /etc/init.d/S80openvpn start opennet_dsl >/dev/null; fi
+	if [ "$on_share_internet" = "on" ]; then /etc/init.d/S80openvpn start opennet_ugw >/dev/null; fi
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
 	<TD>
 EOF
-	if [ "$on_sharedsl" = "off" ]; then
+	if [ "$on_share_internet" = "off" ]; then
 		echo "Internet-Freigabe wurde deaktiviert."
 	else
 		echo "Internet-Freigabe wurde aktiviert."

@@ -31,7 +31,7 @@ elif [ -n "$ffout" ]; then
 		rm -f $ffout
 		rm -f /etc/openvpn/opennet_user/on_aps.key
 		# reaktiviere Webfrontend zum Firmware-Update
-		if ! [ -f /etc/openvpn/opennet_dsl/on_ugws.key ]; then
+		if ! [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
 			mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 		fi
 cat<<EOF

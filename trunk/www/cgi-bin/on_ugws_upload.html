@@ -1,11 +1,11 @@
 #!/bin/sh
 
 export DATE="5.9.2005"
-export TITLE="Verwaltung: DSL-Freigabe"
+export TITLE="Verwaltung: Internet-Freigabe"
 . ${0%/*}/cgi-bin-pre.sh
 
 cat<<EOF
-<H1>Verwaltung: DSL-Freigabe</H1>
+<H1>Verwaltung: Internet-Freigabe</H1>
 EOF
 
 if [ "$REQUEST_METHOD" != "POST" ]; then
@@ -37,27 +37,27 @@ cat<<EOF
 <TR>
 <TD>
 EOF
-if [ -z "${ffout##*.key}" ] && ! [ -f  /etc/openvpn/opennet_dsl/on_ugws.key ]; then
-	echo "geheimer Schlüssel wurde hochgeladen und in /etc/openvpn/opennet_dsl/ als Datei on_ugws.key gespeichert"
-	cp "$ffout" /etc/openvpn/opennet_dsl/on_ugws.key
+if [ -z "${ffout##*.key}" ] && ! [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ]; then
+	echo "geheimer Schlüssel wurde hochgeladen und in /etc/openvpn/opennet_ugw/ als Datei on_ugws.key gespeichert"
+	cp "$ffout" /etc/openvpn/opennet_ugw/on_ugws.key
 	# blockiere Webfrontend zum Firmware-Update
 	if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
 		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
 		ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 	fi
-elif [ -z "${ffout##*.crt}" ] && ! [ -f  /etc/openvpn/opennet_dsl/on_ugws.crt ]; then
-	echo "Zertifikat wurde hochgeladen und in  /etc/openvpn/opennet_dsl/ als Datei on_ugws.crt gespeichert"
-	cp "$ffout" /etc/openvpn/opennet_dsl/on_ugws.crt
+elif [ -z "${ffout##*.crt}" ] && ! [ -f  /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	echo "Zertifikat wurde hochgeladen und in  /etc/openvpn/opennet_ugw/ als Datei on_ugws.crt gespeichert"
+	cp "$ffout" /etc/openvpn/opennet_ugw/on_ugws.crt
 elif [ -z "${ffout##*.key}" ] || [ -z "${ffout##*.crt}" ]; then
 	rm -f /tmp/on_ugws_upload.key
 	rm -f /tmp/on_ugws_upload.crt
 	echo "<H1>"
 	if [ -z "${ffout##*.key}" ]; then 
 		cp $ffout /tmp/on_ugws_upload.key 
-		echo "Geheimer Schlüssel (Datei on_ugws.key im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
+		echo "Geheimer Schlüssel (Datei on_ugws.key im Verzeichnis /etc/openvpn/opennet_ugw/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
 	elif [ -z "${ffout##*.crt}" ]; then
 		cp $ffout /tmp/on_ugws_upload.crt
-		echo "Zertifikat (Datei on_ugws.crt im Verzeichnis /etc/openvpn/opennet_dsl/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
+		echo "Zertifikat (Datei on_ugws.crt im Verzeichnis /etc/openvpn/opennet_ugw/) auf dem Accesspoint schon vorhanden. <br> Was soll ich machen?"
 	fi
 	echo "</H1>"
 cat<<EOF

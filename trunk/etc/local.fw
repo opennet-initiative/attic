@@ -21,7 +21,7 @@ case $1 in
         $DEBUG && iptables -I INPUT 6 -i $TUNDEV -j LOG --log-prefix "TUN-IN:"
         iptables -I INPUT 7 -i $TUNDEV -j DROP
 	
-	##### opennet_dsl tunnel ######################################################
+	##### opennet_ugw tunnel ######################################################
         iptables -I INPUT -i $TAPDEV -j ACCEPT
 	#iptables -I INPUT 1 -i $TAPDEV -m state --state INVALID -j DROP
         #iptables -I INPUT 2 -i $TAPDEV -p icmp -j ACCEPT
@@ -51,7 +51,7 @@ case $1 in
 		iptables -I FORWARD 2 -i $LANDEV -o $TUNDEV -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 		$DEBUG && iptables -I FORWARD 3 -i $LANDEV -o $TUNDEV -j LOG --log-prefix "TUN-FWOUT:"
 		iptables -I FORWARD 4 -i $LANDEV -o $TUNDEV -j DROP
-	##### opennet_dsl tunnel ######################################################
+	##### opennet_ugw tunnel ######################################################
 	######### eingehende pakete
 		iptables -I FORWARD -i $TAPDEV -j ACCEPT
 		#iptables -I FORWARD 1 -i $TAPDEV -m state --state INVALID -j DROP
@@ -94,7 +94,7 @@ case $1 in
 #### CHAIN OUTPUT
 	##### opennet_user tunnel ######################################################
         iptables -I OUTPUT 1 -o $TUNDEV -j ACCEPT
-	##### opennet_dsl tunnel ######################################################
+	##### opennet_ugw tunnel ######################################################
 	iptables -I OUTPUT -o $TAPDEV -j ACCEPT
 	##### pppoe ######################################################
 	iptables -I OUTPUT -o $PPPDEV -j ACCEPT
@@ -104,7 +104,7 @@ case $1 in
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
 	ip rule add unicast from $LANNET/$LANPRE table 4
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
-	# add special rule to ensure dsl-access to nagare
+	# add special rule to ensure ugw-access to nagare
 	ip rule add unicast table 5
 #load tun module
 #       insmod tun   # not needed, loaded by /etc/modules.d
