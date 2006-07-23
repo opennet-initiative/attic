@@ -133,7 +133,6 @@ if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw
 		else
 			echo "<tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
 			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
-			echo "<TD><INPUT NAME="ugw_start" TITLE="start" TYPE="SUBMIT" VALUE="starten"></TD></tr>"
 		fi	
 	fi
 fi
@@ -150,7 +149,7 @@ cat<<EOF
 EOF
 	fi
 cat<<EOF
-	<TD><INPUT NAME="ugw_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen"></TD>
+	<TD><INPUT NAME="ugw_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen/starten"></TD>
 	</tr>
 EOF
 
