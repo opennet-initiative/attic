@@ -49,23 +49,23 @@ wan_route()
 }
 
 
-# if dsl-sharing is temporary blocked, counter will be decreased every minute.
-on_sharedsl_blocked=$(nvram get on_sharedsl_blocked)
-if [ "$1" = "quick" ] && [ -n "$on_sharedsl_blocked" ]; then
-	nvram set on_sharedsl_blocked=$(($on_sharedsl_blocked-1))
-	# if counter reaches zero, dsl is (re)activated
-	if [ "$on_sharedsl_blocked" = "0" ]; then
-		nvram unset on_sharedsl_blocked
-		nvram set on_sharedsl="on"
+# if internet-sharing is temporary blocked, counter will be decreased every minute.
+on_share_internet_blocked=$(nvram get on_share_internet_blocked)
+if [ "$1" = "quick" ] && [ -n "$on_share_internet_blocked" ]; then
+	nvram set on_share_internet_blocked=$(($on_share_internet_blocked-1))
+	# if counter reaches zero, ugw is (re)activated
+	if [ "$on_share_internet_blocked" = "0" ]; then
+		nvram unset on_share_internet_blocked
+		nvram set on_share_internet="on"
 		nvram commit
-		/etc/init.d/S80openvpn start opennet_dsl
+		/etc/init.d/S80openvpn start opennet_ugw
 	fi
 fi
 
 # prüfe ob WANDEV Teil des WIFI-Netzes ist. Wenn ja, dann sofort abbrechen
 if [ "$(ipcalc $(nvram get wan_ipaddr) $(nvram get wan_netmask)|grep "NETWORK")" = "$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask)|grep "NETWORK")" ]; then
 	test $DEBUG && logger -t check_usergateway "WANNET Teil von WIFINET"
-	/etc/init.d/S80openvpn stop opennet_dsl
+	/etc/init.d/S80openvpn stop opennet_ugw
 	wan_route del
 	usergateway_route del
 	return
@@ -80,15 +80,15 @@ if [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then
 	# keine default-route gefunden, entferne policy-routing und stoppe tunnel
 	# AcHTUNG: wenn nicht per hand, wird der tunnel zu nagare (table 5) erst wieder durch cron-hourly gestartet
 	test $DEBUG && logger -t check_usergateway "WAN-default route fehlt, stoppe opennet_usergateway tunnel (wenn gestartet)"
-	/etc/init.d/S80openvpn stop opennet_dsl
+	/etc/init.d/S80openvpn stop opennet_ugw
 	wan_route del
 	usergateway_route del
 	return
 elif [ -z "$table_5" ]; then
 	logger -t check_usergateway "table 5 ist nicht vorhanden, prüfe ob tunnel aktiv ist und stoppe den"
-	if [ -e /var/run/openvpn.opennet_dsl.pid ]; then
+	if [ -e /var/run/openvpn.opennet_ugw.pid ]; then
 		test $DEBUG && logger -t check_usergateway "stopping opennet_usergateway tunnel (route table 5 empty)"
-		/etc/init.d/S80openvpn stop opennet_dsl >/dev/null
+		/etc/init.d/S80openvpn stop opennet_ugw >/dev/null
 	fi
 fi
 
@@ -99,7 +99,7 @@ if $(ping -c 1 $ip_remote >/dev/null 2>/dev/null); then
 	if [ -z "$table_4" ]; then wan_route add $ip_remote; fi
 else
 	test $DEBUG && logger -t check_usergateway "no, WAN-Gegenstelle $ip_remote kann nicht extern erreicht werden"
-	/etc/init.d/S80openvpn stop opennet_dsl
+	/etc/init.d/S80openvpn stop opennet_ugw
 	wan_route del
 	usergateway_route del
 	return
@@ -128,11 +128,13 @@ for central_gw in $central_gateways; do
 		# prüfe ob gateway über wan erreicht werden kann
 		if $(ping -c 1 $central_gw_ip >/dev/null 2>/dev/null); then
 			test $DEBUG && logger -t check_usergateway "ok, $central_gw kann extern erreicht werden"
-			# start opennet_dsl tunnel
-			/etc/init.d/S80openvpn start opennet_dsl
+			# start opennet_ugw tunnel (only if inet-sharing is not blocked)
+			if [ -z "$(nvram get on_share_internet_blocked)" ]; then
+				/etc/init.d/S80openvpn start opennet_ugw
+			fi
 		else
 			test $DEBUG && logger -t check_usergateway "no, nagare kann nicht extern erreicht werden"
-			/etc/init.d/S80openvpn stop opennet_dsl
+			/etc/init.d/S80openvpn stop opennet_ugw
 			usergateway_route del $ip_remote $central_gw_ip
 		fi
 	else
