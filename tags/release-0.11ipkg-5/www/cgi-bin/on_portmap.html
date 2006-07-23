@@ -1,0 +1,233 @@
+#!/bin/sh
+
+export DATE="2.9.2005"
+export TITLE="Verwaltung: Portmapping"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+
+<script type="text/javascript">document.getElementById('idx13').className="idx selected";</script>
+
+<H1>Verwaltung: Portmapping</H1>
+EOF
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+	base_addr=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
+cat<<EOF
+	<p>Als Ziel der Weiterleitungen muss eine IP-Adresse im lokalen Netzwerk (im Opennet üblicherweise 172.16.0.0/12) angegeben werden. Zusätzlich kann ein Zielport, dann direkt dahinter durch einen Doppelpunkt getrennt angegeben werden.</p>
+<H2>Weiterleitung aus dem Internet</H2>
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<div id="description">
+	<p>Die folgenden Ports werden aus dem Internet durch einen aktivem OpenVPN-Tunnel an Rechner im lokalen Netzwerk weitergeleitet. Damit Du aus dem Internet auf den Rechner zugreifen kannst, musst du den Namen, der deinem aktiven Gateway
+EOF
+	
+	on_gw=$(nvram get on_gw)
+	echo -n "($on_gw"
+	case $on_gw in
+		192.168.0.254)
+		echo -n " = opennet.dnsalias.org"
+		;;
+		192.168.0.250)
+		#echo -n " = unbekannt"
+		;;
+		*)
+		;;
+	esac
+	echo -n ")"
+cat<<EOF
+ zugeordnet ist, kennen. Weitere Informationen findest Du im <a href=" http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet Wiki</a>. Bei einem Wechsel des Gateways (beispielsweise bei einer Störung) ändert sich auch der Name, unter dem der/die Rechner aus dem Internet erreichbar ist/sind.</p>
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ----------------------------------------------------------- -->
+	<FORM NAME="MAINFORM_INET" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+	<TBODY>
+	<TR><TD colspan="2">
+	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "true" && echo "CHECKED='true'" && echo "VALUE='true'") ONCHANGE="var Number=1; while(eval('this.form.on_mapaddr'+Number)) {eval('this.form.on_mapaddr'+Number++).disabled=this.checked;};">Alle Internet-Ports an einen Zielrechner weiterleiten
+	</TD></TR>
+	
+	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD>
+	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
+	<TD>$((base_addr))<br/>bzw. alle Ports</TD>
+	<TD><INPUT NAME="on_mapaddr0" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr0)"></TD>
+	</TR>
+EOF
+for number in 1 2 3 4 5 6 7 8 9; do
+cat<<EOF
+	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
+	<TD WIDTH="20" >$((base_addr+$number))</TD>
+	<TD><INPUT NAME="on_mapaddr$number" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr$number)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
+	</TR>
+EOF
+	number=$(($number+1))
+done
+cat<<EOF
+
+
+	<TR><TD colspan="2"><HR /></TD></TR>
+	<TR>
+	<TD colspan="2"><INPUT NAME="post_inet_portmap" TITLE="Port-Forwarding für Internet-Ports aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+	</TR>
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
+
+	<H2>Weiterleitung aus dem Opennet</H2>
+	<p>Die folgenden Ports werden aus dem Opennet (WLAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus nicht (direkt) erreichbar.</p>
+	<FORM NAME="MAINFORM_ON" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+	<TBODY>
+	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD></TR>	
+EOF
+number=1
+for on_internal_mapping in $(nvram get on_intrlmap); do
+on_internal_port=$(echo $on_internal_mapping | cut -d'>' -f1)
+local_lan_addr=$(echo $on_internal_mapping | cut -d'>' -f2)
+cat<<EOF
+<TR>
+	<td NAME="on_intrlsport"><INPUT NAME="on_intrlsport$number" SIZE="20" TYPE="TEXT" VALUE="$on_internal_port"></td>
+	<td NAME="on_intrldaddr"><INPUT NAME="on_intrldaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
+	<td>
+</TR>	
+EOF
+	number=$(($number+1))
+done
+cat<<EOF
+<TR>
+<TD> </TD>
+</TR><TR>
+	<td colspan="3">Mapping hinzufügen:</td>
+</TR>
+<TR>
+	<td NAME="on_new_intrlsport"><INPUT NAME="on_new_intrlsport" SIZE="20" TYPE="TEXT"></td>
+	<td NAME="on_new_intrldaddr"><INPUT NAME="on_new_intrldaddr" SIZE="20" TYPE="TEXT"></td>
+	<td></td>
+</TR>	
+<TR><TD colspan="2"><HR /></TD></TR>
+<TR>
+<TD colspan="2"><INPUT NAME="post_on_portmap" TITLE="Opennet-internes Port-Forwarding aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+</TR>
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
+
+	<H2>Weiterleitung aus dem Internet (WAN-Anschluss)</H2>
+	<p>Die folgenden Ports werden aus dem Internet (WAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus direkt erreichbar.</p>
+	<FORM NAME="MAINFORM_ON" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+	<TBODY>
+	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD></TR>	
+EOF
+number=1
+for on_wan_mapping in $(nvram get on_wanmap); do
+on_wan_port=$(echo $on_wan_mapping | cut -d'>' -f1)
+local_lan_addr=$(echo $on_wan_mapping | cut -d'>' -f2)
+cat<<EOF
+<TR>
+	<td NAME="on_wansport"><INPUT NAME="on_wansport$number" SIZE="20" TYPE="TEXT" VALUE="$on_wan_port"></td>
+	<td NAME="on_wandaddr"><INPUT NAME="on_wandaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
+	<td>
+</TR>	
+EOF
+	number=$(($number+1))
+done
+cat<<EOF
+<TR>
+<TD> </TD>
+</TR><TR>
+	<td colspan="3">Mapping hinzufügen:</td>
+</TR>
+<TR>
+	<td NAME="on_new_wansport"><INPUT NAME="on_new_wansport" SIZE="20" TYPE="TEXT"></td>
+	<td NAME="on_new_wandaddr"><INPUT NAME="on_new_wandaddr" SIZE="20" TYPE="TEXT"></td>
+	<td></td>
+</TR>	
+<TR><TD colspan="2"><HR /></TD></TR>
+<TR>
+<TD colspan="2"><INPUT NAME="post_wan_portmap" TITLE="Internet (WAN) Port-Forwarding aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+</TR>
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
+EOF
+	
+else
+	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+	
+	echo -n "<PRE>"
+	/etc/init.d/S82portmapping stop
+	echo "</PRE>"
+
+	if [ -n "$post_on_portmap" ]; then
+		number=1
+		on_portmap_newlist=
+		# refresh all stored values
+		for on_portmap in $(nvram get on_intrlmap); do
+			sourceport=$(unescape $(eval echo \$on_intrlsport$number))
+			destaddr=$(unescape $(eval echo \$on_intrldaddr$number))
+			if [ -n "$sourceport" ] && [ -n "$destaddr" ]; then
+				on_portmap_newlist="$on_portmap_newlist $sourceport>$destaddr"
+			fi;
+			number=$(($number+1))
+		done;
+		
+		# add new values if possible
+		if [ -n "$on_new_intrlsport" ] && [ -n "$on_new_intrldaddr" ]; then
+			on_portmap_newlist="$on_portmap_newlist $(unescape $on_new_intrlsport)>$(unescape $on_new_intrldaddr)"
+		fi
+		
+		on_portmap_newlist=$(echo $on_portmap_newlist)
+		nvram set on_intrlmap="$on_portmap_newlist"
+	
+	elif [ -n "$post_wan_portmap" ]; then
+		number=1
+		wan_portmap_newlist=
+		# refresh all stored values
+		for wan_portmap in $(nvram get on_wanmap); do
+			sourceport=$(unescape $(eval echo \$on_wansport$number))
+			destaddr=$(unescape $(eval echo \$on_wandaddr$number))
+			if [ -n "$sourceport" ] && [ -n "$destaddr" ]; then
+				wan_portmap_newlist="$wan_portmap_newlist $sourceport>$destaddr"
+			fi;
+			number=$(($number+1))
+		done;
+		
+		# add new values if possible
+		if [ -n "$on_new_wansport" ] && [ -n "$on_new_wandaddr" ]; then
+			wan_portmap_newlist="$wan_portmap_newlist $(unescape $on_new_wansport)>$(unescape $on_new_wandaddr)"
+		fi
+		
+		wan_portmap_newlist=$(echo $wan_portmap_newlist)
+		nvram set on_wanmap="$wan_portmap_newlist"
+	
+	elif [ -n "$post_inet_portmap" ]; then
+		for V in on_mapaddr0 on_mapaddr1 on_mapaddr2 on_mapaddr3 on_mapaddr4 on_mapaddr5 on_mapaddr6 on_mapaddr7 on_mapaddr8 on_mapaddr9 on_mapall2one; do
+			eval "C=\$$V"
+			C=$(unescape $C)
+			if [ "$C" != "$(nvram get $V)" ]; then
+				nvram set $V="$C"
+			fi
+		done
+	fi
+	nvram commit>/dev/null 2>&1
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+	Portmapping wird nun aktualisiert</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+	echo -n "<PRE>"
+	/etc/init.d/S82portmapping start
+	echo "</PRE>"
+fi
+
+. ${0%/*}/cgi-bin-post.sh

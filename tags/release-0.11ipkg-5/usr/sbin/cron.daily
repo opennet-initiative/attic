@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Will run every day (at 00:XX, depending on wifi ip-adress)
+if [ -n "$(nvram get on_wifidhcp)" ]; then
+	nvram set on_wifidhcp=""
+	nvram commit
+	/etc/init.d/S50dnsmasq restart >/dev/null
+	logger cron-daily switched wlan-dhcp off
+fi
+
+# hole aktuelle paketliste
+/usr/sbin/get_firmware_list.sh

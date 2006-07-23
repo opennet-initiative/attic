@@ -1,0 +1,149 @@
+#!/bin/sh
+
+test -n "$FAILSAFE" && exit
+
+. /etc/functions.sh
+
+set_wireless()
+{
+	# I had cases where $WIFIADR wasnt set from the beginning. So wait a little while
+	count=
+	while [ -z "$WIFIADR" ] && [ $((count++)) -lt 10 ]; do
+		logger "S53olsrd WIFIADR not set, sleeping for ten seconds"
+		sleep 10;
+		eval $(/usr/bin/netparam);
+	done;
+	
+	OLSRDEV=$WIFIDEV
+	OLSRDEVLIST=$WIFIDEV
+
+	if [ -n "$WIFIADR" ] && [ "$LANADR" != "$WIFIADR" ]; then
+		if [ -n "$LANOLSR" ]; then
+			OLSRDEVLIST="$OLSRDEVLIST $LANDEV"
+		fi
+	else
+		OLSRDEV=$LANDEV
+		OLSRDEVLIST=$LANDEV
+	fi
+
+	if [ -n "$WANOLSR" ]; then
+		OLSRDEVLIST="$OLSRDEVLIST $WANDEV"
+	fi
+	
+	OLSRDEVLIST="$OLSRDEVLIST tap0"
+	
+	test -n "$(nvram get ff_txant)" && wl -i $WIFIDEV txant $(nvram get ff_txant)
+	test -n "$(nvram get ff_txpwr)" && wl -i $WIFIDEV txpwr $(nvram get ff_txpwr)
+	FFMTU=$(nvram get ff_mtu)
+	if [ -n "$FFMTU" ] && [ 1500 -gt $FFMTU ]; then
+		ifconfig $OLSRDEV mtu $FFMTU
+		for i in D I; do
+			iptables -$i FORWARD -o $OLSRDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
+		done
+	fi
+}
+
+write_config()
+{
+	test -d /var/etc || mkdir -p /var/etc
+
+	HNA4=$(nvram get ff_hna4)
+	DMZS=$(nvram get ff_dmz)
+	IFS=\;
+	for DMZ in $DMZS; do
+		SRCIP=${DMZ%[:,]*}
+		if [ -n "$HNA4" ]; then
+			HNA4="$HNA4;$SRCIP/32"
+		else
+			HNA4="$SRCIP/32"
+		fi
+	done
+	unset IFS
+
+	/usr/sbin/parse_olsrd_conf main >/var/etc/olsrd.conf
+
+	if [ "$(nvram get ff_dyngw)" != "0" ]; then
+		cat>>/var/etc/olsrd.conf<<EOM
+LoadPlugin "olsrd_dyn_gw_plain.so.0.3"
+{
+}
+EOM
+	fi
+
+	if [ "$(nvram get ff_httpinfo)" != "0" ]; then
+		HTTPINFO_PARA=
+		if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
+			# Allow httpinfo on LAN
+			HTTPINFO_PARA="PlParam \"Net\" \"$LANNET $LANMSK\""
+		fi
+		cat>>/var/etc/olsrd.conf<<EOM
+LoadPlugin "olsrd_httpinfo.so.0.1"
+{
+	PlParam	"port"	"8080"
+	PlParam	"Host"	"127.0.0.1"
+	$HTTPINFO_PARA
+}
+EOM
+	fi
+
+	if [ -n "$HNA4" ]; then
+		IFS=\;
+		echo "Hna4">>/var/etc/olsrd.conf
+		echo "{">>/var/etc/olsrd.conf
+		for ENT in $HNA4; do
+			echo "	$(ipcalc $ENT|grep "NETWORK"|cut -d'=' -f2) $(ipcalc $ENT|grep "NETMASK"|cut -d'=' -f2)">>/var/etc/olsrd.conf
+		done
+		echo "}">>/var/etc/olsrd.conf
+		unset IFS
+	fi
+
+	IPC_PARA=
+	if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
+		# Allow Ipc on LAN
+		IPC_PARA="Net $LANNET $LANMSK"
+	fi
+	cat>>/var/etc/olsrd.conf<<EOM
+IpcConnect
+{
+	MaxConnections	1
+	Host		127.0.0.1
+	$IPC_PARA
+}
+EOM
+
+	for DEV in $OLSRDEVLIST; do
+	cat>>/var/etc/olsrd.conf<<EOM
+Interface "$DEV"
+{
+EOM
+	/usr/sbin/parse_olsrd_conf device >>/var/etc/olsrd.conf
+	cat>>/var/etc/olsrd.conf<<EOM
+}
+EOM
+	done
+}
+
+case $1 in
+	start)
+		echo "Starting olsrd..."
+		eval $(/usr/bin/netparam)
+		set_wireless
+		write_config
+		# olsrd will disable per iface, but on wrt that is not enough
+		echo 0 >/proc/sys/net/ipv4/conf/all/send_redirects
+		olsrd -f /var/etc/olsrd.conf -d 0
+		# give olsrd a higher priority than the other userspace-processes
+		renice -3 $(ps|grep olsrd|grep -v grep|cut -b 0-5) 2>/dev/null >/dev/null
+	;;
+	stop)
+		echo "Stopping olsrd..."
+		killall olsrd>/dev/null 2>&1
+	;;
+	restart)
+		$0 stop
+		$0 start
+	;;
+	*)
+		echo "Usage: $0 start|stop|restart"
+	;;
+esac
