@@ -48,7 +48,7 @@ map_all_ports() {
         port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
         last_port=$(($port+9))
 
-        if [ "$(nvram get on_mapall2one)" = "true" ]; then
+        if [ "$(nvram get on_mapall2one)" = "on" ]; then
                 ip=$(nvram get on_mapaddr0)
                 if [ -n "$ip" ]; then map_port_to_ip $port:$last_port $ip $TUNDEV $1; fi
         else

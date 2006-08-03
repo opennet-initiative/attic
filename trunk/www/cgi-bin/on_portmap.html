@@ -49,7 +49,7 @@ cat<<EOF
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD colspan="2">
-	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "true" && echo "CHECKED='true'" && echo "VALUE='true'") ONCHANGE="var Number=1; while(eval('this.form.on_mapaddr'+Number)) {eval('this.form.on_mapaddr'+Number++).disabled=this.checked;};">Alle Internet-Ports an einen Zielrechner weiterleiten
+	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "on" && echo "CHECKED='true'" && echo "VALUE='true'") ONCHANGE="var Number=1; while(eval('this.form.on_mapaddr'+Number)) {eval('this.form.on_mapaddr'+Number++).disabled=this.checked;};">Alle Internet-Ports an einen Zielrechner weiterleiten
 	</TD></TR>
 	
 	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD>
@@ -62,7 +62,7 @@ for number in 1 2 3 4 5 6 7 8 9; do
 cat<<EOF
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD WIDTH="20" >$((base_addr+$number))</TD>
-	<TD><INPUT NAME="on_mapaddr$number" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr$number)"$(test "$(nvram get on_mapall2one)" = "true" && echo "disabled='true'")></TD>
+	<TD><INPUT NAME="on_mapaddr$number" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr$number)"$(test "$(nvram get on_mapall2one)" = "on" && echo "disabled='true'")></TD>
 	</TR>
 EOF
 	number=$(($number+1))
