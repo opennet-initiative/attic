@@ -88,7 +88,7 @@ fi
 # activate automatic optimization of txpwr by default if not deactivated
 if [ -z "$(nvram show 2>/dev/null | grep on_autoadapttxpwr)" ]; then
 	nvram set on_autoadapttxpwr=on
-	echo " ACHTUNG: Antennenverstärkung wurde auf 8dBi festgelegt."
+	echo " ACHTUNG: einmalige Automatische Optimierung der Sendeleistung aktiviert."
 fi
 
 # if the list of possible gateways is empty switch auto-search on
