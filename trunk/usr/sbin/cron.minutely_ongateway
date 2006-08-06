@@ -33,7 +33,7 @@ testcount=5 # how often it will be tried to establish a connection till gateway
             # is decalred as not to work
 
 old_gwaddrs=$(nvram get on_gwaddrs)
-if [ -z "old_gwaddrs" ]; then update_dns=true; else false; fi
+if [ -z "old_gwaddrs" ]; then update_dns=true; else update_dns=false; fi
 
 #################################################################################
 # try to establish openvpn tunnel
