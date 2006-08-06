@@ -17,7 +17,7 @@ usergateway_route()
 	if [ "$1" = "add" ]; then
 		test $DEBUG && logger -t check_usergateway "aktiviere policy-routing für usergateway $3 per table 5"
 		ip route add $3 via $2 table 5
-	else
+	elif [ -n "$(ip route show table 5)" ]; then
 		test $DEBUG && logger -t check_usergateway "entferne policy-routing für usergateway per table 5"
 		if [ -z "$3" ]; then
 			ip route flush table 5 2>/dev/null
@@ -42,7 +42,7 @@ wan_route()
 		if [ -n "$lan_ipaddr" ]; then ip route add throw $LANNET_PRE table 4; fi
 		if [ -n "$wifi_ipaddr" ]; then ip route add throw $WIFINET_PRE table 4; fi
 		ip route add default via $2 table 4
-	else
+	elif [ -n "$(ip route show table 4)" ]; then
 		test $DEBUG && logger -t check_usergateway "entferne policy-routing für wan per table 4"
 		ip route flush table 4 2>/dev/null
 	fi
@@ -79,8 +79,10 @@ table_5=$(ip route show table 5)
 if [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then
 	# keine default-route gefunden, entferne policy-routing und stoppe tunnel
 	# AcHTUNG: wenn nicht per hand, wird der tunnel zu nagare (table 5) erst wieder durch cron-hourly gestartet
-	test $DEBUG && logger -t check_usergateway "WAN-default route fehlt, stoppe opennet_usergateway tunnel (wenn gestartet)"
-	/etc/init.d/S80openvpn stop opennet_ugw
+	if [ -e /var/run/openvpn.opennet_ugw.pid ]; then
+		test $DEBUG && -t check_usergateway "WAN-default route fehlt, stoppe opennet_usergateway tunnel"
+		/etc/init.d/S80openvpn stop opennet_ugw
+	fi
 	wan_route del
 	usergateway_route del
 	return
