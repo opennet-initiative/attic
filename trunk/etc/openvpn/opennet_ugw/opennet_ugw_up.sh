@@ -13,4 +13,11 @@ nagare_ip=$(nslookup nagare.on-i.de 2>/dev/null | tail -n 1 | awk '{ print $2 }'
 iptables -t nat -A POSTROUTING -o $WANDEV -s $WIFINET/$WIFIPRE -d $nagare_ip -p udp --dport 1600 -j SNAT --to-source $WANADR
 iptables -t nat -A PREROUTING -d 192.168.0.251  -p udp --dport 1600 -j DNAT --to-destination $nagare_ip
 
+# clean contrack from registered connections to let them use the new settings
+echo 0 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
+echo 0 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
+while [ -n "$(cat /proc/net/ip_conntrack | grep 'port=1600 .*=192.168.0.251')" ]; do sleep 5; done
+echo 30 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
+echo 180 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
+
 echo "ugw-tunnel active" >/tmp/openvpn_ugw_msg.txt	# a short message for the web frontend
