@@ -28,7 +28,7 @@ class CSVFileWriter(LQColorMap):
       for element in color:
          if not (0 <= element <= 255):
             raise StandardError('Got invalid color %r from LQColorMap.color_calculate on calling it with %r %r.' % (color, args, kwargs))
-      return '#%.2X%.2X%.2x' % color
+      return '#%02X%02X%02X' % color
 
    def node_draw(self, coord, lq, text, node_ip):
       if (lq is None):

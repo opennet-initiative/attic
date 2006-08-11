@@ -15,7 +15,8 @@ from alfredi_coordinate_acquiration_on001 import OnWikiNodeListParser
 from alfredi_link_acquiration_on001 import links_from_csv, links_symmetrize
 from coordinate_structures import PointByCoordinates
 from alfredi_graphing import MapManipulator
-from alfredi_output_shapefile import ShapefileWriter
+#from alfredi_output_shapefile import ShapefileWriter
+from alfredi_output_kml import KMLFileWriter
 
 _log_config = logging.getLogger('config')
 
@@ -73,16 +74,24 @@ graph_calls = (
    )
 )
 
-output_unit_shp = (
-   ShapefileWriter(basefilename_nodes='alfredi_nodes', basefilename_links='alfredi_links'),
+#output_unit_shp = (
+#   ShapefileWriter(basefilename_nodes='alfredi_nodes', basefilename_links='alfredi_links'),
+#   (
+#      ((),{}),
+#   )
+#)
+
+output_unit_kml = (
+   KMLFileWriter(elementlimit=None),
    (
-      ((),{}),
+      (('output/alfredi_output.kml',),{}),
    )
 )
 
 def output_units_generate():
    retval = [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
-   retval.append(output_unit_shp)
+   #retval.append(output_unit_shp)
+   retval.append(output_unit_kml)
    return retval
 
 url_node_list = 'http://wiki.opennet-initiative.de/index.php/Opennet_Nodes'
