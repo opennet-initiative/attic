@@ -79,7 +79,7 @@ class KMLFileWriter(LQColorMap):
       for element in color:
          if not (0 <= element <= 255):
             raise StandardError('Got invalid color %r from LQColorMap.color_calculate on calling it with %r %r.' % (color, args, kwargs))
-      return 'ff%02x%02x%02x' % color
+      return 'ff%02x%02x%02x' % (color[2], color[1], color[0])
 
    def element_new(self):
       if ((not self.elementlimit) or (self.elementcount < self.elementlimit)):  
