@@ -31,25 +31,7 @@ def ip_make(ip_data):
       ip_data = ip_data[3] + 2**32 * ip_data[2] + 2**64 * ip_data[1] + 2**96 * ip_data[0] 
    return address_structures.ip_make(ip_data)
 
-def nfct_make(nfct_data):
-   nfct_tuple = nfct_data[0]
-   assert nfct_tuple[0] == nfct_data[1][1]
-   assert nfct_tuple[1] == nfct_data[1][0]
-   assert nfct_tuple[2] == nfct_data[1][2]
-   assert nfct_tuple[3] == nfct_data[1][3]
-   assert nfct_tuple[4] == nfct_data[1][5]
-   assert nfct_tuple[5] == nfct_data[1][4]
-   nfct_nat = nfct_data[10]
-   l4proto = nfct_tuple[3]
-   return Nfct(
-      Nfct_Connection(
-         src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
-         l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=nfct_data[7], 
-         packetsto=nfct_data[8][0], bytesto=nfct_data[8][1], packetsfrom=nfct_data[9][0], bytesfrom=nfct_data[9][1]),
-      Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
-      *nfct_data[2:7]
-   )
-   
+  
 class Nfct_Indexed_Meta(type):
    def __init__(self, *args, **kwargs):
       type.__init__(self, *args, **kwargs)
@@ -198,3 +180,32 @@ class Nfct:
    
    def __str__(self):
       return 'NFCT([%s] %s %s, [%s %s %s %s])' % (self.id, self.connection, self.nat, self.timeout, self.mark, self.status, self.use)
+
+
+def nfct_make(nfct_data):
+   nfct_tuple = nfct_data[0]
+   assert nfct_tuple[0] == nfct_data[1][1]
+   assert nfct_tuple[1] == nfct_data[1][0]
+   assert nfct_tuple[2] == nfct_data[1][2]
+   assert nfct_tuple[3] == nfct_data[1][3]
+   assert nfct_tuple[4] == nfct_data[1][5]
+   assert nfct_tuple[5] == nfct_data[1][4]
+   nfct_nat = nfct_data[10]
+   l4proto = nfct_tuple[3]
+   return Nfct(
+      Nfct_Connection(
+         src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
+         l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=nfct_data[7], 
+         packetsto=nfct_data[8][0], bytesto=nfct_data[8][1], packetsfrom=nfct_data[9][0], bytesfrom=nfct_data[9][1]),
+      Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
+      *nfct_data[2:7]
+   )
+
+
+def ct_dump_conntrack_table(af):
+   return [nfct_make(e) for e in nlct_.ct_dump_conntrack_table(af)]
+   
+def ct_event_conntrack():
+   return [nfct_make(e) for e in nlct_.ct_event_conntrack()]
+   
+   
