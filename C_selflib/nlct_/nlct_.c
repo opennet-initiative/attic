@@ -19,6 +19,11 @@ Copyright 2006 Sebastian Hagen
 #include <fcntl.h>
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 
+struct nfct_mask {
+   int mask;
+   char *name;
+};
+
 struct nfct_handle *nch;
 static PyObject *NfnlError;
 static PyObject *ct_event_retval = NULL;
@@ -42,7 +47,7 @@ static PyObject *ct_dump_conntrack_table(PyObject *self, PyObject *args) {
    srv = nfct_dump_conntrack_table(nch, family);
     
    ct_event_retval = NULL;
-    
+   
    if (srv == 0) {
       return retval;
    } else {
@@ -129,33 +134,46 @@ inline static PyObject *ct_nfctct_to_py_nat(struct nfct_nat *n, unsigned char pr
    );
 }
 
-inline static PyObject *ct_nfctct_to_py(struct nfct_conntrack *ct) {
-   return Py_BuildValue("NNNNNNNNNNN",
+inline static PyObject *ct_nfctct_to_py(struct nfct_conntrack *ct, int type, unsigned int flags) {
+   static PyObject *rv; 
+   rv = Py_BuildValue("iNNssssssssN",
+      type,
       ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_ORIGINAL]),
       ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_REPLY]),
-      PyLong_FromUnsignedLong(ct->timeout),
-      PyLong_FromUnsignedLong(ct->mark),
-      PyLong_FromUnsignedLong(ct->status),
-      PyLong_FromUnsignedLong(ct->use),
-      PyLong_FromUnsignedLong(ct->id),
-      ct_nfcfct_to_py_protoinfo(&ct->protoinfo, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum),
-      ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_ORIGINAL]),
-      ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_REPLY]),
+      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
       ct_nfctct_to_py_nat(&ct->nat, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum, ct->tuple[NFCT_DIR_REPLY].l3protonum)
    );
+   
+   if (flags & NFCT_TIMEOUT) PyTuple_SetItem(rv, 3, PyLong_FromUnsignedLong(ct->timeout));
+   if (flags & NFCT_MARK) PyTuple_SetItem(rv, 4, PyLong_FromUnsignedLong(ct->mark));
+   if (flags & NFCT_STATUS) PyTuple_SetItem(rv, 5, PyLong_FromUnsignedLong(ct->status));
+   if (flags & NFCT_USE) PyTuple_SetItem(rv, 6, PyLong_FromUnsignedLong(ct->use));
+   if (flags & NFCT_ID) PyTuple_SetItem(rv, 7, PyLong_FromUnsignedLong(ct->id));
+   if (flags & NFCT_PROTOINFO) PyTuple_SetItem(rv, 8, ct_nfcfct_to_py_protoinfo(&ct->protoinfo, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum));
+   if (flags & NFCT_COUNTERS_ORIG) PyTuple_SetItem(rv, 9, ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_ORIGINAL]));
+   if (flags & NFCT_COUNTERS_RPLY) PyTuple_SetItem(rv, 10, ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_REPLY]));
+   return rv;
 }
 
-int ct_callback(void *ct, unsigned int flags, int ct_status, void *data) {
+int ct_callback(void *ct, unsigned int flags, int type, void *data) {
    int *pyexc = data;
    static PyObject *nelem;
    
-   nelem = ct_nfctct_to_py(ct);
+   nelem = ct_nfctct_to_py(ct, type, flags);
    
    if (!nelem || PyList_Append(ct_event_retval, nelem)) {
       *pyexc = 1;
       return -1; /* abort iteration */
    } else
       return 0;
+}
+
+
+struct nfct_mask ct_h_bms(int mask, char *name) {
+   struct nfct_mask rv;
+   rv.mask = mask;
+   rv.name = name;
+   return rv;
 }
 
 
@@ -168,6 +186,35 @@ static PyMethodDef pynlct__methods[] = {
 
 PyMODINIT_FUNC
 initnlct_(void) {
+   int i;
+   struct nfct_mask nfct_masks[] = {
+      /* see libnetfilter_conntrack.h for the meanings of these */
+      /* nfct flag masks 
+      ct_h_bms(NFCT_STATUS, "NFCT_STATUS"),
+      ct_h_bms(NFCT_PROTOINFO, "NFCT_PROTOINFO"),
+      ct_h_bms(NFCT_TIMEOUT, "NFCT_TIMEOUT"),
+      ct_h_bms(NFCT_MARK, "NFCT_MARK"),
+      ct_h_bms(NFCT_COUNTERS_ORIG, "NFCT_COUNTERS_ORIG"),
+      ct_h_bms(NFCT_COUNTERS_RPLY, "NFCT_COUNTERS_RPLY"),
+      ct_h_bms(NFCT_USE, "NFCT_USE"),
+      ct_h_bms(NFCT_ID, "NFCT_ID"),*/
+      /* nfct status masks */
+      ct_h_bms(IPS_EXPECTED, "IPS_EXPECTED"),
+      ct_h_bms(IPS_SEEN_REPLY, "IPS_SEEN_REPLY"),
+      ct_h_bms(IPS_ASSURED, "IPS_ASSURED"),
+      ct_h_bms(IPS_CONFIRMED, "IPS_CONFIRMED"),
+      ct_h_bms(IPS_SRC_NAT, "IPS_SRC_NAT"),
+      ct_h_bms(IPS_DST_NAT, "IPS_DST_NAT"),
+      ct_h_bms(IPS_NAT_MASK, "IPS_NAT_MASK"),
+      ct_h_bms(IPS_SEQ_ADJUST, "IPS_SEQ_ADJUST"),
+      ct_h_bms(IPS_SRC_NAT_DONE, "IPS_SRC_NAT_DONE"),
+      ct_h_bms(IPS_DST_NAT_DONE, "IPS_DST_NAT_DONE"),
+      ct_h_bms(IPS_NAT_DONE_MASK, "IPS_NAT_DONE_MASK"),
+      ct_h_bms(IPS_DYING, "IPS_DYING"),
+      ct_h_bms(IPS_FIXED_TIMEOUT, "IPS_FIXED_TIMEOUT"),
+      ct_h_bms(0, NULL) /* sentinel */
+   };
+
    nch = nfct_open(CONNTRACK, NFCT_ALL_CT_GROUPS);
    if (!nch) {
       PyErr_SetString(PyExc_ImportError, strerror(errno));
@@ -182,5 +229,9 @@ initnlct_(void) {
    Py_INCREF(NfnlError);
    PyModule_AddObject(module, "error", NfnlError);
    PyModule_AddObject(module, "nch_fd", Py_BuildValue("i",nfct_fd(nch)));
+   
+   for (i = 0; nfct_masks[i].name != NULL; i++) 
+      PyModule_AddObject(module, nfct_masks[i].name, Py_BuildValue("i", nfct_masks[i].mask));
+   
 }
 
