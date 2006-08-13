@@ -20,6 +20,9 @@ from socket import IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMP
 
 import address_structures
 import nlct_
+from nlct_ import IPS_EXPECTED, IPS_ASSURED, IPS_CONFIRMED, IPS_SRC_NAT, IPS_DST_NAT, IPS_NAT_MASK,\
+                  IPS_SEQ_ADJUST, IPS_SRC_NAT_DONE, IPS_DST_NAT_DONE, IPS_NAT_DONE_MASK, IPS_DYING,\
+                  IPS_FIXED_TIMEOUT, nch_fd
 
 IPPROTO_SCTP = 132
 
@@ -81,7 +84,7 @@ class Nfct_Connection(object):
       return '%s%r' % (self.__class__.__name__, self.__getinitargs__())
 
    def __str__(self):
-      return '%s:%s(%s,%s) <-> %s:%s(%s,%s); %s[%s] %s' % (self.src, self.l4src, self.to_packets, self.to_bytes, self.dst, self.l4dst,
+      return '%s:%s[%s/%s] <-> %s:%s[%s/%s]; %s[%s] %s' % (self.src, self.l4src, self.to_packets, self.to_bytes, self.dst, self.l4dst,
          self.from_packets, self.from_bytes, self.l3proto, self.protoinfo, self.l4proto)
 
 class Nfct_Connection_Unknown(Nfct_Connection):
@@ -160,7 +163,7 @@ class Nfct_Nat:
       return '%s%r' % (self.__class__.__name__, self.__getinitargs__())
 
    def __str__(self):
-      return 'NAT(%s:%s %s:%s)' % (self.min_ip, self.min_l4, self.max_ip, self.max_l4)
+      return '<NAT %s:%s %s:%s>' % (self.min_ip, self.min_l4, self.max_ip, self.max_l4)
 
 class Nfct:
    def __init__(self, connection, nat, timeout, mark, status, use, id):
@@ -179,27 +182,29 @@ class Nfct:
       return '%s%r' % (self.__class__.__name__, self.__getinitargs__())
    
    def __str__(self):
-      return 'NFCT([%s] %s %s, [%s %s %s %s])' % (self.id, self.connection, self.nat, self.timeout, self.mark, self.status, self.use)
+      return '<NFCT %s [%s %s %s %s %s]>' % (self.connection, self.id, self.timeout, self.mark, self.status, self.use)
 
 
 def nfct_make(nfct_data):
-   nfct_tuple = nfct_data[0]
-   assert nfct_tuple[0] == nfct_data[1][1]
-   assert nfct_tuple[1] == nfct_data[1][0]
-   assert nfct_tuple[2] == nfct_data[1][2]
-   assert nfct_tuple[3] == nfct_data[1][3]
-   assert nfct_tuple[4] == nfct_data[1][5]
-   assert nfct_tuple[5] == nfct_data[1][4]
-   nfct_nat = nfct_data[10]
+   nfct_tuple = nfct_data[1]
+   nfct_tuple2 = nfct_data[2]
+   
+   assert nfct_tuple[0] == nfct_tuple2[1]
+   assert nfct_tuple[1] == nfct_tuple2[0]
+   assert nfct_tuple[2] == nfct_tuple2[2]
+   assert nfct_tuple[3] == nfct_tuple2[3]
+   assert nfct_tuple[4] == nfct_tuple2[5]
+   assert nfct_tuple[5] == nfct_tuple2[4]
+   nfct_nat = nfct_data[11]
    l4proto = nfct_tuple[3]
-   return Nfct(
+   return (nfct_data[0], Nfct(
       Nfct_Connection(
          src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
-         l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=nfct_data[7], 
-         packetsto=nfct_data[8][0], bytesto=nfct_data[8][1], packetsfrom=nfct_data[9][0], bytesfrom=nfct_data[9][1]),
+         l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=nfct_data[8], 
+         packetsto=nfct_data[9][0], bytesto=nfct_data[9][1], packetsfrom=nfct_data[10][0], bytesfrom=nfct_data[10][1]),
       Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
-      *nfct_data[2:7]
-   )
+      *nfct_data[3:8]
+   ))
 
 
 def ct_dump_conntrack_table(af):
@@ -209,3 +214,8 @@ def ct_event_conntrack():
    return [nfct_make(e) for e in nlct_.ct_event_conntrack()]
    
    
+if (__name__ == '__main__'):
+   import select
+   while (select.select([nch_fd],[],[])):
+      for (ct_type, nfct) in ct_event_conntrack(): 
+         print ct_type, nfct
