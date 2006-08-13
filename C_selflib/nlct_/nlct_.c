@@ -1,0 +1,186 @@
+/*
+Copyright 2006 Sebastian Hagen
+ This file is part of nlct_.
+
+ nlct_ is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2 
+ as published by the Free Software Foundation
+
+ nlct_ is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with alfredi; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+#include <Python.h>
+#include <fcntl.h>
+#include <libnetfilter_conntrack/libnetfilter_conntrack.h>
+
+struct nfct_handle *nch;
+static PyObject *NfnlError;
+static PyObject *ct_event_retval = NULL;
+int ct_event_pyexc = 0;
+
+
+static PyObject *ct_dump_conntrack_table(PyObject *self, PyObject *args) {
+   int family, srv;
+   static PyObject *retval;
+   if (!PyArg_ParseTuple(args, "i", &family)) {
+      Py_DECREF(args);
+      return NULL;
+   }
+   
+   retval = PyList_New(0);
+   if (!retval) return NULL;
+   ct_event_retval = retval;
+   ct_event_pyexc = 0;
+   
+   /* at least this one doesn't directly check our uid */
+   srv = nfct_dump_conntrack_table(nch, family);
+    
+   ct_event_retval = NULL;
+    
+   if (srv == 0) {
+      return retval;
+   } else {
+      Py_DECREF(retval);
+      if (!ct_event_pyexc)
+         PyErr_SetString(NfnlError, strerror(abs(srv))); /* not a py error in the callback handler */
+      return NULL;
+   }
+}
+
+
+static PyObject *ct_event_conntrack(PyObject *self, PyObject *args) {
+   int srv;
+   static PyObject *retval;
+   
+   retval = PyList_New(0);
+   if (!retval) return NULL;
+   ct_event_retval = retval;
+   ct_event_pyexc = 0;
+   /* probably a mistake; this really shouldn't depend on uid == 0 */
+   srv = nfct_event_conntrack(nch);
+   
+   ct_event_retval = NULL;
+   
+   if (srv == 0)
+      return retval;
+   else {
+      Py_DECREF(retval);
+      if (!ct_event_pyexc)
+         PyErr_SetString(NfnlError, strerror(abs(srv))); /* not a py error in the callback handler */
+      return NULL;
+   }
+}
+
+inline static PyObject *ct_nfcfct_to_py_address(union nfct_address *t, int proto) {
+   return ((proto == AF_INET) ? 
+      PyLong_FromUnsignedLong((long) ntohl(t->v4)) :
+      Py_BuildValue("NNNN",
+         PyLong_FromUnsignedLong((long) ntohl(t->v6[0])),
+         PyLong_FromUnsignedLong((long) ntohl(t->v6[1])),
+         PyLong_FromUnsignedLong((long) ntohl(t->v6[2])),
+         PyLong_FromUnsignedLong((long) ntohl(t->v6[3]))
+      )
+   );
+}
+
+inline static PyObject *ct_nfcfct_to_py_l4(union nfct_l4 *a, unsigned char proto) {
+   if (proto == IPPROTO_TCP) return PyInt_FromLong((long) a->tcp.port);
+   if (proto == IPPROTO_UDP) return PyInt_FromLong((long) a->udp.port);
+   if (proto == IPPROTO_ICMP) return Py_BuildValue("NNN",
+      PyInt_FromLong((long) a->icmp.type),
+      PyInt_FromLong((long) a->icmp.code),
+      PyInt_FromLong((long) a->icmp.id)
+   );
+   if (proto == IPPROTO_SCTP) return PyInt_FromLong((long) a->sctp.port);
+   return PyInt_FromLong((long) a->all);
+}
+
+inline static PyObject *ct_nfcfct_to_py_tuple(struct nfct_tuple *t) {
+   return Py_BuildValue("NNNNNN",
+      ct_nfcfct_to_py_address(&t->src, t->l3protonum),
+      ct_nfcfct_to_py_address(&t->dst, t->l3protonum),
+      PyInt_FromLong((long) t->l3protonum),
+      PyInt_FromLong((long) t->protonum),
+      ct_nfcfct_to_py_l4(&t->l4src, t->l3protonum),
+      ct_nfcfct_to_py_l4(&t->l4dst, t->l3protonum)
+   );
+}
+
+inline static PyObject *ct_nfcfct_to_py_protoinfo(union nfct_protoinfo *p, unsigned char proto) {
+   return ((proto == IPPROTO_TCP) ? PyInt_FromLong((long) p->tcp.state) : (Py_INCREF(Py_None), Py_None));
+}
+
+inline static PyObject *ct_nfctct_to_py_counters(struct nfct_counters *c) {
+   return Py_BuildValue("NN", PyLong_FromUnsignedLongLong(c->packets), PyLong_FromUnsignedLongLong(c->bytes));
+}
+
+inline static PyObject *ct_nfctct_to_py_nat(struct nfct_nat *n, unsigned char proto1, unsigned char proto2) {
+   return Py_BuildValue("NNNN",
+      PyLong_FromUnsignedLong(n->min_ip),
+      PyLong_FromUnsignedLong(n->max_ip),
+      ct_nfcfct_to_py_l4(&n->l4min, proto1),
+      ct_nfcfct_to_py_l4(&n->l4max, proto2)
+   );
+}
+
+inline static PyObject *ct_nfctct_to_py(struct nfct_conntrack *ct) {
+   return Py_BuildValue("NNNNNNNNNNN",
+      ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_ORIGINAL]),
+      ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_REPLY]),
+      PyLong_FromUnsignedLong(ct->timeout),
+      PyLong_FromUnsignedLong(ct->mark),
+      PyLong_FromUnsignedLong(ct->status),
+      PyLong_FromUnsignedLong(ct->use),
+      PyLong_FromUnsignedLong(ct->id),
+      ct_nfcfct_to_py_protoinfo(&ct->protoinfo, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum),
+      ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_ORIGINAL]),
+      ct_nfctct_to_py_counters(&ct->counters[NFCT_DIR_REPLY]),
+      ct_nfctct_to_py_nat(&ct->nat, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum, ct->tuple[NFCT_DIR_REPLY].l3protonum)
+   );
+}
+
+int ct_callback(void *ct, unsigned int flags, int ct_status, void *data) {
+   int *pyexc = data;
+   static PyObject *nelem;
+   
+   nelem = ct_nfctct_to_py(ct);
+   
+   if (!nelem || PyList_Append(ct_event_retval, nelem)) {
+      *pyexc = 1;
+      return -1; /* abort iteration */
+   } else
+      return 0;
+}
+
+
+static PyMethodDef pynlct__methods[] = {
+   {"ct_dump_conntrack_table", ct_dump_conntrack_table, METH_VARARGS, "nfct_dump_conntrack_table() wrapper"},
+   {"ct_event_conntrack", ct_event_conntrack, METH_VARARGS, "nfct_event_conntrack() wrapper"},
+   {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+
+PyMODINIT_FUNC
+initnlct_(void) {
+   nch = nfct_open(CONNTRACK, NFCT_ALL_CT_GROUPS);
+   if (!nch) {
+      PyErr_SetString(PyExc_ImportError, strerror(errno));
+      return;
+   }
+   fcntl(nfct_fd(nch), F_SETFL, O_NONBLOCK);
+   nfct_register_callback(nch, ct_callback, &ct_event_pyexc);
+   
+   PyObject *module;
+   module = Py_InitModule("nlct_", pynlct__methods);
+   NfnlError = PyErr_NewException("nfnl.error", NULL, NULL);
+   Py_INCREF(NfnlError);
+   PyModule_AddObject(module, "error", NfnlError);
+   PyModule_AddObject(module, "nch_fd", Py_BuildValue("i",nfct_fd(nch)));
+}
+
