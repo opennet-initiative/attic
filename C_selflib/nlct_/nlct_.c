@@ -169,14 +169,6 @@ int ct_callback(void *ct, unsigned int flags, int type, void *data) {
 }
 
 
-struct nfct_mask ct_h_bms(int mask, char *name) {
-   struct nfct_mask rv;
-   rv.mask = mask;
-   rv.name = name;
-   return rv;
-}
-
-
 static PyMethodDef pynlct__methods[] = {
    {"ct_dump_conntrack_table", ct_dump_conntrack_table, METH_VARARGS, "nfct_dump_conntrack_table() wrapper"},
    {"ct_event_conntrack", ct_event_conntrack, METH_VARARGS, "nfct_event_conntrack() wrapper"},
@@ -190,29 +182,34 @@ initnlct_(void) {
    struct nfct_mask nfct_masks[] = {
       /* see libnetfilter_conntrack.h for the meanings of these */
       /* nfct flag masks 
-      ct_h_bms(NFCT_STATUS, "NFCT_STATUS"),
-      ct_h_bms(NFCT_PROTOINFO, "NFCT_PROTOINFO"),
-      ct_h_bms(NFCT_TIMEOUT, "NFCT_TIMEOUT"),
-      ct_h_bms(NFCT_MARK, "NFCT_MARK"),
-      ct_h_bms(NFCT_COUNTERS_ORIG, "NFCT_COUNTERS_ORIG"),
-      ct_h_bms(NFCT_COUNTERS_RPLY, "NFCT_COUNTERS_RPLY"),
-      ct_h_bms(NFCT_USE, "NFCT_USE"),
-      ct_h_bms(NFCT_ID, "NFCT_ID"),*/
+      {NFCT_STATUS, "NFCT_STATUS"},
+      {NFCT_PROTOINFO, "NFCT_PROTOINFO"},
+      {NFCT_TIMEOUT, "NFCT_TIMEOUT"},
+      {NFCT_MARK, "NFCT_MARK"},
+      {NFCT_COUNTERS_ORIG, "NFCT_COUNTERS_ORIG"},
+      {NFCT_COUNTERS_RPLY, "NFCT_COUNTERS_RPLY"},
+      {NFCT_USE, "NFCT_USE"},
+      {NFCT_ID, "NFCT_ID"},*/
+      /* nfct type possibilities */
+      {NFCT_MSG_UNKNOWN, "NFCT_MSG_UNKNOWN"},
+      {NFCT_MSG_NEW, "NFCT_MSG_NEW"},
+      {NFCT_MSG_UPDATE, "NFCT_MSG_UPDATE"},
+      {NFCT_MSG_DESTROY, "NFCT_MSG_DESTROY"},
       /* nfct status masks */
-      ct_h_bms(IPS_EXPECTED, "IPS_EXPECTED"),
-      ct_h_bms(IPS_SEEN_REPLY, "IPS_SEEN_REPLY"),
-      ct_h_bms(IPS_ASSURED, "IPS_ASSURED"),
-      ct_h_bms(IPS_CONFIRMED, "IPS_CONFIRMED"),
-      ct_h_bms(IPS_SRC_NAT, "IPS_SRC_NAT"),
-      ct_h_bms(IPS_DST_NAT, "IPS_DST_NAT"),
-      ct_h_bms(IPS_NAT_MASK, "IPS_NAT_MASK"),
-      ct_h_bms(IPS_SEQ_ADJUST, "IPS_SEQ_ADJUST"),
-      ct_h_bms(IPS_SRC_NAT_DONE, "IPS_SRC_NAT_DONE"),
-      ct_h_bms(IPS_DST_NAT_DONE, "IPS_DST_NAT_DONE"),
-      ct_h_bms(IPS_NAT_DONE_MASK, "IPS_NAT_DONE_MASK"),
-      ct_h_bms(IPS_DYING, "IPS_DYING"),
-      ct_h_bms(IPS_FIXED_TIMEOUT, "IPS_FIXED_TIMEOUT"),
-      ct_h_bms(0, NULL) /* sentinel */
+      {IPS_EXPECTED, "IPS_EXPECTED"},
+      {IPS_SEEN_REPLY, "IPS_SEEN_REPLY"},
+      {IPS_ASSURED, "IPS_ASSURED"},
+      {IPS_CONFIRMED, "IPS_CONFIRMED"},
+      {IPS_SRC_NAT, "IPS_SRC_NAT"},
+      {IPS_DST_NAT, "IPS_DST_NAT"},
+      {IPS_NAT_MASK, "IPS_NAT_MASK"},
+      {IPS_SEQ_ADJUST, "IPS_SEQ_ADJUST"},
+      {IPS_SRC_NAT_DONE, "IPS_SRC_NAT_DONE"},
+      {IPS_DST_NAT_DONE, "IPS_DST_NAT_DONE"},
+      {IPS_NAT_DONE_MASK, "IPS_NAT_DONE_MASK"},
+      {IPS_DYING, "IPS_DYING"},
+      {IPS_FIXED_TIMEOUT, "IPS_FIXED_TIMEOUT"},
+      {0, NULL} /* sentinel */
    };
 
    nch = nfct_open(CONNTRACK, NFCT_ALL_CT_GROUPS);
@@ -220,6 +217,7 @@ initnlct_(void) {
       PyErr_SetString(PyExc_ImportError, strerror(errno));
       return;
    }
+   
    fcntl(nfct_fd(nch), F_SETFL, O_NONBLOCK);
    nfct_register_callback(nch, ct_callback, &ct_event_pyexc);
    
