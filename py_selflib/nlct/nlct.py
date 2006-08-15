@@ -22,7 +22,9 @@ import address_structures
 import nlct_
 from nlct_ import IPS_EXPECTED, IPS_ASSURED, IPS_CONFIRMED, IPS_SRC_NAT, IPS_DST_NAT, IPS_NAT_MASK,\
                   IPS_SEQ_ADJUST, IPS_SRC_NAT_DONE, IPS_DST_NAT_DONE, IPS_NAT_DONE_MASK, IPS_DYING,\
-                  IPS_FIXED_TIMEOUT, nch_fd
+                  IPS_FIXED_TIMEOUT, NFCT_MSG_UNKNOWN, NFCT_MSG_NEW, NFCT_MSG_UPDATE,\
+                  NFCT_MSG_DESTROY
+from nlct_ import NfctHandle as NfctHandle_
 
 IPPROTO_SCTP = 132
 
@@ -206,16 +208,16 @@ def nfct_make(nfct_data):
       *nfct_data[3:8]
    ))
 
+class NfctHandle(NfctHandle_):
+   def dump_conntrack_table(self, family):
+      return [nfct_make(e) for e in NfctHandle_.dump_conntrack_table(self, family)]
+   
+   def event_conntrack(self):
+      return [nfct_make(e) for e in NfctHandle_.event_conntrack(self)]
 
-def ct_dump_conntrack_table(af):
-   return [nfct_make(e) for e in nlct_.ct_dump_conntrack_table(af)]
-   
-def ct_event_conntrack():
-   return [nfct_make(e) for e in nlct_.ct_event_conntrack()]
-   
-   
 if (__name__ == '__main__'):
    import select
-   while (select.select([nch_fd],[],[])):
-      for (ct_type, nfct) in ct_event_conntrack(): 
+   nch = NfctHandle()
+   while (select.select([nch],[],[])):
+      for (ct_type, nfct) in nch.event_conntrack(): 
          print ct_type, nfct
