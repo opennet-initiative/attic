@@ -217,7 +217,10 @@ def db_certupdate(certs, dbcursor):
 			rx = int( res[2] )
                         t1 = strptime(firstseen, '%Y-%m-%d %H:%M:%S')
 			t2 = strptime(lastseen, '%Y-%m-%d %H:%M:%S')
-			rate = (tx + rx) / (mktime(t2) - mktime(t1))
+                        if (t2 > t1):
+				rate = (tx + rx) / (mktime(t2) - mktime(t1))
+			else:
+				rate = (tx + rx)
 		else:
 			firstseen = ''
 			lastseen = ''
