@@ -24,19 +24,14 @@ struct nfct_mask {
    char *name;
 };
 
-struct nfct_handle *nch;
 static PyObject *NfnlError;
 static PyObject *ct_event_retval = NULL;
 int ct_event_pyexc = 0;
 
 
-static PyObject *ct_dump_conntrack_table(PyObject *self, PyObject *args) {
-   int family, srv;
+static PyObject *ct_dump_conntrack_table(struct nfct_handle *nch, int family) {
+   int srv;
    static PyObject *retval;
-   if (!PyArg_ParseTuple(args, "i", &family)) {
-      Py_DECREF(args);
-      return NULL;
-   }
    
    retval = PyList_New(0);
    if (!retval) return NULL;
@@ -59,7 +54,7 @@ static PyObject *ct_dump_conntrack_table(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *ct_event_conntrack(PyObject *self, PyObject *args) {
+static PyObject *ct_event_conntrack(struct nfct_handle *nch) {
    int srv;
    static PyObject *retval;
    
@@ -168,10 +163,124 @@ int ct_callback(void *ct, unsigned int flags, int type, void *data) {
       return 0;
 }
 
+typedef struct {
+   PyObject_HEAD
+   struct nfct_handle *nch;
+} NfctHandle;
+
+static void NfctHandle_dealloc(NfctHandle *self) {
+   if (self->nch) nfct_close(self->nch);
+   self->ob_type->tp_free((PyObject*) self);
+}
+
+static int NfctHandle_init(NfctHandle *self, PyObject *args, PyObject *kwargs) {
+   static char *kwlist[] = {NULL};
+   int srv;
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "", kwlist)) return -1; 
+   
+   if (self->nch && (srv = nfct_close(self->nch))) {
+      PyErr_SetString(NfnlError, strerror(abs(srv)));
+      return -1;
+   }
+   
+   self->nch = nfct_open(CONNTRACK, NFCT_ALL_CT_GROUPS);
+   if (!self->nch) {
+      PyErr_SetString(NfnlError, strerror(errno));
+      return -1;
+   }
+   
+   if (fcntl(nfct_fd(self->nch), F_SETFL, O_NONBLOCK)) {
+      PyErr_SetString(NfnlError, strerror(errno));
+      nfct_close(self->nch);
+      return -1;
+   };
+   
+   nfct_register_callback(self->nch, ct_callback, &ct_event_pyexc);
+   return 0;
+}
+
+static PyObject *NfctHandle_dump_conntrack_table(NfctHandle *self, PyObject *args, PyObject *kwargs) {
+   int family;
+   static char *kwlist[] = {"af_family", NULL};
+   if (!self->nch) {
+      PyErr_SetString(NfnlError, "NfctHandle instance hasn't been initialized");
+      return NULL;
+   }
+   
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &family)) {
+      Py_DECREF(args);
+      return NULL;
+   }
+   
+   return ct_dump_conntrack_table(self->nch, family);
+}
+
+static PyObject *NfctHandle_event_conntrack(NfctHandle *self) {
+   if (!self->nch) {
+      PyErr_SetString(NfnlError, "NfctHandle instance hasn't been initialized");
+      return NULL;
+   }
+   return ct_event_conntrack(self->nch);
+}
+
+static PyObject *Nfct_Handle_fileno(NfctHandle *self) {
+   if (!self->nch) {
+      PyErr_SetString(NfnlError, "NfctHandle instance hasn't been initialized");
+      return NULL;
+   }
+   return PyInt_FromLong(nfct_fd(self->nch));
+}
+
+static PyMethodDef NfctHandle_methods[] = {
+   {"dump_conntrack_table", (PyCFunction)NfctHandle_dump_conntrack_table, METH_VARARGS, "nfct_dump_conntrack_table() wrapper"},
+   {"event_conntrack", (PyCFunction)NfctHandle_event_conntrack, METH_NOARGS, "nfct_event_conntrack() wrapper"},
+   {"fileno", (PyCFunction)Nfct_Handle_fileno, METH_NOARGS, "return fd of internal netlink socket"},
+   {NULL}  /* Sentinel */
+};
+
+static PyTypeObject NfctHandleType = {
+   PyObject_HEAD_INIT(NULL)
+   0,                         /*ob_size*/
+   "nfct_.NfctHandle",        /*tp_name*/
+   sizeof(NfctHandle),        /*tp_basicsize*/
+   0,                         /*tp_itemsize*/
+   (destructor)NfctHandle_dealloc, /*tp_dealloc*/
+   0,                         /*tp_print*/
+   0,                         /*tp_getattr*/
+   0,                         /*tp_setattr*/
+   0,                         /*tp_compare*/
+   0,                         /*tp_repr*/
+   0,                         /*tp_as_number*/
+   0,                         /*tp_as_sequence*/
+   0,                         /*tp_as_mapping*/
+   0,                         /*tp_hash */
+   0,                         /*tp_call*/
+   0,                         /*tp_str*/
+   0,                         /*tp_getattro*/
+   0,                         /*tp_setattro*/
+   0,                         /*tp_as_buffer*/
+   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+   "Netlink socket wrapped by libnetfilter_conntrack",               /* tp_doc */
+   0,                         /* tp_traverse */
+   0,                         /* tp_clear */
+   0,                         /* tp_richcompare */
+   0,                         /* tp_weaklistoffset */
+   0,                         /* tp_iter */
+   0,                         /* tp_iternext */
+   NfctHandle_methods,        /* tp_methods */
+   0,                         /* tp_members */
+   0,                         /* tp_getset */
+   0,                         /* tp_base */
+   0,                         /* tp_dict */
+   0,                         /* tp_descr_get */
+   0,                         /* tp_descr_set */
+   0,                         /* tp_dictoffset */
+   (initproc)NfctHandle_init, /* tp_init */
+   0,                         /* tp_alloc */
+   0,                         /* tp_new */
+};
 
 static PyMethodDef pynlct__methods[] = {
-   {"ct_dump_conntrack_table", ct_dump_conntrack_table, METH_VARARGS, "nfct_dump_conntrack_table() wrapper"},
-   {"ct_event_conntrack", ct_event_conntrack, METH_VARARGS, "nfct_event_conntrack() wrapper"},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -179,6 +288,7 @@ static PyMethodDef pynlct__methods[] = {
 PyMODINIT_FUNC
 initnlct_(void) {
    int i;
+   PyObject *module;
    struct nfct_mask nfct_masks[] = {
       /* see libnetfilter_conntrack.h for the meanings of these */
       /* nfct flag masks 
@@ -209,24 +319,24 @@ initnlct_(void) {
       {IPS_NAT_DONE_MASK, "IPS_NAT_DONE_MASK"},
       {IPS_DYING, "IPS_DYING"},
       {IPS_FIXED_TIMEOUT, "IPS_FIXED_TIMEOUT"},
+      /* AF_NETLINK isn't currently provided by the socket module, so also list the relevant parameters */
+      {AF_NETLINK, "AF_NETLINK"},
+      {SOCK_RAW, "SOCK_RAW"},
+      {NETLINK_NETFILTER, "NETLINK_NETFILTER"},
       {0, NULL} /* sentinel */
    };
 
-   nch = nfct_open(CONNTRACK, NFCT_ALL_CT_GROUPS);
-   if (!nch) {
-      PyErr_SetString(PyExc_ImportError, strerror(errno));
-      return;
-   }
    
-   fcntl(nfct_fd(nch), F_SETFL, O_NONBLOCK);
-   nfct_register_callback(nch, ct_callback, &ct_event_pyexc);
-   
-   PyObject *module;
    module = Py_InitModule("nlct_", pynlct__methods);
    NfnlError = PyErr_NewException("nfnl.error", NULL, NULL);
    Py_INCREF(NfnlError);
    PyModule_AddObject(module, "error", NfnlError);
-   PyModule_AddObject(module, "nch_fd", Py_BuildValue("i",nfct_fd(nch)));
+   //PyModule_AddObject(module, "nch_fd", Py_BuildValue("i",nfct_fd(nch)));
+   
+   NfctHandleType.tp_new = PyType_GenericNew;
+   if (PyType_Ready(&NfctHandleType) < 0) return;
+   Py_INCREF(&NfctHandleType);
+   PyModule_AddObject(module, "NfctHandle", (PyObject*) &NfctHandleType);
    
    for (i = 0; nfct_masks[i].name != NULL; i++) 
       PyModule_AddObject(module, nfct_masks[i].name, Py_BuildValue("i", nfct_masks[i].mask));
