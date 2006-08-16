@@ -201,7 +201,7 @@ static int NfctHandle_init(NfctHandle *self, PyObject *args, PyObject *kwargs) {
 
 static PyObject *NfctHandle_dump_conntrack_table(NfctHandle *self, PyObject *args, PyObject *kwargs) {
    int family;
-   static char *kwlist[] = {"af_family", NULL};
+   static char *kwlist[] = {"family", NULL};
    if (!self->nch) {
       PyErr_SetString(NfnlError, "NfctHandle instance hasn't been initialized");
       return NULL;
@@ -259,8 +259,8 @@ static PyTypeObject NfctHandleType = {
    0,                         /*tp_getattro*/
    0,                         /*tp_setattro*/
    0,                         /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-   "Netlink socket wrapped by libnetfilter_conntrack",               /* tp_doc */
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /*tp_flags*/
+   "Netlink socket wrapped by libnetfilter_conntrack",   /* tp_doc */
    0,                         /* tp_traverse */
    0,                         /* tp_clear */
    0,                         /* tp_richcompare */
@@ -331,7 +331,6 @@ initnlct_(void) {
    NfnlError = PyErr_NewException("nfnl.error", NULL, NULL);
    Py_INCREF(NfnlError);
    PyModule_AddObject(module, "error", NfnlError);
-   //PyModule_AddObject(module, "nch_fd", Py_BuildValue("i",nfct_fd(nch)));
    
    NfctHandleType.tp_new = PyType_GenericNew;
    if (PyType_Ready(&NfctHandleType) < 0) return;
