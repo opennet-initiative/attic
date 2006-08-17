@@ -27,7 +27,7 @@ target_gid = target_uid
 
 # filename of filename_rrd: rrd to use; teucrium will not create it 
 # unless given the cmdline parameter -c
-filename_rrd = 'chroot/t_traffic_001.rrd'
+filename_rrd = 't_traffic_001.rrd'
 # prefix for graphics output files
 filename_graphics_base = 'graphics/t_traffic_001_'
 chroot_target = '/home/FIXME/teucrium/chroot'
