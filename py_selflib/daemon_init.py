@@ -18,13 +18,14 @@
 import os
 import sys
 
-def daemon_init(stdout_filename='log/stdout', stderr_filename='log/stderr'):
+def daemon_init(stdout_filename='log/stdout', stderr_filename='log/stderr', setsid=True):
    fork_result = os.fork()
    if (fork_result != 0):
       print 'Started as %s.' % (fork_result,)
       sys.exit(0)
    
-   os.setsid()
+   if (setsid):
+      os.setsid()
 
    #Close stdin, stdout and stderr, and optionally replace the latter ones with file-streams.
    os.close(sys.stdin.fileno())
