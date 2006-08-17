@@ -3,7 +3,7 @@
 
 from distutils.core import setup, Extension
 
-iptint_main = Extension('iptint', sources = ['iptintmodule.c'], libraries = ['iptc'])
+iptint_main = Extension('iptint', sources = ['iptintmodule.c'], libraries = ['iptc_pic', 'iptc'])
 
 setup (name = 'iptint',
        version = '0.01',
