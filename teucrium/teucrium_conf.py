@@ -22,13 +22,14 @@ DIRECTION_OUTPUT = 2
 
 base_separator='_'
 
-target_uid = 2037
+target_uid = FIXME
 target_gid = target_uid
 
 # filename of filename_rrd: rrd to use; teucrium will not create it 
 # unless given the cmdline parameter -c
-filename_rrd = 't_traffic_001.rrd'
-filename_graphics_base = 't_traffic_001_'
+filename_rrd = 'chroot/t_traffic_001.rrd'
+# prefix for graphics output files
+filename_graphics_base = 'graphics/t_traffic_001_'
 chroot_target = '/home/FIXME/teucrium/chroot'
 
 # counters_to_track specifies which netfilter rules/chains to read the
