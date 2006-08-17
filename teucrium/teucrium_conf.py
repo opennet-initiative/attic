@@ -7,7 +7,7 @@ import logging.handlers
 
 from teucrium_main import COUNTER_BYTES, COUNTER_PACKETS
 
-#logging stuff
+# logging stuff
 settings = {
    'basic_io': {
       'handlers':(
@@ -25,17 +25,17 @@ base_separator='_'
 target_uid = 2037
 target_gid = target_uid
 
-#filename of filename_rrd: rrd to use; teucrium will not create it, 
-#a suitable rrd with this name must already exist for it to work
+# filename of filename_rrd: rrd to use; teucrium will not create it 
+# unless given the cmdline parameter -c
 filename_rrd = 't_traffic_001.rrd'
 filename_graphics_base = 't_traffic_001_'
 chroot_target = '/home/FIXME/teucrium/chroot'
 
-#counters_to_track specifies which netfilter rules/chains to read the
-#counters of and where to put the results
-#It should be a sequence of an arbitrary number of sequences of the 
-#following scheme: (), {} 
-#See teucrium_main.iptgrapher.target_add for the relevant function.
+# counters_to_track specifies which netfilter rules/chains to read the
+# counters of and where to put the results
+# It should be a sequence of an arbitrary number of sequences of the 
+# following scheme: (), {} 
+# See teucrium_main.iptgrapher.target_add for the relevant function.
 counters_to_track = []
 
 conf_table = 'mangle'
