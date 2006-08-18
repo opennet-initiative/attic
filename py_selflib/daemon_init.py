@@ -18,8 +18,8 @@
 import os
 import sys
 import logging
-import warning
-from warning import showwarning as showwarning_orig
+import warnings
+from warnings import showwarning as showwarning_orig
 
 def daemon_init(stdout_filename='log/stdout', stderr_filename='log/stderr', setsid=True):
    fork_result = os.fork()
@@ -54,5 +54,5 @@ def showwarning_logging(message, category, filename, lineno, file=None):
    logger_warnings.warn(formatwarning(message, category, filename, lineno))
 
 def warnings_redirect_logging():
-   warning.showwarning = showwarning_logging
+   warnings.showwarning = showwarning_logging
 

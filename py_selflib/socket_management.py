@@ -47,11 +47,11 @@ from process_reload import picklablesocket as socket_object
 
 defaults = {}
 defaults['class_defaults'] = {}
-defaults['waitable_objects'] = [[],[],[]]
-defaults['waitable_object_data'] = {}
-defaults['waitable_object_cache_state'] = {
-   'updated':0
-   }
+#defaults['waitable_objects'] = [[],[],[]]
+#defaults['waitable_object_data'] = {}
+#defaults['waitable_object_cache_state'] = {
+#   'updated':0
+#   }
 
 
 defaults['locks'] = {}
@@ -760,16 +760,16 @@ class Timer:
       self.align = align
       
       if (align):
-         delay -= (time.time() % delay)
+         interval -= (time.time() % interval)
  
-      self.expire_ts = time.time() + float(delay)
+      self.expire_ts = time.time() + float(interval)
 
    def __cmp__(self, other):
-      if (self.delay < other.delay): 
+      if (self.interval < other.interval):
          return -1
-      if (self.delay > other.delay):
+      if (self.interval > other.interval):
          return 1
-      if (self.delay == other.delay):
+      if (self.interval == other.interval):
          return 0
 
    def register(self):
@@ -796,9 +796,9 @@ class Timer:
       
       now = time.time()
       
-      self.expire_ts = now + self.delay
+      self.expire_ts = now + self.interval
       if (self.align):
-         self.expire_ts -= now % self.delay
+         self.expire_ts -= now % self.interval
 
    def __repr__(self):
       return '%s%r' % (self.__class__.__name__, (self.interval, self.function, 
@@ -870,17 +870,17 @@ class Timer:
 
 def timers_add(delay, callback_handler, parent=None, args=(), kwargs={}, persistence=False):
    """DEPRECATED: Add a timer to the list of running timers."""
-   warning.warn("socket_management.timers_add() is deprecated; use the Timer class instead")
+   warnings.warn("socket_management.timers_add() is deprecated; use the Timer class instead")
    return Timer(delay, callback_handler, parent, args, kwargs, persistence, persistence)
 
 def timers_remove(timer_entry):
    """DEPRECATED: Remove the timer matching the timer_entry from running timers, if it is one."""
-   warning.warn("socket_management.timers_remove() is deprecated; use the timer.close() instead")
+   warnings.warn("socket_management.timers_remove() is deprecated; use the timer.close() instead")
    timer_entry.stop()
 
 def timers_remove_all(data_type, data):
    """Remove all timers with a specific callback_handler or parent."""
-   warning.warn("socket_management.timers_remove_all() is deprecated; use Timer.timers_stop_by* instead")
+   warnings.warn("socket_management.timers_remove_all() is deprecated; use Timer.timers_stop_by* instead")
    if (data_type == TIMERS_CALLBACK_HANDLER):
       Timer.timers_stop_byfunction(data)
    elif (data_type == TIMERS_PARENT):
