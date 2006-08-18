@@ -1,5 +1,5 @@
-#!/usr/bin/env python2.3
-#Copyright 2004 Sebastian Hagen
+#!/usr/bin/env python
+#Copyright 2004,2005,2006 Sebastian Hagen
 # This file is part of py_selflib.
 
 # py_selflib is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@ import re
 import popen2
 import signal
 from sets import Set as set
+import warnings
 
 try:
    import fcntl
@@ -52,18 +53,14 @@ defaults['waitable_object_cache_state'] = {
    'updated':0
    }
 
-defaults['running_timers'] = []
-defaults['timer_parents'] = {}
+
 defaults['locks'] = {}
 
 init_misc.set_defaults(defaults=defaults, global_scope=globals())
-
-locks['timers'] = thread.allocate_lock()
-
 logger = logging.getLogger('socket_management')
 
 class fd_wrap:
-   logger = logging.getLogger('fd_wrap')
+   logger = logging.getLogger('socket_management.fd_wrap')
    readable = []
    writable = []
    errable = []
@@ -77,6 +74,12 @@ class fd_wrap:
    
    def __int__(self):
       return self.fd
+
+   def __eq__(self, other):
+      return (isinstance(other, self.__class__) and (self.fd == other.fd))
+   
+   def __ne__(self, other):
+      return (not self.__eq__(other))
 
    def __cmp__(self, other):
       if (self.fd < other.fd):
@@ -153,7 +156,7 @@ class fd_wrap:
    def close(self):
       """Close fd, make parent forget about us, and forget about any and all associations"""
       self.logger.log(25, 'Shutting down %r.' % (self,))
-      self.unregister_all()
+      self.fd_unregister_all()
       if (self.file):
          if (isinstance(self.file, socket.socket)):
             try:
@@ -171,14 +174,10 @@ class fd_wrap:
       if (self.parent):
          self.parent.fd_forget(self)
 
-      del(self.fd)
+      self.fd = None
    
    def __bool__(self):
-      try:
-         self.fd
-         return True
-      except AttributeError:
-         return False
+      return bool(self.fd)
    
    def __repr__(self):
       return '%s(%r, %r)' % (self.__class__.__name__, self.fd, self.parent)
@@ -316,16 +315,19 @@ class asynchronous_transfer_base:
 
    def fd_forget(self, fd):
       """Forget a transfer object."""
-      if (fd in self.buffers_input):
+      fd_in = (fd in self.buffers_input)
+      if (fd_in):
          if (self.buffers_input[fd]):
             self.input_process(fd)
-         del(self.buffers_input[fd])
-         
-      if (fd in self.buffers_output):
-         del(self.buffers_output[fd])
-
+      
       if (callable(self.close_handler)):
          self.close_handler(self, fd)
+      
+      if (fd_in):
+         del(self.buffers_input[fd])
+      
+      if (fd in self.buffers_output):
+         del(self.buffers_output[fd])
 
    def clean_up(self):
       """Shutdown all fds and discard remaining buffered output."""
@@ -512,7 +514,7 @@ class file_asynchronous_binary(asynchronous_transfer_base):
       self.logger.log(20, 'Locked fd %s on file %s.' % (self.fd, self.filename))
       return return_value
       
-   def close(self, fd):
+   def fd_forget(self, fd):
       if (self.locked and (fd == self.fd)):
          try:
             fcntl.lockf(fd, fcntl.LOCK_UN)
@@ -520,7 +522,7 @@ class file_asynchronous_binary(asynchronous_transfer_base):
          except:
             self.logger.log(40, 'Failed to unlock fd %s on file %s. Error:' % (self.fd, self.filename), exc_info=True)
       
-      fd.close()
+      asynchronous_transfer_base.fd_forget(self,fd)
       self.fd = None
 
    def clean_up(self):
@@ -557,13 +559,13 @@ class serialport_asynchronous_binary(file_asynchronous_binary):
       if (self.fd):
          return termios.tcflow(self.fd, action)
       
-   def close(self, fd):
+   def fd_forget(self, fd):
       if (fd):
          try:
             termios.tcflush(int(fd), termios.TCOFLUSH)
          except termios.error:
             pass
-         fd.close()
+         file_asynchronous_binary.fd_forget(self, fd)
 
 #pipes to spawned processes
 CHILD_REACT_NOT = 0
@@ -618,7 +620,7 @@ class child_execute_base(asynchronous_transfer_base):
             
             self.clean_up()
 
-   def close(self, fd):
+   def fd_forget(self, fd):
       if (fd == self.stdin_fd):
          self.stdin_fd = None
       if (fd == self.stdout_fd):
@@ -628,10 +630,9 @@ class child_execute_base(asynchronous_transfer_base):
          self.stderr_fd = None
          self.stderr_str = self.buffers_input[fd]
       
-      fd.close()
-
+      asynchronous_transfer_base.fd_forget(self, fd)
       if (len(self.buffers_input) == 0 == len(self.buffers_output)):
-         #We're out of open fds.
+         #We're out of open input fds.
          self.child_poll()
          if (self.child):
             #And our child is still alive,...
@@ -653,7 +654,7 @@ class child_execute_base(asynchronous_transfer_base):
       """Wait() on our child, then poll() it, set a timer to report the results and finally trigger pipe_notify."""
       exit_status = self.child.wait()
       return_code = self.child.poll()
-      socket_management.timers_add(delay=-1000, callback_handler=self.termination_handler, args=(self, return_code, exit_status), callback_kwargs={}, parent=None)
+      Timer(interval=-1000, function=self.termination_handler, args=(self, return_code, exit_status), callback_kwargs={}, parent=None)
       socket_management.pipe_notify.notify()
 
    def stream_record(self, name, fd, in_stream=False):
@@ -696,8 +697,8 @@ class child_execute_Popen4(child_execute_base):
 
 class pipe_notify_class:
    """Manages a pipe used to safely interrupt blocking select calls of other threads."""
+   logger = logging.getLogger('socket_management.pipe_notify')
    def __init__(self):
-      self.logger = logging.getLogger('socket_management.pipe_notify')
       self.read_fd = self.write_fd = None
       #waitable_object_instances_add(self)
       self.pipe_init()
@@ -739,79 +740,153 @@ class pipe_notify_class:
    def clean_up(self):
       self.clean_up_pipe()
 
+
 TIMERS_CALLBACK_HANDLER = 2
 TIMERS_PARENT = 1
 
-def timers_add(delay, callback_handler, parent=None, args=(), kwargs={}, persistence=False):
-   """Add a timer to the list of running timers."""
-   persistence = bool(persistence)
-   
-   if (persistence):
-      persistence = delay
-      delay = delay - (time.time() % delay)
-
-   expire_ts = time.time() + float(delay)
-   
-   locks['timers'].acquire()
-   try:
-      running_timers.append((expire_ts, parent, callback_handler, args, kwargs, persistence))
-      running_timers.sort()
-   finally:
-      locks['timers'].release()
+class Timer:
+   '''Timer class; instantiate to start. This is one of the few thread-safe parts of socket_management,
+      because it's also used to transfer Information in general back to the main thread.'''
+   logger = logging.getLogger('socket_management.Timer')
+   lock = thread.allocate_lock()
+   timers_active = []
+   def __init__(self, interval, function, parent=None, args=(), kwargs={}, persistence=False, align=False):
+      self.interval = interval
+      self.function = function
+      self.parent = parent
+      self.args = args
+      self.kwargs = kwargs
+      self.persistence = bool(persistence)
+      self.align = align
       
-   return (expire_ts, parent, callback_handler, args, kwargs, persistence)
+      if (align):
+         delay -= (time.time() % delay)
+ 
+      self.expire_ts = time.time() + float(delay)
 
+   def __cmp__(self, other):
+      if (self.delay < other.delay): 
+         return -1
+      if (self.delay > other.delay):
+         return 1
+      if (self.delay == other.delay):
+         return 0
+
+   def register(self):
+      self.lock.aquire()
+      try:
+         self.timers_active.append(self)
+         self.timers_active.sort()
+      finally:
+         self.lock.release()
+      
+   def unregister(self):
+      self.lock.aquire()
+      try:
+         self.timers_active.remove(self)
+      finally:
+         self.lock.release()
+
+   def function_call(self):
+      self.function(*self.args, **self.kwargs)
+      
+   def expire_ts_bump(self):
+      if (not self.persistence):
+         raise ValueError("%r isn't persistent." % self)
+      
+      now = time.time()
+      
+      self.expire_ts = now + self.delay
+      if (self.align):
+         self.expire_ts -= now % self.delay
+
+   def __repr__(self):
+      return '%s%r' % (self.__class__.__name__, (self.interval, self.function, 
+         self.parent, self.args, self.kwargs, self.persistence, self.align))
+
+   def stop(self):
+      self.lock.acquire()
+      try:
+         self.timers_active.remove(self)
+      finally:
+         self.lock.release()
+
+   def timers_process(cls):
+      cls.lock.acquire()
+      timers_active = cls.timers_active
+      order_change = False
+      expired_timers = []
+      try:
+         while (timers_active and (timers_active[0].expire_ts <= time.time())):
+            timer = timers_active.pop(0)
+            expired_timers.append(timer)
+            if (timer.persistence):
+               timers_active.append(timer)
+               order_change = True
+
+         if (order_change):
+            timers_active.sort()
+
+      finally:
+         cls.lock.release()
+      
+      for expired_timer in expired_timers:
+         try:
+            expired_timer.function_call()
+         except:
+            cls.logger.log(40, 'Exception in Timer %r: ', exc_info=True)
+            
+   timers_process = classmethod(timers_process)
+   
+   def timers_stop_byattribute(cls, attr_name, attr_val):
+      cls.lock.acquire()
+      try:
+         for timer in cls.timers_active[:]:
+            if (getattr(timer,attr_name) == attr_val):
+               timer.stop()
+      finally:
+         cls.lock.release()
+
+   timers_stop_byattribute = classmethod(timers_stop_byattribute)
+
+   def timers_stop_byfunction(cls, function):
+      cls.timers_stop_byattribute(cls, 'function', function)
+      
+   timers_stop_byfunction = classmethod(timers_stop_byfunction)
+      
+   def timers_stop_byparent(cls, parent):
+      cls.timers_stop_byattribute(cls, 'parent', parent)
+
+   timers_stop_byparent = classmethod(timers_stop_byparent)
+
+   def timers_stop_all(cls):
+      cls.lock.acquire()
+      try:
+         del(cls.timers_active[:])
+      finally:
+         cls.lock.release()
+
+   timers_stop_all = classmethod(timers_stop_all)
+
+def timers_add(delay, callback_handler, parent=None, args=(), kwargs={}, persistence=False):
+   """DEPRECATED: Add a timer to the list of running timers."""
+   warning.warn("socket_management.timers_add() is deprecated; use the Timer class instead")
+   return Timer(delay, callback_handler, parent, args, kwargs, persistence, persistence)
 
 def timers_remove(timer_entry):
-   """Remove the timer matching the timer_entry from running timers, if it is one."""
-   if (timer_entry in running_timers):
-      locks['timers'].acquire()
-      try:
-         running_timers.remove(timer_entry)
-      finally:
-         locks['timers'].release()
+   """DEPRECATED: Remove the timer matching the timer_entry from running timers, if it is one."""
+   warning.warn("socket_management.timers_remove() is deprecated; use the timer.close() instead")
+   timer_entry.stop()
 
 def timers_remove_all(data_type, data):
    """Remove all timers with a specific callback_handler or parent."""
-   if ((type(data_type) == int) and (0 < data_type < 3)):
-      locks['timers'].acquire()
-      try:
-         for timer_entry in running_timers[:]:
-            if (timer_entry[data_type] == data):
-               running_timers.remove(timer_entry)
-
-      finally:
-         locks['timers'].release()
-
+   warning.warn("socket_management.timers_remove_all() is deprecated; use Timer.timers_stop_by* instead")
+   if (data_type == TIMERS_CALLBACK_HANDLER):
+      Timer.timers_stop_byfunction(data)
+   elif (data_type == TIMERS_PARENT):
+      Timer.timers_stop_byparent(data)
    else:
       raise ValueError("Invalid argument %s for data_type (expected integer 1 or 2)." % repr(data_type))
-
-def timers_process():
-   """Check for expired timers and process them."""
-   order_change = False
-   expired_timers = []
-   locks['timers'].acquire()
-   try:
-      while ((len(running_timers) > 0) and (running_timers[0][0] <= time.time())):
-         expired_timer = running_timers.pop(0)
-         persistence = expired_timer[5]
-         expired_timers.append(expired_timer)
-         if (persistence):
-            next_expire_ts = time.time() + persistence - (time.time() % persistence)
-            running_timers.append((next_expire_ts,) + expired_timer[1:])
-            order_change = True
-
-      if ((order_change) and len(running_timers) > 0):
-         running_timers.sort()
-         
-   finally:
-      locks['timers'].release()
- 
-   for expired_timer in expired_timers:     
-      try:
-         expired_timer[2](*expired_timer[3], **expired_timer[4])
-      except StandardError:
-         logger.log(40, 'Exception in timer:', exc_info=True)
 
 
 def select_loop():
@@ -820,18 +895,15 @@ def select_loop():
    fds_writable = fd_wrap.writable
    fds_errable = fd_wrap.errable
    
-   
    while (1):
-      if (len(running_timers) == 0):
+      if (not Timer.timers_active):
          if ([] == fds_readable == fds_writable == fds_errable):
             logger.log(30, 'No waitable objects or timers left active. Leaving select loop.')
             return None
          
          timeout = None
       else:
-         timeout = running_timers[0][0] - time.time()
-         if (timeout < 0):
-            timeout = 0
+         timeout = min((Timer.timers_active[0].expire_ts - time.time()), 0)
 
       fds_readable_now, fds_writable_now, fds_errable_now = select.select(fds_readable, fds_writable, fds_errable, timeout)
 
@@ -851,21 +923,18 @@ def select_loop():
                except OSError:
                   pass
 
-      timers_process()
+      Timer.timers_process()
 
 def shutdown():
-   """Shut down ALL connections managed by this module and clear the timer list."""
+   """Shut down all connections managed by this module and clear the timer list."""
    fds = []
    for fd in (fd_wrap.readable + fd_wrap.writable + fd_wrap.errable):
       if not (fd in fds):
          fds.append(fd)
          fd.close()
          
-   locks['timers'].acquire()
-   try:
-      running_timers = []
-   finally:
-      locks['timers'].release()
+   Timer.timers_stop_all()
+
 
    
 pipe_notify = pipe_notify_class()
