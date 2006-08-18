@@ -27,6 +27,7 @@ import thread
 import re
 import popen2
 import signal
+from sets import Set as set
 
 try:
    import fcntl
@@ -61,9 +62,126 @@ locks['timers'] = thread.allocate_lock()
 
 logger = logging.getLogger('socket_management')
 
-fds_readable = []
-fds_writable = []
-fds_erring = []
+class fd_wrap:
+   logger = logging.getLogger('fd_wrap')
+   readable = []
+   writable = []
+   errable = []
+   def __init__(self, fd, parent, file=None):
+      self.fd = fd
+      self.parent = parent
+      self.file = file
+      
+   def fileno(self):
+      return self.fd
+   
+   def __int__(self):
+      return self.fd
+
+   def __cmp__(self, other):
+      if (self.fd < other.fd):
+         return -1
+      if (self.fd > other.fd):
+         return 1
+      if (self.fd == other.fd):
+         return 0
+
+   def __hash__(self):
+      return hash(self.fd)
+   
+   def fd_read(self):
+      """Process readability event"""
+      self.parent.fd_read(self)
+      
+   def fd_write(self):
+      """Process writability event"""
+      self.parent.fd_write(self)
+      
+   def fd_err(self):
+      """Process error event."""
+      self.parent.fd_err(self)
+   
+   def fd_register(self, seq):
+      """Add fd to a specified event waiter sequence"""
+      if (self in seq):
+         raise StandardError('%r is already contained in seq %r.' % (self, seq))
+      seq.append(self)
+   
+   def fd_unregister(self, seq):
+      """Remove fd from specified event waiter sequence"""
+      seq.remove(self)
+   
+   def fd_unregister_all(self):
+      """Remove fd from all event sets"""
+      for seq in (self.readable, self.writable, self.errable):
+         if (self in seq):
+            self.fd_unregister(seq)
+      
+   def fd_register_read(self):
+      """Add fd to read set"""
+      self.fd_register(self.readable)
+      
+   def fd_register_write(self):
+      """Add fd to write set"""
+      self.fd_register(self.writable)
+   
+   def fd_register_err(self):
+      """Add fd to error set"""
+      self.fd_register(self.errable)
+   
+   def fd_unregister_read(self):
+      """Remove fd from read set"""
+      self.fd_unregister(self.readable)
+      
+   def fd_unregister_write(self):
+      """Remove fd from write set"""
+      self.fd_unregister(self.writable)
+   
+   def fd_unregister_err(self):
+      """Remove fd from err set"""
+      self.fd_unregister(self.errable)
+   
+   def fd_registered_read(self):
+      return (self in self.readable)
+   
+   def fd_registered_write(self):
+      return (self in self.writable)
+   
+   def fd_registered_err(self):
+      return (self in self.errable)
+   
+   def close(self):
+      """Close fd, make parent forget about us, and forget about any and all associations"""
+      self.logger.log(25, 'Shutting down %r.' % (self,))
+      self.unregister_all()
+      if (self.file):
+         if (isinstance(self.file, socket.socket)):
+            try:
+               self.file.shutdown(2)
+            except socket.error:
+               pass
+         self.file.close()
+
+      else:
+         try:
+            os.close(self.fd)
+         except OSError:
+            pass
+      
+      if (self.parent):
+         self.parent.fd_forget(self)
+
+      del(self.fd)
+   
+   def __bool__(self):
+      try:
+         self.fd
+         return True
+      except AttributeError:
+         return False
+   
+   def __repr__(self):
+      return '%s(%r, %r)' % (self.__class__.__name__, self.fd, self.parent)
 
 
 class asynchronous_transfer_base:
@@ -74,11 +192,13 @@ class asynchronous_transfer_base:
 
       self.buffers_input = {}
       self.buffers_output = {}
-      self.file_objects = {}
       self.close_handler = None
 
       self.address = None
       self.target = None
+
+   def connection_up(self):
+      return bool(self.buffers_input)
 
    def obtain_logger(self, name=None):
       if (name):
@@ -89,58 +209,43 @@ class asynchronous_transfer_base:
          self.logger = logging.getLogger(self.loggername)
 
    def fd_err(self, fd):
-      """Deal with ready for input/output and errro conditions on waitable objects."""
+      """Deal with ready for input/output and error conditions on waitable objects."""
 
       if not ((fd in self.buffers_output) or (fd in self.buffers_input)):
          self.logger.log(40, "This instance (%s; to %s) is not responsible for erring_fd %s passed to fd_err. Trying to close it anyway." % (self, self.target, fd))
          
-      self.close(erring_object)
+      fd.close()
 
    def fd_read(self, fd):
+      """Read and buffer input"""
       if not (fd in self.buffers_input):
          raise ValueError('Fd %s is not in self.buffers_input' % (fd,))
       try:
          #select may fail with EBADF ("Bad file descriptor")
          while (len(select.select([fd],[],[],0)[0]) > 0):
             #os.read may fail with OSError: [Errno 104] Connection reset by peer
-            new_data = os.read(fd, 1048576)
+            new_data = os.read(int(fd), 1048576)
             if (len(new_data) > 0):
                self.buffers_input[fd] += new_data
             else:
-               self.close(fd)
                self.clean_up()
                break
       
       except (socket.error, OSError):
-         self.logger.log(30, 'Error reading from fd %s connected to %s. Closing connection. Error:' % (fd, self.target,), exc_info=True)
+         self.logger.log(30, 'Error reading from fd %s connected to %s. Closing connection. Error:' % (fd, self.target), exc_info=True)
          self.clean_up()
 
       if ((fd in self.buffers_input) and (self.buffers_input[fd])):
          self.input_process(fd)
 
    def input_process(self, fd):
+      """Process newly buffered input"""
       raise NotImplementedError('input_process should by implemented by child classes.')
 
-   def fd_register(self, fd):
-      '''Check whether there is an entry for this fd in wo_instances that points to us, and if not, make one.'''
-      if ((not fd in wo_instances.key_list) or (wo_instances[fd] != self)):
-         wo_instances[fd] = self
-      
-   def fd_unregister(self, fd):
-      if ((fd in wo_instances.key_list) and (wo_instances[fd] == self)):
-         del(wo_instances[fd])
-         if (fd in fds_readable):
-            fds_readable.remove(fd)
-         if (fd in fds_writable):
-            fds_writable.remove(fd)
-         if (fd in fds_erring):
-            fds_erring.remove(fd)
-         
    def fd_write(self, fd):
+      """Write as much buffered output to specified fd as possible"""
       if not (fd in self.buffers_output):
-         if (fd in fds_writable):
-            fds_writable.remove(fd)
-         return False
+         raise ValueError('Instance %r is not currently managing fd %r.' % (self, fd))
       
       buffer_output = self.buffers_output[fd]
       if (len(buffer_output) > 0):
@@ -168,15 +273,17 @@ class asynchronous_transfer_base:
             self.socket_shutdown_error_write(writable_object)
 
          if (len(buffer_output) < 1):
-            #We managed to clear our output buffer. Remove this socket from the global potentially_writeable_object-list to avoid a busy loop.
-            if (fd in fds_writable):
-               fds_writable.remove(fd)
+            #We managed to clear our output buffer. Remove this fd from the global potentially_writeable_object-list to avoid a busy loop.
+            try:
+               fd.fd_unregister_write()
+            except ValueError:
+               pass
 
    def socket_shutdown_error_write(self, fd):
       del(self.buffers_output[fd])
       if (fd in self.buffers_input):
          self.fd_read(fd)
-      self.close(fd)
+      fd.close()
 
    def send_data(self, data, fd=None):
       """Send data to our waitable object."""
@@ -184,7 +291,7 @@ class asynchronous_transfer_base:
          self.logger.log(30, "Unable to output '%s'(to %s) since I don't currently have any open output objects." % (data.rstrip('\n'), self.target))
          return False
       elif (fd is None):
-         #automatic selection; should at least work as long as there is only one
+         #automatic selection; should at least work as long as there is exactly one
          fd = self.buffers_output.keys()[0]
       elif (fd not in self.buffers_output):
          self.logger.log(30, "Unable to output '%s' to '%s'(%s) since I don't have that fd open." % (data.rstrip('\n'), fd, self.target))
@@ -194,34 +301,21 @@ class asynchronous_transfer_base:
       self.buffers_output[fd] = self.buffers_output[fd] + data
 
       self.fd_write(fd)
-      if ((fd in self.buffers_output) and (self.buffers_output[fd]) and (not fd in fds_writable)):
-         fds_writable.append(fd)
+      if ((fd in self.buffers_output) and (self.buffers_output[fd])):
+         try:
+            fd.fd_register_write()
+         except StandardError:
+            pass
 
    def shutdown(self):
+      """Try to flush as much output as we immediately can, then clean up."""
       for fd in self.buffers_output:
          self.fd_write(fd)
 
       self.clean_up()
 
-   def close(self, fd):
-      """Close a transfer object."""
-      self.logger.log(10, 'Closing fd %s which is an interface to %s.' % (fd, repr(self.target)))
-      if (fd in self.file_objects):
-         file_object = self.file_objects[fd]
-         if (isinstance(file_object, socket.socket)):
-            try:
-               file_object.shutdown(2)
-            except socket.error:
-               pass
-            
-            file_object.close()
-      else:
-         file_object = None
-         try:
-            os.close(fd)
-         except OSError:
-            pass
-
+   def fd_forget(self, fd):
+      """Forget a transfer object."""
       if (fd in self.buffers_input):
          if (self.buffers_input[fd]):
             self.input_process(fd)
@@ -230,14 +324,14 @@ class asynchronous_transfer_base:
       if (fd in self.buffers_output):
          del(self.buffers_output[fd])
 
-      self.fd_unregister(fd)
-            
       if (callable(self.close_handler)):
          self.close_handler(self, fd)
 
    def clean_up(self):
+      """Shutdown all fds and discard remaining buffered output."""
       for fd in (self.buffers_output.keys() + self.buffers_input.keys()):
-         self.close(fd)
+         if (fd):
+            fd.close()
 
 
 class sock_stream_connection_binary(asynchronous_transfer_base):
@@ -248,12 +342,10 @@ class sock_stream_connection_binary(asynchronous_transfer_base):
       socket_new = socket_object(address_family, socket.SOCK_STREAM)
       socket_new.connect(address)
       socket_new.setblocking(0)
-      fd = socket_new.fileno()
-      self.file_objects[fd] = socket_new
+      fd = fd_wrap(socket_new.fileno(), self, socket_new)
       self.buffers_input[fd] = ''
       self.buffers_output[fd] = ''
-      self.fd_register(fd)
-      fds_readable.append(fd)
+      fd.fd_register_read()
 
    def input_process(self, fd):
       if (self.input_handler):
@@ -288,9 +380,9 @@ class sock_stream_connection_linebased(sock_stream_connection_binary):
 
 
 class sock_server:
+   logger = logging.getLogger('socket_listen')
    """Tcp server socket class. Accepts connections and instantiates their classes as needed."""
    def __init__(self, bindargs, handler, connection_class=sock_stream_connection_linebased, address_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, backlog=2):
-      self.logger = logging.getLogger('socket_listen')
       self.backlog = backlog
       self.handler = handler
       self.connection_class = connection_class
@@ -306,11 +398,8 @@ class sock_server:
       self.socket.bind(*self.bindargs)
       self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       self.socket.listen(self.backlog)
-      self.fd = fd = self.socket.fileno()
-      if ((not fd in wo_instances.key_list) or (wo_instances[fd] != self)):
-         wo_instances[fd] = self
-      if not (fd in fds_readable):
-         fds_readable.append(fd)
+      self.fd = fd = fd_wrap(self.socket.fileno(), self, self.socket)
+      fd.fd_register_read()
       
    def fd_read(self, fd):
       """Accept a new connection on socket fd."""
@@ -319,17 +408,14 @@ class sock_server:
       
       new_socket, new_socket_address = self.socket.accept()
       if (callable(self.handler)):
-         new_fd = new_socket.fileno()
          new_connection = self.connection_class()
+         new_fd = fd_wrap(new_socket.fileno(), new_connection, new_socket)
          new_connection.buffers_input[new_fd] = ''
          new_connection.buffers_output[new_fd] = ''
-         new_connection.file_objects[new_fd] = new_socket
-         new_connection.fd_register(new_fd)
-         if not (new_fd in fds_readable):
-            fds_readable.append(new_fd)
+         new_fd.fd_register_read()
          
          new_connection.target = new_connection.address = new_socket_address
-         self.handler(connection=new_connection)
+         self.handler(connection = new_connection)
 
       else:
          self.logger(40, 'Unable to use new connection; no handler set. Closing it.')
@@ -340,13 +426,8 @@ class sock_server:
       
    def clean_up(self):
       fd = self.fd
-      if ((fd in wo_instances.key_list) and (wo_instances[fd] == self)):
-         del(wo_instances[fd])
-         if (fd in fds_readable):
-            fds_readable.remove(fd)
-      os.close(fd)
+      fd.close()
       self.fd = None
-      self.socket.close()
       self.socket = None
 
       
@@ -357,18 +438,14 @@ class sock_nonstream(asynchronous_transfer_base):
       socket_new.setblocking(0)
       if (bind_target != None):
          socket_new.bind(bind_target)
-      fd = socket_new.fileno()
+      fd = fd_wrap(socket_new.fileno(), self, socket_new)
       self.socket = socket_new
-      self.file_objects[fd] = socket_new
       self.buffers_input[fd] = ''
       self.buffers_output[fd] = ''
-      self.fd_register(fd)
-      fds_readable.append(fd)
+      fd.fd_register_read()
 
    def fd_read(self, fd):
-      if not (fd in self.file_objects):
-         raise ValueError('Fd %s is not in self.file_objects' % (fd,))
-      sock = self.file_objects[fd]
+      sock = fd.file
       try:
          #select may fail with EBADF ("Bad file descriptor")
          while (len(select.select([fd],[],[],0)[0]) > 0):
@@ -395,20 +472,17 @@ class sock_nonstream(asynchronous_transfer_base):
    
    def send_data(self, data, target, fd=None, flags=0):
       """Send data to our waitable object."""
-      if (not self.file_objects):
+      if (not self.buffers_output):
          self.logger.log(30, "Unable to output %r(to %r) since I don't currently have any open output objects." % (data, target))
-         return False
-      elif (fd == None):
+         raise StandardError("Unable to output %r(to %r) since I don't currently have any open output objects." % (data, target))
+      if (fd == None):
          #automatic selection; should at least work as long as there is only one
          fd = self.buffers_output.keys()[0]
-      elif (fd not in self.file_objects):
-         self.logger.log(30, "Unable to output %r to %r(%r) since I don't have that fd open." % (data, fd, target))
-         return False
-         
+      
       self.logger.log(10, '%r< %r' % (target, data))
-      return self.file_objects[fd].sendto(data, flags, target)
+      return fd.file.sendto(data, flags, target)
       
-      
+
 class file_asynchronous_binary(asynchronous_transfer_base):
    """Asynchronous interface to pseudo-files"""
    def __init__(self, filename, input_handler, close_handler, mode=0777, flags=os.O_RDWR):
@@ -417,11 +491,10 @@ class file_asynchronous_binary(asynchronous_transfer_base):
       self.close_handler = close_handler
       self.target = self.filename = filename
       self.flags = flags = flags | os.O_NONBLOCK | os.O_NOCTTY
-      self.fd = os.open(filename, flags, mode)
-      self.fd_register(self.fd)
+      self.fd = fd_wrap(os.open(filename, flags, mode), self)
       self.buffers_input[self.fd] = ''
       self.buffers_output[self.fd] = ''
-      fds_readable.append(self.fd)
+      self.fd.fd_register_read()
       self.locked = False
 
    def input_process(self, fd):
@@ -447,11 +520,11 @@ class file_asynchronous_binary(asynchronous_transfer_base):
          except:
             self.logger.log(40, 'Failed to unlock fd %s on file %s. Error:' % (self.fd, self.filename), exc_info=True)
       
-      asynchronous_transfer_base.close(self, fd)
+      fd.close()
       self.fd = None
 
    def clean_up(self):
-      self.close(self.fd)
+      self.fd.close()
       
 class serialport_asynchronous_binary(file_asynchronous_binary):
    def __init__(self, filename='/dev/ttyS0', *args, **kwargs):
@@ -487,11 +560,11 @@ class serialport_asynchronous_binary(file_asynchronous_binary):
    def close(self, fd):
       if (fd):
          try:
-            termios.tcflush(fd, termios.TCOFLUSH)
+            termios.tcflush(int(fd), termios.TCOFLUSH)
          except termios.error:
             pass
-         file_asynchronous_binary.close(self, fd)
-         
+         fd.close()
+
 #pipes to spawned processes
 CHILD_REACT_NOT = 0
 CHILD_REACT_WAIT = 1
@@ -555,20 +628,20 @@ class child_execute_base(asynchronous_transfer_base):
          self.stderr_fd = None
          self.stderr_str = self.buffers_input[fd]
       
-      asynchronous_transfer_base.close(self, fd)
+      fd.close()
 
       if (len(self.buffers_input) == 0 == len(self.buffers_output)):
          #We're out of open fds.
          self.child_poll()
          if (self.child):
             #And our child is still alive,...
-            if (self.finish == 1):
+            if (self.finish == CHILD_REACT_WAIT):
                #...so we WAIT for it.
                self.logging.log(30, 'Child process %d (resulted from executing "%s") has closed all connections to us, but is still active. Spawning thread to wait for it.' % (self.child.pid, self.command))
                self.thread = threading.Thread(group=None, target=self.wait_child_childthread, name=None, args=(), kwargs={})
                self.thread.setDaemon(True)
                self.thread.start()
-            elif (self.finish == 2):
+            elif (self.finish == CHILD_REACT_KILL):
                #...so we kill it.
                sig = signal.SIGKILL
                self.child_kill(sig)
@@ -586,11 +659,9 @@ class child_execute_base(asynchronous_transfer_base):
    def stream_record(self, name, fd, in_stream=False):
       """Prepare internal data structures for a new stream and register its fd."""
       self.__dict__[name] = fd
-      self.fd_register(fd)
       if (in_stream):
          self.buffers_input[fd] = ''
-         if not (fd in fds_readable):
-            fds_readable.append(fd)  
+         fd.fd_register_read()
       else:
          self.buffers_output[fd] = ''
       
@@ -606,19 +677,21 @@ class child_execute_Popen3(child_execute_base):
       
    def child_spawn(self):
       self.child = child = popen2.Popen3(self.command, self.capturestderr)
-      self.stream_record('stdin_fd', child.tochild.fileno(), in_stream=False)
-      self.stream_record('stdout_fd', child.fromchild.fileno(), in_stream=True)
+      self.stream_record('stdin_fd', fd_wrap(child.tochild.fileno(), self), in_stream=False)
+      self.stream_record('stdout_fd', fd_wrap(child.fromchild.fileno(), self), in_stream=True)
       
       if (child.childerr):
-         self.stream_record('stderr_fd', child.childerr.fileno(), in_stream=True)
-         
+         self.stream_record('stderr_fd', fd_wrap(child.childerr.fileno(), self), in_stream=True)
+
 class child_execute_Popen4(child_execute_base):
    '''Popen4 objects provide stdin to the child process, and a combined stdout+stderr stream from it.'''
    def child_spawn(self):
       self.child = child = popen2.Popen4(self.command)
-      self.stream_record('stdin_fd', child.tochild.fileno(), in_stream=False)
-      self.stream_record('stdout_fd', child.fromchild.fileno(), in_stream=True)
-      self.stderr_fd = child.fromchild.fileno()
+      fd_out = fd_wrap(child.fromchild.fileno(), self)
+      
+      self.stream_record('stdin_fd', fd_wrap(child.tochild.fileno(), self), in_stream=False)
+      self.stream_record('stdout_fd', fd_out, in_stream=True)
+      self.stderr_fd = fd_out
 
 
 class pipe_notify_class:
@@ -631,39 +704,32 @@ class pipe_notify_class:
 
    def pipe_init(self):
       """Open and initialize the pipe,"""
-      self.read_fd, self.write_fd = os.pipe()
-      fcntl.fcntl(self.read_fd, fcntl.F_SETFL, os.O_NONBLOCK)
+      (read_fd, self.write_fd) = [fd_wrap(fd, self) for fd in os.pipe()]
+      fcntl.fcntl(read_fd, fcntl.F_SETFL, os.O_NONBLOCK)
+      read_fd.fd_register_read()
+      self.read_fd = read_fd
       
-      read_fd = self.read_fd
-      if ((not read_fd in wo_instances) or (wo_instances[read_fd] != self)):
-         wo_instances[read_fd] = self
-      if (not read_fd in fds_readable):
-         fds_readable.append(read_fd)
-
    def fd_read(self, fd):
-      """Read data and throw it away. Reastablish pipe if it has collapsed."""
+      """Read data and throw it away. Reestablish pipe if it has collapsed."""
       if not (fd == self.read_fd):
          raise ValueError('Not responsible for fd %s' % (fd,))
       
       while (len(select.select([fd],[],[],0)[0]) > 0):
-         if (len(os.read(fd, 1048576)) <= 0):
+         if (len(os.read(int(fd), 1048576)) <= 0):
             #looks like for some reason this pipe has collapsed.
             self.logger.log(40, 'The pipe has collapsed. Reinitializing.')
             self.clean_up_pipe()
             self.pipe_init()
 
    def notify(self):
-      """Write a byte in to the input end of the pipe."""
+      """Write a byte into the input end of the pipe if pipe intact and not already readable"""
       if ((self.read_fd) and (self.write_fd) and ((len(select.select([self.read_fd],[],[],0)[0])) == 0)):
-         os.write(self.write_fd, '\000')
+         os.write(int(self.write_fd), '\000')
 
    def clean_up_pipe(self):
       for fd in (self.read_fd, self.write_fd):
-         os.close(fd)
-         if ((fd in wo_instances.key_list) and (wo_instances[fd] == self)):
-            del(wo_instances[fd])
-            if (fd in fds_readable):
-               fds_readable.remove(fd)
+         if (fd):
+            fd.close()
 
       self.read_fd = self.write_fd = None
 
@@ -672,36 +738,6 @@ class pipe_notify_class:
       
    def clean_up(self):
       self.clean_up_pipe()
-
-class wo_dictionary(dict):
-   def __init__(self, *a, **ka):
-      dict.__init__(self, *a, **ka)
-      self.__cache_keys__()
-   def __setitem__(self, *a, **ka):
-      dict.__setitem__(self, *a, **ka)
-      self.__cache_keys__()
-   def __delitem__(self, *a,**ka):
-      dict.__delitem__(self, *a,**ka)
-      self.__cache_keys__()
-   def clear(self,*a,**ka):
-      dict.clear(self,*a,**ka)
-      self.__cache_keys__()
-   def fromkeys(self,*a,**ka):
-      dict.fromkeys(self,*a,**ka)
-      self.__cache_keys__()
-   def setdefault(self,*a,**ka):
-      dict.setdefault(self,*a,**ka)
-      self.__cache_keys__()
-   def pop(self,*a,**ka):
-      dict.pop(self,*a,**ka)
-      self.__cache_keys__()
-   def popitem(self,*a,**ka):
-      dict.popitem(self,*a,**ka)
-      self.__cache_keys__()
-   def __cache_keys__(self):
-      self.key_list = self.keys()
-
-wo_instances = wo_dictionary()
 
 TIMERS_CALLBACK_HANDLER = 2
 TIMERS_PARENT = 1
@@ -780,9 +816,14 @@ def timers_process():
 
 def select_loop():
    """Run the (potentially) infinite main select loop. Should be called as the last step in program intizialization."""
+   fds_readable = fd_wrap.readable
+   fds_writable = fd_wrap.writable
+   fds_errable = fd_wrap.errable
+   
+   
    while (1):
       if (len(running_timers) == 0):
-         if ([] == fds_readable == fds_writable == fds_erring):
+         if ([] == fds_readable == fds_writable == fds_errable):
             logger.log(30, 'No waitable objects or timers left active. Leaving select loop.')
             return None
          
@@ -792,39 +833,33 @@ def select_loop():
          if (timeout < 0):
             timeout = 0
 
-      fds_readable_now, fds_writable_now, fds_erring_now = select.select(fds_readable, fds_writable, fds_erring, timeout)
+      fds_readable_now, fds_writable_now, fds_errable_now = select.select(fds_readable, fds_writable, fds_errable, timeout)
 
-      for waiting_fd_list, wo_type in ((fds_readable_now,0), (fds_writable_now,1), (fds_erring_now,2)):
+      for (waiting_fd_list, wo_type) in ((fds_readable_now,0), (fds_writable_now,1), (fds_errable_now,2)):
          for fd in waiting_fd_list:
-            if (fd in wo_instances):
-               instance = wo_instances[fd]
+            try:
                if (wo_type == 0):
-                  instance.fd_read(fd)
+                  fd.fd_read()
                elif (wo_type == 1):
-                  instance.fd_write(fd)
+                  fd.fd_write()
                elif (wo_type == 2):
-                  instance.fd_err(fd)
-               
-            else:
-               logger.log(40, 'Unknown waitable fd %s returned by select.select() in list %s. Closing it.' % (waiting_object, list_index))
+                  fd.fd_err()
+            except:
+               logger.log(40, 'Failed to process fd %r in mode %r. Trying to close. Error:' % (fd, wo_type), exc_info=True)
                try:
-                  os.close(fd)
+                  fd.close()
                except OSError:
                   pass
-               for fd_list in (fds_readable, fds_writable, fds_erring):
-                  if (fd in fd_list):
-                     fd_list.remove(fd)
-                     
+
       timers_process()
 
 def shutdown():
    """Shut down ALL connections managed by this module and clear the timer list."""
    fds = []
-   for fd in wo_instances.copy():
+   for fd in (fd_wrap.readable + fd_wrap.writable + fd_wrap.errable):
       if not (fd in fds):
          fds.append(fd)
-         os.close(fd)
-         del(wo_instances[fd])
+         fd.close()
          
    locks['timers'].acquire()
    try:
