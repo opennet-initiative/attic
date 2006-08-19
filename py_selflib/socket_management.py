@@ -29,7 +29,6 @@ import popen2
 import signal
 from sets import Set as set
 import warnings
-import weakref
 
 try:
    import fcntl
@@ -56,13 +55,8 @@ class fd_wrap:
    readable = []
    writable = []
    errable = []
-   existing = weakref.WeakKeyDictionary()
    def __init__(self, fd, parent, file=None):
       self.fd = fd
-      self.parent = None
-      if (self in self.existing):
-         raise ValueError("There's already a %r - trust me, you don't want several of me around." % self);
-      self.existing[self] = None
       self.parent = parent
       self.file = file
       
