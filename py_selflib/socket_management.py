@@ -29,6 +29,7 @@ import popen2
 import signal
 from sets import Set as set
 import warnings
+import weakref
 
 try:
    import fcntl
@@ -46,15 +47,6 @@ import init_misc
 from process_reload import picklablesocket as socket_object
 
 defaults = {}
-defaults['class_defaults'] = {}
-#defaults['waitable_objects'] = [[],[],[]]
-#defaults['waitable_object_data'] = {}
-#defaults['waitable_object_cache_state'] = {
-#   'updated':0
-#   }
-
-
-defaults['locks'] = {}
 
 init_misc.set_defaults(defaults=defaults, global_scope=globals())
 logger = logging.getLogger('socket_management')
@@ -64,8 +56,13 @@ class fd_wrap:
    readable = []
    writable = []
    errable = []
+   existing = weakref.WeakKeyDictionary()
    def __init__(self, fd, parent, file=None):
       self.fd = fd
+      self.parent = None
+      if (self in self.existing):
+         raise ValueError("There's already a %r - trust me, you don't want several of me around." % self);
+      self.existing[self] = None
       self.parent = parent
       self.file = file
       
@@ -155,6 +152,8 @@ class fd_wrap:
    
    def close(self):
       """Close fd, make parent forget about us, and forget about any and all associations"""
+      if (not self):
+         raise ValueError("%r has been closed earlier. Leave me alone." % (self,))
       self.logger.log(25, 'Shutting down %r.' % (self,))
       self.fd_unregister_all()
       if (self.file):
@@ -176,7 +175,7 @@ class fd_wrap:
 
       self.fd = None
    
-   def __bool__(self):
+   def __nonzero__(self):
       return bool(self.fd)
    
    def __repr__(self):
@@ -211,7 +210,7 @@ class asynchronous_transfer_base:
       """Deal with ready for input/output and error conditions on waitable objects."""
 
       if not ((fd in self.buffers_output) or (fd in self.buffers_input)):
-         self.logger.log(40, "This instance (%s; to %s) is not responsible for erring_fd %s passed to fd_err. Trying to close it anyway." % (self, self.target, fd))
+         self.logger.log(40, "This instance (%s; to %s) is not responsible for errable fd %s passed to fd_err. Trying to close it anyway." % (self, self.target, fd))
          
       fd.close()
 
@@ -263,13 +262,13 @@ class asynchronous_transfer_base:
                else:
                   #Connection has been closed
                   buffer_output = ''
-                  self.socket_shutdown_error_write(fd)
+                  self.fd_shutdown_error_write(fd)
                   break
                
-         except (socket.error, OSError):
+         except (socket.error, OSError, select.error):
             self.logger.log(30, 'Error writing to socket connected to %s. Closing connection. Error:' % (self.address,), exc_info=True)
             self.buffers_output[fd] = buffer_output = ''
-            self.socket_shutdown_error_write(writable_object)
+            self.fd_shutdown_error_write(fd)
 
          if (len(buffer_output) < 1):
             #We managed to clear our output buffer. Remove this fd from the global potentially_writeable_object-list to avoid a busy loop.
@@ -278,7 +277,7 @@ class asynchronous_transfer_base:
             except ValueError:
                pass
 
-   def socket_shutdown_error_write(self, fd):
+   def fd_shutdown_error_write(self, fd):
       del(self.buffers_output[fd])
       if (fd in self.buffers_input):
          self.fd_read(fd)
@@ -315,15 +314,12 @@ class asynchronous_transfer_base:
 
    def fd_forget(self, fd):
       """Forget a transfer object."""
-      fd_in = (fd in self.buffers_input)
-      if (fd_in):
+      if (callable(self.close_handler)):
+         self.close_handler(fd)
+      
+      if (fd in self.buffers_input):
          if (self.buffers_input[fd]):
             self.input_process(fd)
-      
-      if (callable(self.close_handler)):
-         self.close_handler(self, fd)
-      
-      if (fd_in):
          del(self.buffers_input[fd])
       
       if (fd in self.buffers_output):
@@ -719,7 +715,7 @@ class pipe_notify_class:
          if (len(os.read(int(fd), 1048576)) <= 0):
             #looks like for some reason this pipe has collapsed.
             self.logger.log(40, 'The pipe has collapsed. Reinitializing.')
-            self.clean_up_pipe()
+            self.clean_up()
             self.pipe_init()
 
    def notify(self):
@@ -727,18 +723,19 @@ class pipe_notify_class:
       if ((self.read_fd) and (self.write_fd) and ((len(select.select([self.read_fd],[],[],0)[0])) == 0)):
          os.write(int(self.write_fd), '\000')
 
-   def clean_up_pipe(self):
+   def fd_forget(self, fd):
+      del(fd)
       for fd in (self.read_fd, self.write_fd):
          if (fd):
             fd.close()
 
       self.read_fd = self.write_fd = None
-
+   
    def shutdown(self):
       self.clean_up()
       
    def clean_up(self):
-      self.clean_up_pipe()
+      self.fd_forget(None)
 
 
 TIMERS_CALLBACK_HANDLER = 2
@@ -763,17 +760,19 @@ class Timer:
          interval -= (time.time() % interval)
  
       self.expire_ts = time.time() + float(interval)
+      self.register()
 
    def __cmp__(self, other):
-      if (self.interval < other.interval):
+      if (self.expire_ts < other.expire_ts):
          return -1
-      if (self.interval > other.interval):
+      if (self.expire_ts > other.expire_ts):
          return 1
-      if (self.interval == other.interval):
+      if (self.expire_ts == other.expire_ts):
          return 0
 
    def register(self):
-      self.lock.aquire()
+      self.logger.log(15, 'Registering timer %r.' % (self,))
+      self.lock.acquire()
       try:
          self.timers_active.append(self)
          self.timers_active.sort()
@@ -781,13 +780,15 @@ class Timer:
          self.lock.release()
       
    def unregister(self):
-      self.lock.aquire()
+      self.logger.log(15, 'Unregistering timer %r.' % (self,))
+      self.lock.acquire()
       try:
          self.timers_active.remove(self)
       finally:
          self.lock.release()
 
    def function_call(self):
+      self.logger.log(20, 'Executing timer %r.' % (self,))
       self.function(*self.args, **self.kwargs)
       
    def expire_ts_bump(self):
@@ -800,16 +801,18 @@ class Timer:
       if (self.align):
          self.expire_ts -= now % self.interval
 
+   def __getinitargs__(self):
+      return (self.interval, self.function, self.parent, self.args, self.kwargs, self.persistence, self.align)
+
    def __repr__(self):
-      return '%s%r' % (self.__class__.__name__, (self.interval, self.function, 
-         self.parent, self.args, self.kwargs, self.persistence, self.align))
+      return '%s%r' % (self.__class__.__name__, self.__getinitargs__())
+   
+   def __str__(self):
+      return '%s%s' % (self.__class__.__name__, self.__getinitargs__())
 
    def stop(self):
-      self.lock.acquire()
-      try:
-         self.timers_active.remove(self)
-      finally:
-         self.lock.release()
+      self.logger.log(20, 'Stopping timer %r.' % (self,))
+      self.unregister()
 
    def timers_process(cls):
       cls.lock.acquire()
@@ -821,6 +824,7 @@ class Timer:
             timer = timers_active.pop(0)
             expired_timers.append(timer)
             if (timer.persistence):
+               timer.expire_ts_bump()
                timers_active.append(timer)
                order_change = True
 
@@ -860,6 +864,7 @@ class Timer:
    timers_stop_byparent = classmethod(timers_stop_byparent)
 
    def timers_stop_all(cls):
+      cls.logger.log(16, 'Unregistering all active timers.')
       cls.lock.acquire()
       try:
          del(cls.timers_active[:])
@@ -903,7 +908,7 @@ def select_loop():
          
          timeout = None
       else:
-         timeout = min((Timer.timers_active[0].expire_ts - time.time()), 0)
+         timeout = max((Timer.timers_active[0].expire_ts - time.time()), 0)
 
       fds_readable_now, fds_writable_now, fds_errable_now = select.select(fds_readable, fds_writable, fds_errable, timeout)
 
@@ -916,12 +921,13 @@ def select_loop():
                   fd.fd_write()
                elif (wo_type == 2):
                   fd.fd_err()
-            except:
-               logger.log(40, 'Failed to process fd %r in mode %r. Trying to close. Error:' % (fd, wo_type), exc_info=True)
-               try:
-                  fd.close()
-               except OSError:
-                  pass
+            except StandardError:
+               if (fd):
+                  logger.log(40, 'Failed to process fd %r in mode %r. Trying to close. Error:' % (fd, wo_type), exc_info=True)
+                  try:
+                     fd.close()
+                  except OSError:
+                     pass
 
       Timer.timers_process()
 
