@@ -894,6 +894,10 @@ def select_loop():
    fds_writable = fd_wrap.writable
    fds_errable = fd_wrap.errable
    
+   wo_type_readable = 0
+   wo_type_writable = 1
+   wo_type_errable = 2
+   
    while (1):
       if (not Timer.timers_active):
          if ([] == fds_readable == fds_writable == fds_errable):
@@ -906,14 +910,14 @@ def select_loop():
 
       fds_readable_now, fds_writable_now, fds_errable_now = select.select(fds_readable, fds_writable, fds_errable, timeout)
 
-      for (waiting_fd_list, wo_type) in ((fds_readable_now,0), (fds_writable_now,1), (fds_errable_now,2)):
+      for (waiting_fd_list, wo_type) in ((fds_readable_now,wo_type_readable), (fds_writable_now,wo_type_writable), (fds_errable_now,wo_type_errable)):
          for fd in waiting_fd_list:
             try:
-               if (wo_type == 0):
+               if (wo_type is wo_type_readable):
                   fd.fd_read()
-               elif (wo_type == 1):
+               elif (wo_type is wo_type_writable):
                   fd.fd_write()
-               elif (wo_type == 2):
+               elif (wo_type is wo_type_errable):
                   fd.fd_err()
             except StandardError:
                if (fd):
