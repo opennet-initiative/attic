@@ -54,11 +54,13 @@ class Nfct_Connection_Wrapper:
 
    def __hash__(self):
       return hash(self.connection_data)
+   
+   def __repr__(self):
+      return '%s%s' % (self.__class__.__name__, (self.connection_data,))
 
 class Data_Collocator(asynchronous_transfer_base):
    logger = logging.getLogger('DataAllocator')
    def __init__(self, family=AF_INET):
-      self.logger.log(10, 'Initializing %r.' % (self,))
       asynchronous_transfer_base.__init__(self)
       self.nfct_handle = None
       self.fd = None
@@ -68,12 +70,6 @@ class Data_Collocator(asynchronous_transfer_base):
    def __getinitargs__(self):
       return ()
    
-   def __getstate__(self):
-      return self.connections
-   
-   def __setstate__(self, data):
-      self.connections = data
-
    def nfct_init(self):
       self.nfct_handle = nfct_handle = NfctHandle()
       self.fd = fd_wrap(nfct_handle.fileno(), self, nfct_handle)
@@ -87,7 +83,8 @@ class Data_Collocator(asynchronous_transfer_base):
             del(self.connections[key])
 
    def fd_forget(self, fd):
-      raise NotImplementedError("I can't forget about fds. This shouldn't happen.")
+      if (fd == self.fd):
+         self.fd = self.nfct_handle = None
 
    def fd_read(self, fd):
       if not (self.fd == fd):
@@ -170,16 +167,19 @@ class Data_Collocator_DB(Data_Collocator):
          self.logger.log(40, "Database access failed; I'll retry later. Error was:", exc_info=True)
 
    def __getinitargs__(self):
-      return (self.db_connector, self.db_args, self.db_kwargs) + Data_Collocator.__getinitargs__(self)
+      return (self.db_connector, self.db_connect_interval, self.db_args, self.db_kwargs) + Data_Collocator.__getinitargs__(self)
 
    def __getstate__(self):
       return (self.connections, self.output_cache)
+   
+   def __repr__(self):
+      return '%s%s' % (self.__class__.__name__, self.__getinitargs__())
    
    def __setstate__(self, state):
       (self.connections, self.output_cache) = state
 
    def data_output(self):
-      raise NotImplementedError('data_output should be implmented by subclass.')
+      raise NotImplementedError('data_output should be implemented by subclass.')
 
 
 if (mysql_module):
