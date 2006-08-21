@@ -272,7 +272,7 @@ PyDoc_STRVAR(NfctHandle_close_doc,
 Close nfct handle; the instance will behave unitializedly after this call.");
 
 static PyMethodDef NfctHandle_methods[] = {
-   {"dump_conntrack_table", (PyCFunction)NfctHandle_dump_conntrack_table, METH_VARARGS, NfctHandle_dump_conntrack_table_doc},
+   {"dump_conntrack_table", (PyCFunction)NfctHandle_dump_conntrack_table, METH_VARARGS | METH_KEYWORDS, NfctHandle_dump_conntrack_table_doc},
    {"event_conntrack", (PyCFunction)NfctHandle_event_conntrack, METH_NOARGS, NfctHandle_event_conntrack_doc},
    {"fileno", (PyCFunction)NfctHandle_fileno, METH_NOARGS, NfctHandle_fileno_doc},
    {"close", (PyCFunction)NfctHandle_close, METH_NOARGS, NfctHandle_close_doc},
