@@ -254,12 +254,12 @@ class Nfct_Data(Nfct_Picklable):
       nfct_tuple = indata[1]
       nfct_tuple2 = indata[2]
    
-      assert nfct_tuple[0] == nfct_tuple2[1]
-      assert nfct_tuple[1] == nfct_tuple2[0]
+      assert nfct_tuple[0] == nfct_tuple2[1] #wrong for NAT - FIXME!
+      assert nfct_tuple[1] == nfct_tuple2[0] #ditto
       assert nfct_tuple[2] == nfct_tuple2[2]
       assert nfct_tuple[3] == nfct_tuple2[3]
-      assert nfct_tuple[4] == nfct_tuple2[5]
-      assert nfct_tuple[5] == nfct_tuple2[4]
+      assert nfct_tuple[4] == nfct_tuple2[5] #ditto
+      assert nfct_tuple[5] == nfct_tuple2[4] #ditto
       nfct_nat = indata[11]
       l4proto = nfct_tuple[3]
       return cls(indata[0], Nfct_Connection_Data(
