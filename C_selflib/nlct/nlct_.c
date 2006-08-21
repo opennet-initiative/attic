@@ -232,7 +232,13 @@ static PyObject *NfctHandle_fileno(NfctHandle *self) {
 }
 
 static PyObject *NfctHandle_close(NfctHandle *self) {
-   if (self->nch) nfct_close(self->nch);
+   if (self->nch) {
+      if (nfct_close(self->nch)) {
+         PyErr_SetString(NfnlError, strerror(errno));
+         return NULL;
+      };
+      self->nch = NULL;
+   }
    Py_INCREF(Py_None);
    return Py_None;
 }

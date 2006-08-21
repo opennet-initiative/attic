@@ -132,8 +132,11 @@ class ip_address_base(object):
    def __long__(self):
       return long(self.ip)
    
-   def __getnewargs__(self):
+   def __getstate__(self):
       return (self.ip,)
+
+   def __setstate__(self, state):
+      self.ip = state[0]
    
 class ip_address_v4(ip_address_base):
    separator = '.'
