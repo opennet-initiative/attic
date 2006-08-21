@@ -51,7 +51,15 @@ class Nfct_Connection_Meta(Nfct_Indexed_Meta):
 class Nfct_L4_Address_Meta(Nfct_Indexed_Meta):
    Index = nfct_l4_address_classes
 
-class Nfct_Comparable(object):
+class Nfct_Picklable(object):
+   def __getstate__(self):
+      return [getattr(self, slotname) for slotname in self.__slots__]
+   
+   def __setstate__(self, state):
+      for (slotname, val) in zip(self.__slots__, state):
+         setattr(self, slotname, val)
+
+class Nfct_Comparable(Nfct_Picklable):
    def __eq__(self, other):
       if not (isinstance(self.__class__, other) or (isinstance(other.__class__, self))):
          return False
@@ -236,7 +244,7 @@ class Nfct_Connection_Data(Nfct_Comparable):
       return '<NFCT %s [%s %s %s %s %s]>' % (self.connection, self.id, self.timeout, self.mark, self.status, self.use)
 
 
-class Nfct_Data:
+class Nfct_Data(Nfct_Picklable):
    __slots__ = ('type', 'connection_data')
    def __init__(self, nfct_type, connection_data):
       self.type = nfct_type
