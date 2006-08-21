@@ -718,12 +718,15 @@ class pipe_notify_class:
          os.write(int(self.write_fd), '\000')
 
    def fd_forget(self, fd):
-      del(fd)
-      for fd in (self.read_fd, self.write_fd):
-         if (fd):
-            fd.close()
-
-      self.read_fd = self.write_fd = None
+      if (self.read_fd == fd):
+         self.read_fd = None
+      elif (self.write_fd == fd):
+         self.write_fd = None
+      
+      if (self.read_fd):
+         self.read_fd.close()
+      if (self.write_fd):
+         self.write_fd.close()
    
    def shutdown(self):
       self.clean_up()
@@ -931,10 +934,8 @@ def select_loop():
 
 def shutdown():
    """Shut down all connections managed by this module and clear the timer list."""
-   fds = []
    for fd in (fd_wrap.readable + fd_wrap.writable + fd_wrap.errable):
-      if not (fd in fds):
-         fds.append(fd)
+      if (fd):
          fd.close()
          
    Timer.timers_stop_all()
