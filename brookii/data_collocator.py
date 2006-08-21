@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import datetime
+import time
 import logging
 from socket import AF_INET
 
@@ -31,12 +32,13 @@ except ImportError:
    _logger.log(35, 'Unable to import MySQLdb')
    db_module = None
 else:
-   from mysql_module import DatabaseError as mysql_DatabaseError
+   mysql_DatabaseError = db_DatabaseError = mysql_module.DatabaseError
+
 
 class Nfct_Connection_Wrapper:
-   def __init__(self, connection_data, start):
+   def __init__(self, connection_data):
       self.connection_data = connection_data
-      self.start = start
+      self.start = None
       self.start_reliable = False
       self.finish_reliable = False
       self.finish = None
@@ -55,7 +57,7 @@ class Nfct_Connection_Wrapper:
 
 class Data_Collocator(asynchronous_transfer_base):
    logger = logging.getLogger('DataAllocator')
-   def __init__(self, family):
+   def __init__(self, family=AF_INET):
       self.logger.log(10, 'Initializing %r.' % (self,))
       asynchronous_transfer_base.__init__(self)
       self.nfct_handle = None
@@ -75,6 +77,7 @@ class Data_Collocator(asynchronous_transfer_base):
    def nfct_init(self):
       self.nfct_handle = nfct_handle = NfctHandle()
       self.fd = fd_wrap(nfct_handle.fileno(), self, nfct_handle)
+      self.fd.fd_register_read()
       now = datetime.datetime.now()
       self.nfct_handle.dump_conntrack_table(self.family)
       self.fd_read(self.fd)
@@ -137,16 +140,19 @@ class Data_Collocator(asynchronous_transfer_base):
 
 class Data_Collocator_DB(Data_Collocator):
    logger = logging.getLogger('Data_Collocator_DB')
-   db_exception = None 
-   def __init__(self, db_connector=db_module.connect, db_args=(), db_kwargs={}, *args, **kwargs):
+   db_exception = db_DatabaseError
+   def __init__(self, db_connector=db_module.connect, connect_interval=100, db_args=(), db_kwargs={}, *args, **kwargs):
       Data_Collocator.__init__(self, *args, **kwargs)
       self.output_cache = []
       self.db_connector = db_connector
       self.db_args = db_args
       self.db_kwargs = db_kwargs
       self.db_connection = self.db_cursor = None
+      self.db_connect_attempt_last = None
+      self.db_connect_interval = connect_interval
       
    def db_connect(self):
+      self.db_connect_attempt_last = time.time()
       self.db_connection = self.db_connector(*self.db_args, **self.db_kwargs)
       self.db_cursor = self.db_connection.cursor()
       
@@ -156,6 +162,7 @@ class Data_Collocator_DB(Data_Collocator):
       self.db_connection = self.db_cursor = None
 
    def data_store(self, connwrap):
+      self.logger.log(10, '%r preparing to store data.' % (self,))
       self.output_cache.append(connwrap)
       try:
          self.data_output()
@@ -185,7 +192,12 @@ if (mysql_module):
 
       def data_output(self):
          if (not self.db_connection):
+            self.logger.log(10, "Not pushing data; waiting for db reconnect delay expiration.") 
+            if ((not (self.db_connect_attempt_last is None)) and ((self.db_connect_attempt_last + self.db_connect_interval) > time.time())):
+               return
             self.db_connect()
+
+         self.logger.log(15, "%r beginning mysql push cycle." % (self,))
          while (self.output_cache):
             e = self.output_cache[0]
             c = e.connection_data.connection
@@ -197,6 +209,7 @@ if (mysql_module):
                e.id = self.db_cursor.fetchone()[0]
             self.logger.log(10, "Inserted %r into database." % (e,))
             del(self.output_cache[0])
+         self.logger.log(15, "%r finished mysql push cycle." % (self,))
 
       def __getinitargs__(self):
          return (self.db_table,) + Data_Collocator_DB.__getinitargs__(self)
