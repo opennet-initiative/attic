@@ -51,8 +51,28 @@ class Nfct_Connection_Meta(Nfct_Indexed_Meta):
 class Nfct_L4_Address_Meta(Nfct_Indexed_Meta):
    Index = nfct_l4_address_classes
 
-class Nfct_Connection(object):
+class Nfct_Comparable(object):
+   def __eq__(self, other):
+      if not (isinstance(self.__class__, other) or (isinstance(other.__class__, self))):
+         return False
+      
+      for attrstr in self.slots_relevant:
+         if (getattr(self, attrstr) != getattr(other, attrstr)):
+            return False
+
+      return True
+
+   def __ne__(self, other):
+      return (not self.__eq__(other))
+
+   def __hash__(self):
+      return hash(tuple([getattr(self, attrstr) for attrstr in self.slots_relevant]))
+
+
+class Nfct_Connection(Nfct_Comparable):
    __metaclass__ = Nfct_Connection_Meta
+   __slots__ = ('src','dst','l3proto','l4src','l4dst','protoinfo','to_packets','to_bytes','from_packets','from_bytes','l4proto')
+   slots_relevant = ('l3proto','src','dst','l4proto', 'l4src','l4dst')
    def __new__(cls, **kwargs):
       l4proto = kwargs['l4proto']
       if (l4proto in nfct_connection_classes):
@@ -89,6 +109,18 @@ class Nfct_Connection(object):
       return '%s:%s[%s/%s] <-> %s:%s[%s/%s]; %s[%s] %s' % (self.src, self.l4src, self.to_packets, self.to_bytes, self.dst, self.l4dst,
          self.from_packets, self.from_bytes, self.l3proto, self.protoinfo, self.l4proto)
 
+   def __eq__(self, other):
+      if not (isinstance(self.__class__, other), isinstance(other.__class__, self)):
+         return False
+      
+      for attrstr in self.slots_relevant:
+         if (getattr(self, attrstr) != getattr(other, attrstr)):
+            return False
+      
+      return True
+   def __ne__(self, other):
+      return (not self.__eq__(other))
+
 class Nfct_Connection_Unknown(Nfct_Connection):
    l4proto = None	#default entry set by metaclass
 
@@ -104,7 +136,7 @@ class Nfct_Connection_SCTP(Nfct_Connection):
 class Nfct_Connection_ICMP(Nfct_Connection):
    l4proto = IPPROTO_ICMP
 
-class L4_Address(object):
+class L4_Address(Nfct_Comparable):
    __metaclass__ = Nfct_L4_Address_Meta
    def __new__(cls, l4proto, *args, **kwargs):
       if (l4proto in nfct_l4_address_classes):
@@ -117,7 +149,10 @@ class L4_Address(object):
       return super(self.__class__, self)
 
 class L4_Address_ShortPort(L4_Address):
+   __slots__ = slots_relevant = ('port',)
    def __init__(self, l4proto, port):
+      if not (0 <= port <= 65535):
+         raise ValueError('Port %r is invalid.' % (port,))
       self.port = port
    
    def __repr__(self):
@@ -143,7 +178,14 @@ class L4_Address_SCTP(L4_Address_ShortPort):
 
 class L4_Address_ICMP(L4_Address):
    l4proto = IPPROTO_ICMP
+   __slots__ = slots_relevant = ('type', 'code', 'id')
    def __init__(self, l4proto, ctype, code, id):
+      if not (0 <= self.type <= 255):
+         raise ValueError('Type %r is invalid.' % (type,))
+      if not (0 <= self.code <= 255):
+         raise ValueError('Code %r is invalid.' % (code,))
+      if not (0 <= self.id <= 65535):
+         raise ValueError('Id %r is invalid.' % (id,))
       self.type = ctype
       self.code = code
       self.id = id
@@ -151,7 +193,11 @@ class L4_Address_ICMP(L4_Address):
    def __repr__(self):
       return '%s%r' % (self.__class__.__name__, (self.type, self.code, self.id))
 
-class Nfct_Nat:
+   def __int__(self):
+      return (int(self.type) + int(self.code)*256 + int(self.id)*65536)
+
+class Nfct_Nat(Nfct_Comparable):
+   __slots__ = slots_relevant = ('min_ip', 'max_ip', 'min_l4', 'max_l4')
    def __init__(self, min_ip, max_ip, min_l4, max_l4):
       self.min_ip = ip_make(min_ip)
       self.max_ip = ip_make(max_ip)
@@ -167,7 +213,10 @@ class Nfct_Nat:
    def __str__(self):
       return '<NAT %s:%s %s:%s>' % (self.min_ip, self.min_l4, self.max_ip, self.max_l4)
 
-class Nfct:
+
+class Nfct_Connection_Data(Nfct_Comparable):
+   __slots__ = ('connection', 'nat', 'timeout', 'mark', 'status', 'use', 'id')
+   slots_relevant = ('id','connection')
    def __init__(self, connection, nat, timeout, mark, status, use, id):
       self.connection = connection
       self.nat = nat
@@ -187,37 +236,67 @@ class Nfct:
       return '<NFCT %s [%s %s %s %s %s]>' % (self.connection, self.id, self.timeout, self.mark, self.status, self.use)
 
 
-def nfct_make(nfct_data):
-   nfct_tuple = nfct_data[1]
-   nfct_tuple2 = nfct_data[2]
+class Nfct_Data:
+   __slots__ = ('type', 'connection_data')
+   def __init__(self, nfct_type, connection_data):
+      self.type = nfct_type
+      self.connection_data = connection_data
+
+   def from_raw(cls, indata):
+      nfct_tuple = indata[1]
+      nfct_tuple2 = indata[2]
    
-   assert nfct_tuple[0] == nfct_tuple2[1]
-   assert nfct_tuple[1] == nfct_tuple2[0]
-   assert nfct_tuple[2] == nfct_tuple2[2]
-   assert nfct_tuple[3] == nfct_tuple2[3]
-   assert nfct_tuple[4] == nfct_tuple2[5]
-   assert nfct_tuple[5] == nfct_tuple2[4]
-   nfct_nat = nfct_data[11]
-   l4proto = nfct_tuple[3]
-   return (nfct_data[0], Nfct(
-      Nfct_Connection(
-         src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
-         l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=nfct_data[8], 
-         packetsto=nfct_data[9][0], bytesto=nfct_data[9][1], packetsfrom=nfct_data[10][0], bytesfrom=nfct_data[10][1]),
-      Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
-      *nfct_data[3:8]
-   ))
+      assert nfct_tuple[0] == nfct_tuple2[1]
+      assert nfct_tuple[1] == nfct_tuple2[0]
+      assert nfct_tuple[2] == nfct_tuple2[2]
+      assert nfct_tuple[3] == nfct_tuple2[3]
+      assert nfct_tuple[4] == nfct_tuple2[5]
+      assert nfct_tuple[5] == nfct_tuple2[4]
+      nfct_nat = indata[11]
+      l4proto = nfct_tuple[3]
+      return cls(indata[0], Nfct_Connection_Data(
+         Nfct_Connection(
+            src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
+            l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=indata[8], 
+            packetsto=indata[9][0], bytesto=indata[9][1], packetsfrom=indata[10][0], bytesfrom=indata[10][1]),
+         Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
+         *indata[3:8]
+      ))
+   from_raw = classmethod(from_raw)
+
+   def __repr__(self):
+      return '%s(%s, %r)' % (self.__class__.__name__, self.type, self.connection_data)
+   
+   def __str__(self):
+      return '%s(%s, %s)' % (self.__class__.__name__, self.type, self.connection_data)
+
 
 class NfctHandle(NfctHandle_):
-   def dump_conntrack_table(self, family):
-      return [nfct_make(e) for e in NfctHandle_.dump_conntrack_table(self, family)]
+   def __init__(self, *args, **kwargs):
+      """(re)open nfct handle and initialize instance; requires elevates privileges."""
+      NfctHandle_.__init__(self, *args, **kwargs)
    
-   def event_conntrack(self):
-      return [nfct_make(e) for e in NfctHandle_.event_conntrack(self)]
+   def dump_conntrack_table(self, *args, **kwargs):
+      return [Nfct_Data.from_raw(e) for e in NfctHandle_.dump_conntrack_table(self, *args, **kwargs)]
+   
+   def event_conntrack(self, *args, **kwargs):
+      return [Nfct_Data.from_raw(e) for e in NfctHandle_.event_conntrack(self, *args, **kwargs)]
+
 
 if (__name__ == '__main__'):
-   import select
+   # demonstration mode; works somewhat like conntrack -E
+   import os, select
    nch = NfctHandle()
+   # the following works starting with libnetfilter_conntrack svn revision 6664 or so,
+   # the lib had a misfeature that prevented this before; comment out the setuid() part
+   # in that case
+   try:
+      os.setuid(65534)
+   except:
+      # Hum, we didn't have that cap to begin with. No matter then.
+      pass
+
    while (select.select([nch],[],[])):
-      for (ct_type, nfct) in nch.event_conntrack(): 
-         print ct_type, nfct
+      for nfct_data in nch.event_conntrack(): 
+         print nfct_data.type, nfct_data.connection_data
+

@@ -223,7 +223,7 @@ static PyObject *NfctHandle_event_conntrack(NfctHandle *self) {
    return ct_event_conntrack(self->nch);
 }
 
-static PyObject *Nfct_Handle_fileno(NfctHandle *self) {
+static PyObject *NfctHandle_fileno(NfctHandle *self) {
    if (!self->nch) {
       PyErr_SetString(NfnlError, "NfctHandle instance hasn't been initialized");
       return NULL;
@@ -231,10 +231,45 @@ static PyObject *Nfct_Handle_fileno(NfctHandle *self) {
    return PyInt_FromLong(nfct_fd(self->nch));
 }
 
+static PyObject *NfctHandle_close(NfctHandle *self) {
+   if (self->nch) nfct_close(self->nch);
+   Py_INCREF(Py_None);
+   return Py_None;
+}
+
+PyDoc_STRVAR(NfctHandle_doc,
+"NfctHandle() -> NfctHandle object\n\n\
+Open an NfctHandle. This requires elevated privileges.");
+
+PyDoc_STRVAR(NfctHandle_dump_conntrack_table_doc, 
+"dump_conntrack_table(family) -> sequence\n\n\
+Return conntrack table for specified address family (see socket.AF_*), and\n\
+return recevied data; this will probably also return any other data buffered\n\
+on this nfct handle since it was last read. This operation requires\n\
+CAP_NET_ADMIN.");
+
+PyDoc_STRVAR(NfctHandle_event_conntrack_doc,
+"event_conntrack() -> sequence\n\n\
+Return all conntrack events currently buffered on this nfct handle (and flush\n\
+that buffer). This doesn't require any special privileges per se, but some\n\
+versions of libnetlink_conntrack contain a misfeature preventing use of the\n\
+wrapped ct_event_conntrack() for uids != 0.");
+
+PyDoc_STRVAR(NfctHandle_fileno_doc,
+"fileno() -> integer\n\n\
+Return fd for the netlink socket used internally by this nfct handle. The fd\n\
+will only change on __init__(), and can be used to manipulate the socket\n\
+directly or to wait on it with select() or poll().");
+
+PyDoc_STRVAR(NfctHandle_close_doc,
+"close()\n\n\
+Close nfct handle; the instance will behave unitializedly after this call.");
+
 static PyMethodDef NfctHandle_methods[] = {
-   {"dump_conntrack_table", (PyCFunction)NfctHandle_dump_conntrack_table, METH_VARARGS, "nfct_dump_conntrack_table() wrapper"},
-   {"event_conntrack", (PyCFunction)NfctHandle_event_conntrack, METH_NOARGS, "nfct_event_conntrack() wrapper"},
-   {"fileno", (PyCFunction)Nfct_Handle_fileno, METH_NOARGS, "return fd of internal netlink socket"},
+   {"dump_conntrack_table", (PyCFunction)NfctHandle_dump_conntrack_table, METH_VARARGS, NfctHandle_dump_conntrack_table_doc},
+   {"event_conntrack", (PyCFunction)NfctHandle_event_conntrack, METH_NOARGS, NfctHandle_event_conntrack_doc},
+   {"fileno", (PyCFunction)NfctHandle_fileno, METH_NOARGS, NfctHandle_fileno_doc},
+   {"close", (PyCFunction)NfctHandle_close, METH_NOARGS, NfctHandle_close_doc},
    {NULL}  /* Sentinel */
 };
 
@@ -260,7 +295,7 @@ static PyTypeObject NfctHandleType = {
    0,                         /*tp_setattro*/
    0,                         /*tp_as_buffer*/
    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /*tp_flags*/
-   "Netlink socket wrapped by libnetfilter_conntrack",   /* tp_doc */
+   NfctHandle_doc,            /* tp_doc */
    0,                         /* tp_traverse */
    0,                         /* tp_clear */
    0,                         /* tp_richcompare */
