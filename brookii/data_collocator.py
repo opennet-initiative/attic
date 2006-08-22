@@ -43,7 +43,6 @@ class Nfct_Connection_Wrapper:
       self.finish_reliable = False
       self.finish = None
       self.id = None
-      self.last_update = None
 
    def __eq__(self, other):
       return ((isinstance(self.__class__, other) or isinstance(other.__class__, self)) and 
@@ -78,7 +77,7 @@ class Data_Collocator(asynchronous_transfer_base):
       self.nfct_handle.dump_conntrack_table(self.family)
       self.fd_read(self.fd)
       for (key, value) in self.connections.items():
-         if ((value.last_update is None) or (value.last_update < now)):
+         if ((value.finish is None) or (value.finish < now)):
             self.data_store(value)
             del(self.connections[key])
 
@@ -112,7 +111,6 @@ class Data_Collocator(asynchronous_transfer_base):
                connwrap.connection_data = nfct_msg.connection_data
          else:
             self.connections[connwrap] = connwrap
-         connwrap.last_update = now
          connwrap.finish = now
          
          if not (connwrap.start):
