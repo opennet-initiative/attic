@@ -4,7 +4,7 @@ CREATE TABLE connection_log_ipv4 (
    finish DATETIME NOT NULL,
    start_reliable BOOL NOT NULL,
    finish_reliable BOOL NOT NULL,
-   l3proto TINYINT NOT NULL UNSIGNED,
+   l3proto TINYINT UNSIGNED NOT NULL,
    to_l3src INT UNSIGNED,
    to_l3dst INT UNSIGNED,
    back_l3src INT UNSIGNED,
@@ -16,8 +16,8 @@ CREATE TABLE connection_log_ipv4 (
    back_l4dst INT UNSIGNED,
    protoinfo TINYINT UNSIGNED,
    status INT UNSIGNED,
-   to_packets BIGINT NOT NULL UNSIGNED,
-   back_packets BIGINT NOT NULL UNSIGNED,
-   to_bytes BIGINT NOT NULL UNSIGNED,
-   back_bytes BIGINT NOT NULL UNSIGNED
+   to_packets BIGINT UNSIGNED NOT NULL,
+   back_packets BIGINT UNSIGNED NOT NULL,
+   to_bytes BIGINT UNSIGNED NOT NULL,
+   back_bytes BIGINT UNSIGNED NOT NULL
 );
