@@ -79,8 +79,8 @@ class Nfct_Comparable(Nfct_Picklable):
 
 class Nfct_Connection(Nfct_Comparable):
    __metaclass__ = Nfct_Connection_Meta
-   __slots__ = ('src','dst','l3proto','l4src','l4dst','protoinfo','to_packets','to_bytes','from_packets','from_bytes','l4proto')
-   slots_relevant = ('l3proto','src','dst','l4proto', 'l4src','l4dst')
+   __slots__ = ('to_src','to_dst', 'back_src','back_dst','l3proto','to_l4src','to_l4dst','back_l4src','back_l4dst','protoinfo','to_packets','to_bytes','back_packets','back_bytes','l4proto')
+   slots_relevant = ('l3proto','to_src','to_dst','l4proto', 'l4src','l4dst')
    def __new__(cls, **kwargs):
       l4proto = kwargs['l4proto']
       if (l4proto in nfct_connection_classes):
@@ -89,17 +89,21 @@ class Nfct_Connection(Nfct_Comparable):
          target_class = nfct_connection_classes[None]
       return object.__new__(target_class, **kwargs)
    
-   def __init__(self, src, dst, l3proto, l4src, l4dst, protoinfo, packetsto, bytesto, packetsfrom, bytesfrom, l4proto=None):
-      self.src = ip_make(src)
-      self.dst = ip_make(dst)
+   def __init__(self, to_src, to_dst, back_src, back_dst, l3proto, to_l4src, to_l4dst, back_l4src, back_l4dst, protoinfo, to_packets, to_bytes, back_packets, back_bytes, l4proto=None):
+      self.to_src = ip_make(to_src)
+      self.to_dst = ip_make(to_dst)
+      self.back_src = ip_make(back_src)
+      self.back_dst = ip_make(back_dst)
       self.l3proto = l3proto
-      self.l4src = l4src
-      self.l4dst = l4dst
+      self.to_l4src = to_l4src
+      self.to_l4dst = to_l4dst
+      self.back_l4src = back_l4src
+      self.back_l4dst = back_l4dst
       self.protoinfo = protoinfo
-      self.to_packets = packetsto
-      self.to_bytes = bytesto
-      self.from_packets = packetsfrom
-      self.from_bytes = bytesfrom
+      self.to_packets = to_packets
+      self.to_bytes = to_bytes
+      self.back_packets = back_packets
+      self.back_bytes = back_bytes
       if ((self.l4proto is None) and (not (l4proto is None))):
          self.l4proto = l4proto
 
@@ -107,15 +111,20 @@ class Nfct_Connection(Nfct_Comparable):
       return super(self.__class__, self)
 
    def __getinitargs__(self):
-      return (self.src, self.dst, self.l3proto, self.l4src, self.l4dst, self.protoinfo, self.to_packets, self.to_bytes, 
-         self.from_packets, self.from_bytes, self.l4proto)
+      return (self.to_src, self.to_dst, self.back_src, self.back_dst,
+              self.l3proto, self.to_l4src, self.to_l4dst, self.back_l4src,
+              self.back_l4dst, self.protoinfo, self.to_packets, self.to_bytes, 
+              self.back_packets, self.back_bytes, self.l4proto)
 
    def __repr__(self):
       return '%s%r' % (self.__class__.__name__, self.__getinitargs__())
 
    def __str__(self):
-      return '%s:%s[%s/%s] <-> %s:%s[%s/%s]; %s[%s] %s' % (self.src, self.l4src, self.to_packets, self.to_bytes, self.dst, self.l4dst,
-         self.from_packets, self.from_bytes, self.l3proto, self.protoinfo, self.l4proto)
+      return '%s:%s -> %s:%s[%s/%s] ; %s:%s -> %s:%s[%s/%s] ; %s[%s] %s' % (
+         self.to_src, self.to_l4src, self.to_dst, self.to_l4dst,
+         self.to_packets, self.to_bytes, self.back_src, self.back_l4src,
+         self.back_dst, self.back_l4dst, self.back_packets, self.back_bytes,
+         self.l3proto, self.protoinfo, self.l4proto)
 
    def __eq__(self, other):
       if not (isinstance(self.__class__, other), isinstance(other.__class__, self)):
@@ -254,19 +263,19 @@ class Nfct_Data(Nfct_Picklable):
       nfct_tuple = indata[1]
       nfct_tuple2 = indata[2]
    
-      assert nfct_tuple[0] == nfct_tuple2[1] #wrong for NAT - FIXME!
-      assert nfct_tuple[1] == nfct_tuple2[0] #ditto
       assert nfct_tuple[2] == nfct_tuple2[2]
       assert nfct_tuple[3] == nfct_tuple2[3]
-      assert nfct_tuple[4] == nfct_tuple2[5] #ditto
-      assert nfct_tuple[5] == nfct_tuple2[4] #ditto
       nfct_nat = indata[11]
       l4proto = nfct_tuple[3]
       return cls(indata[0], Nfct_Connection_Data(
          Nfct_Connection(
-            src=nfct_tuple[0],dst=nfct_tuple[1],l3proto=nfct_tuple[2],l4proto=l4proto,
-            l4src=L4_Address(l4proto,nfct_tuple[4]), l4dst=L4_Address(l4proto, nfct_tuple[5]), protoinfo=indata[8], 
-            packetsto=indata[9][0], bytesto=indata[9][1], packetsfrom=indata[10][0], bytesfrom=indata[10][1]),
+            to_src=nfct_tuple[0],to_dst=nfct_tuple[1], back_src=nfct_tuple2[0],
+            back_dst=nfct_tuple2[1], l3proto=nfct_tuple[2],l4proto=l4proto,
+            to_l4src=L4_Address(l4proto,nfct_tuple[4]),
+            to_l4dst=L4_Address(l4proto, nfct_tuple[5]),
+            back_l4src=L4_Address(l4proto,nfct_tuple2[4]),
+            back_l4dst=L4_Address(l4proto,nfct_tuple2[5]),protoinfo=indata[8],
+            to_packets=indata[9][0], to_bytes=indata[9][1], back_packets=indata[10][0], back_bytes=indata[10][1]),
          Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
          *indata[3:8]
       ))
