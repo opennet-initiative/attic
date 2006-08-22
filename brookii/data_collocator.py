@@ -113,14 +113,14 @@ class Data_Collocator(asynchronous_transfer_base):
          else:
             self.connections[connwrap] = connwrap
          connwrap.last_update = now
+         connwrap.finish = now
          
          if not (connwrap.start):
-            connwrap.start = True
+            connwrap.start = now
             if (nfct_msg_type == NFCT_MSG_NEW):
                connwrap.start_reliable = True
 
          if (nfct_msg_type == NFCT_MSG_DESTROY):
-            connwrap.finish = now
             connwrap.finish_reliable = True
             self.data_store(connwrap)
             try:
