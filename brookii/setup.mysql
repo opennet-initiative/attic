@@ -1,10 +1,10 @@
 CREATE TABLE connection_log_ipv4 (
    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-   start DATETIME,
-   finish DATETIME,
-   start_reliable BOOL,
-   finish_reliable BOOL,
-   l3proto TINYINT UNSIGNED,
+   start NOT NULL DATETIME,
+   finish NOT NULL DATETIME,
+   start_reliable NOT NULL BOOL,
+   finish_reliable NOT NULL BOOL,
+   l3proto NOT NULL TINYINT UNSIGNED,
    to_l3src INT UNSIGNED,
    to_l3dst INT UNSIGNED,
    back_l3src INT UNSIGNED,
@@ -16,8 +16,8 @@ CREATE TABLE connection_log_ipv4 (
    back_l4dst INT UNSIGNED,
    protoinfo TINYINT UNSIGNED,
    status INT UNSIGNED,
-   to_packets BIGINT UNSIGNED,
-   back_packets BIGINT UNSIGNED,
-   to_bytes BIGINT UNSIGNED,
-   back_bytes BIGINT UNSIGNED
+   to_packets NOT NULL BIGINT UNSIGNED,
+   back_packets NOT NULL BIGINT UNSIGNED,
+   to_bytes NOT NULL BIGINT UNSIGNED,
+   back_bytes NOT NULL BIGINT UNSIGNED
 );
