@@ -80,7 +80,7 @@ class Nfct_Comparable(Nfct_Picklable):
 class Nfct_Connection(Nfct_Comparable):
    __metaclass__ = Nfct_Connection_Meta
    __slots__ = ('to_src','to_dst', 'back_src','back_dst','l3proto','to_l4src','to_l4dst','back_l4src','back_l4dst','protoinfo','to_packets','to_bytes','back_packets','back_bytes','l4proto')
-   slots_relevant = ('l3proto','to_src','to_dst','l4proto', 'l4src','l4dst')
+   slots_relevant = ('l3proto','to_src','to_dst','l4proto', 'to_l4src','to_l4dst')
    def __new__(cls, **kwargs):
       l4proto = kwargs['l4proto']
       if (l4proto in nfct_connection_classes):
