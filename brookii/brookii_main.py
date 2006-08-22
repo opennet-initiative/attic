@@ -67,11 +67,14 @@ def state_save(target):
    cPickle.dump(target, outfile)
    outfile.close()
    _logger.log(20, 'Moving %r to %r.' % (statefilename_new, statefilename))
-   os.rename(statefilename_new, statefilename) 
-
+   os.rename(statefilename_new, statefilename)
 
 
 dc.nfct_init()
+
+pid_filing.release_pid_file()
+daemon_init.daemon_init()
+pid_filing.file_pid()
 
 socket_management.Timer(save_interval, state_save, args=(dc,), persistence=True, align=True)
 try:
