@@ -202,8 +202,8 @@ if (mysql_module):
             e = self.output_cache[0]
             c = e.connection_data.connection
                
-            self.db_cursor.execute("""REPLACE INTO %s (connection_id, start, finish, start_reliable, finish_reliable, l3proto, l3src, l3dst, l4proto, l4src, l4dst, protoinfo, status, to_packets, from_packets, to_bytes, from_bytes) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-            (self.db_table, e.id, e.start, e.finish, e.start_reliable, e.finish_reliable, c.l3proto, int(c.src), int(c.dst), c.l4proto, int(c.l4src), int(c.l4dst), c.protoinfo, e.connection_data.status, c.to_packets, c.from_packets, c.to_bytes, c.from_bytes))
+            self.db_cursor.execute("""REPLACE INTO %s (connection_id, start, finish, start_reliable, finish_reliable, l3proto, to_l3src, to_l3dst, back_l3src, back_l3dst, l4proto, l4src, l4dst, protoinfo, status, to_packets, back_packets, to_bytes, back_bytes) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (self.db_table, e.id, e.start, e.finish, e.start_reliable, e.finish_reliable, c.l3proto, int(c.to_src), int(c.to_dst), int(c.back_src), int(c.back_dst), c.l4proto, int(c.to_l4src), int(c.to_l4dst), int(c.back_l4src), int(c.back_l4dst), c.protoinfo, e.connection_data.status, c.to_packets, c.back_packets, c.to_bytes, c.back_bytes))
             if not (e.id):
                self.db_cursor.execute("""SELECT MAX(id) from %s""", (self.db_table,))
                e.id = self.db_cursor.fetchone()[0]
