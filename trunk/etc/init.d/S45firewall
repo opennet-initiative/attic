@@ -1,8 +1,17 @@
 #!/bin/sh
 
-test -n "$FAILSAFE" && exit
-#test -z "$(awk 'sub(":","") {print $1}' /proc/net/wireless)" && exit
+##############################################
+# Die firewall-Regeln sind auf diese Datei und die Datei /etc/local.fw verteilt.
+# Das hat vor allem 'historische Gründe' ;)
+# 
+# /etc/init.d/S45firewall:
+#	konfiguriert generelle Filter-Regeln zur Kommunikation zwischen
+#	WIFI und LAN. Auch wird die Tabelle ipfilter hier angelegt.
+# /etc/local.fw:
+#	konfiguriert Filteregeln für die Tunnel (TUN, TAP) und für die
+#	Nutzung des WAN-Devices. Ausserdem werden hier ip-rules angelegt
 
+test -n "$FAILSAFE" && exit
 . /etc/functions.sh
 
 DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
@@ -10,70 +19,18 @@ if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
 set_masq() {
-	# Ignore OLSR packets directly from these stations, e.g.
-	# if this connection is too slow, ignore sporadic packets
-	IGNIPS=$(nvram get ff_ign)
-	IFS=\;
-	for IGNIP in $IGNIPS; do
-		iptables -I INPUT -i $WIFIDEV -s $IGNIP -p udp --sport 698 -j DROP
-	done
-	unset IFS
-
-	# Setup alias and dest nat for an ethernet DMZ PC, e.g.
-	# 172.31.255.254 on WLAN -> DMZ PC which has 192.168.1.2
-	# Also add to olsrd.conf: "HNA4 172.31.255.254 255.255.255.255"
-	DEVNUM=0
-	DMZS=$(nvram get ff_dmz)
-	IFS=\;
-	for DMZ in $DMZS; do
-		SRCIP=${DMZ%[:,]*}
-		DSTIP=${DMZ#*[:,]}
-		ifconfig $WIFIDEV:$DEVNUM $SRCIP netmask 255.255.255.255 broadcast $SRCIP
-		iptables -t nat -A PREROUTING -d $SRCIP -j DNAT --to $DSTIP
-		iptables -I FORWARD -s ! $LANNET/$LANPRE -d $DSTIP -j ACCEPT
-		iptables -I FORWARD -s $DSTIP -d ! $LANNET/$LANPRE -j ACCEPT
-		iptables -I OUTPUT -o lo -s $SRCIP -d $SRCIP -j ACCEPT
-		iptables -I INPUT -i lo -s $SRCIP -d $SRCIP -j ACCEPT
-		DEVNUM=$(( $DEVNUM + 1 ))
-	done
-	unset IFS
-
-	# Accept fragments
-	iptables -I INPUT -f -j ACCEPT
-
-	# Mask packets from these WLAN DHCP clients, so they can do inet w/o OLSR
-	ENTS=$(nvram get ff_wldhcp)
-	IFS=\;
-	for ENT in $ENTS; do
-		NET=${ENT%[:,]*}
-		MSK=${ENT#*[:,]}
-		#iptables -t nat -A POSTROUTING -s $NET -j MASQUERADE
-		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $DHCPWIFINET/$DHCPWIFIPRE -j MASQUERADE
-	done
-	unset IFS
-
-	if [ -z "$LANOLSR" ] && [ "$(nvram get ff_nonat)" != "1" ]; then
-		# Mask packets from LAN to WIFI
-		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
-	fi
+	# Mask packets from LAN to WIFI
+	iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
 
 	if [ -n "$WANDEV" ] && [ "$WANDEV" != "ppp0" ] ; then
 		if [ -z "$WANOLSR" ]; then
 			# Mask packets to WAN
 			iptables -t nat -A POSTROUTING -o $WANDEV -j MASQUERADE
-		elif [ -z "$LANOLSR" ] && [ "$(nvram get ff_nonat)" != "1" ]; then
-			# Mask packets from LAN to WAN(OLSR)
-			iptables -t nat -A POSTROUTING -o $WANDEV -s $LANNET/$LANPRE -j MASQUERADE
 		fi
-	fi
-
-	if [ -n "$WIFIMTU" ] && [ 1500 -gt $WIFIMTU ]; then
-		# Repair braindead websites
-		iptables -I FORWARD -o $WIFIDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 	fi
 }
 
-set_wlan_fw() {
+set_ipfilter() {
 	iptables -N ipfilter
 
 	# Receive on /dev/lo? Only to/from 127.x.x.x and
@@ -103,6 +60,11 @@ set_wlan_fw() {
 	test -n "$WIFIADR" && $DEBUG && iptables -A ipfilter -o $WIFIDEV -d $LANNET/$LANPRE -j LOG
 	test -n "$WIFIADR" && iptables -A ipfilter -o $WIFIDEV -d $LANNET/$LANPRE -j DROP
 	test -n "$WIFIADR" && iptables -A ipfilter -o $WIFIDEV -s $WIFINET/$WIFIPRE -j ACCEPT
+}
+
+set_wifi_lan_fw() {
+	# Accept fragments
+	iptables -A INPUT -f -j ACCEPT
 
 	# Allow DHCP. Note: Answers do not show up in INPUT|FORWARD
 	test -n "$WIFIADR" && iptables -A INPUT -i $WIFIDEV -d 255.255.255.255 -p udp --sport 68 --dport 67 -j ACCEPT
@@ -121,6 +83,10 @@ set_wlan_fw() {
 	$DEBUG && iptables -A OUTPUT -j LOG --log-prefix "OUT:"
 	iptables -A OUTPUT -j DROP
 
+	if [ -n "$WIFIMTU" ] && [ 1500 -gt $WIFIMTU ]; then
+		# Repair braindead websites
+		iptables -A FORWARD -o $WIFIDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	fi
 	iptables -A FORWARD -j ipfilter
 	iptables -A FORWARD -i $WIFIDEV -o $WIFIDEV -j ACCEPT
 	test -n "$WIFIADR" && iptables -A FORWARD -i $WIFIDEV -d 255.255.255.255 -p udp --sport 68 --dport 67 -j ACCEPT
@@ -129,45 +95,6 @@ set_wlan_fw() {
 	test -n "$WIFIADR" && iptables -A FORWARD -i $LANDEV -o $WIFIDEV -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 	$DEBUG && iptables -A FORWARD -j LOG --log-prefix "FW:"
 	iptables -A FORWARD -j DROP
-}
-
-set_wan_fw() {
-	if [ -n "$WIFIADR" ] && [ "$(ipcalc $WANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" = "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
-		# WAN with OLSR, open firewall
-		iptables -I INPUT -i $WANDEV -j ACCEPT
-		iptables -I OUTPUT -o $WANDEV -j ACCEPT
-		iptables -I FORWARD -o $WANDEV -j ACCEPT
-		iptables -I FORWARD -i $WANDEV -j ACCEPT
-		return
-	fi
-	iptables -A INPUT -i $WANDEV -m state --state INVALID -j DROP
-	iptables -A INPUT -i $WANDEV -m state --state ESTABLISHED,RELATED -j ACCEPT
-	$DEBUG && iptables -A INPUT -i $WANDEV -j LOG --log-prefix "WAN:"
-	iptables -A INPUT -i $WANDEV -j DROP
-
-	iptables -A OUTPUT -o $WANDEV -j ACCEPT
-
-	iptables -A FORWARD -i $LANDEV -o $WANDEV -m state --state INVALID -j DROP
-	iptables -A FORWARD -i $LANDEV -o $WANDEV -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-	$DEBUG && iptables -A FORWARD -i $LANDEV -o $WANDEV -j LOG --log-prefix "WAN:"
-	iptables -A FORWARD -i $LANDEV -o $WANDEV -j DROP
-
-	iptables -A FORWARD -i $WANDEV -o $LANDEV -m state --state INVALID -j DROP
-	iptables -A FORWARD -i $WANDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-	$DEBUG && iptables -A FORWARD -i $WANDEV -o $LANDEV -d $LANNET/$LANPRE -j LOG --log-prefix "WAN:"
-	iptables -A FORWARD -i $WANDEV -o $LANDEV -d $LANNET/$LANPRE -j DROP
-
-	if [ -n "$WIFIADR" ]; then
-		iptables -A FORWARD -i $WIFIDEV -o $WANDEV -m state --state INVALID -j DROP
-		iptables -A FORWARD -i $WIFIDEV -o $WANDEV -s $WIFINET/$WIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-		$DEBUG && iptables -A FORWARD -i $WIFIDEV -o $WANDEV -j LOG --log-prefix "WAN:"
-		iptables -A FORWARD -i $WIFIDEV -o $WANDEV -j DROP
-
-		iptables -A FORWARD -i $WANDEV -o $WIFIDEV -m state --state INVALID -j DROP
-		iptables -A FORWARD -i $WANDEV -o $WIFIDEV -s ! $WIFINET/$WIFIPRE -d $WIFINET/$WIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
-		$DEBUG && iptables -A FORWARD -i $WANDEV -o $WIFIDEV -d $WIFINET/$WIFIPRE -j LOG --log-prefix "WAN:"
-		iptables -A FORWARD -i $WANDEV -o $WIFIDEV -d $WIFINET/$WIFIPRE -j DROP
-	fi
 }
 
 clear_fw() {
@@ -199,8 +126,6 @@ case $1 in
 		echo "Starting firewall..."
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
-			test -n "$WANDEV" && [ "$WANDEV" != "ppp0" ] && set_wan_fw
-			
 			# I had several cases where some netparams weren't set from the beginning.
 			# So I'll check if they are set and if not wait a little while
 			count=
@@ -208,17 +133,18 @@ case $1 in
 				sleep=
 				for V in LODEV LONET LOPRE LANDEV LANNET LANPRE WIFIDEV WIFINET WIFIPRE; do
 					if [ -z "$(eval echo \$$V)" ]; then
-						logger "S45firewall $V not set, sleeping for ten seconds"
+						logger "S45firewall $V not set, sleeping for two seconds"
 						sleep=1; break;
 					fi
 				done;
 				if [ -z "$sleep" ]; then break; fi
-				sleep 10;
+				sleep 2;
 				eval $(/usr/bin/netparam);
 			done;
 			
 			if [ -z "$WIFIADR" ] || [ "$(ipcalc $LANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" != "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
-				set_wlan_fw
+				set_ipfilter
+				set_wifi_lan_fw
 			fi
 		fi
 		set_masq
@@ -241,9 +167,8 @@ case $1 in
 		iptables -X ipfilter
 		eval $(/usr/bin/netparam)
 		if [ "$(nvram get fw_disable)" != "1" ]; then
-			test -n "$WANDEV" && [ "$WANDEV" != "ppp0" ] && set_wan_fw
 			if [ -z "$WIFIADR" ] || [ "$(ipcalc $LANADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" != "$(ipcalc $WIFIADR $WIFIMSK|grep "NETWORK"|cut -d'=' -f2)" ]; then
-				set_wlan_fw
+				set_ipfilter; set_wifi_lan_fw
 			fi
 		fi
 	;;
