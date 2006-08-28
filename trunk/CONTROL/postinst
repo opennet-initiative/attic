@@ -205,7 +205,9 @@ if [ -e /etc/openvpn/opennet_dsl ]; then
 	rm -rf /etc/openvpn/opennet_dsl
 fi
 
-nvram set on_share_internet=$(nvram get on_sharedsl)
+if [ -z "$(nvram get on_share_internet)" ]; then
+	nvram set on_share_internet=$(nvram get on_sharedsl)
+fi
 nvram unset on_sharedsl
 nvram unset on_sharedsl_blocked
 
