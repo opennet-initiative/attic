@@ -219,10 +219,10 @@ if ! [ -e upgrade.sh_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -
 	ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
 fi
 
+nvram commit
+
 echo " ################################################### "
 echo " #         please reboot after installation        # "
 echo " #      bitte AP nach Installation neu starten     # "
 echo " #  (warte bis Meldung 'Successfully terminated')  # "
 echo " ################################################### "
-
-nvram commit
