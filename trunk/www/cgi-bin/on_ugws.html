@@ -132,18 +132,19 @@ if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw
 			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td><td /></tr>"
 		else
 			echo "<tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
-			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td></tr>"
 		fi	
 	fi
 fi
 	if [ -n  "$(ip route show table 5)" ];then
 cat<<EOF
-
+	<tr>
 	<td>Internet-Freigabe möglich </td>
 	<td> <img src="../images/yes.gif" alt="yes" align="absmiddle"></td>
 EOF
 	else
 cat<<EOF
+	<tr>
 	<td>Internet-Freigabe nicht möglich </td>
 	<td> <img src="../images/no.gif" alt="no" align="absmiddle"></td>
 EOF
