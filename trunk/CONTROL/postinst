@@ -135,7 +135,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-5pre6"
+nvram set on_fw_pkgversion="0.11ipkg-6"
 
 echo "  initializing opennet-values - done"
 
@@ -146,7 +146,7 @@ echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.11ipkg-5pre6 --- " >>/etc/banner
+echo " -- modified with opennet-package 0.11ipkg-6 ------- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 awk '!/Opennet-Interface/ {print}' /www/cgi-bin/webif/.categories >/www/cgi-bin/webif/.categories_bak
