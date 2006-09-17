@@ -90,15 +90,15 @@ inline static PyObject *ct_nfcfct_to_py_address(union nfct_address *t, int proto
 }
 
 inline static PyObject *ct_nfcfct_to_py_l4(union nfct_l4 *a, unsigned char proto) {
-   if (proto == IPPROTO_TCP) return PyInt_FromLong((long) a->tcp.port);
-   if (proto == IPPROTO_UDP) return PyInt_FromLong((long) a->udp.port);
+   if (proto == IPPROTO_TCP) return Py_BuildValue("(N)", PyInt_FromLong((long) a->tcp.port));
+   if (proto == IPPROTO_UDP) return Py_BuildValue("(N)", PyInt_FromLong((long) a->udp.port));
    if (proto == IPPROTO_ICMP) return Py_BuildValue("NNN",
       PyInt_FromLong((long) a->icmp.type),
       PyInt_FromLong((long) a->icmp.code),
       PyInt_FromLong((long) a->icmp.id)
    );
-   if (proto == IPPROTO_SCTP) return PyInt_FromLong((long) a->sctp.port);
-   return PyInt_FromLong((long) a->all);
+   if (proto == IPPROTO_SCTP) return Py_BuildValue("(N)", PyInt_FromLong((long) a->sctp.port));
+   return Py_BuildValue("(N)", PyInt_FromLong((long) a->all));
 }
 
 inline static PyObject *ct_nfcfct_to_py_tuple(struct nfct_tuple *t) {

@@ -271,12 +271,12 @@ class Nfct_Data(Nfct_Picklable):
          Nfct_Connection(
             to_src=nfct_tuple[0],to_dst=nfct_tuple[1], back_src=nfct_tuple2[0],
             back_dst=nfct_tuple2[1], l3proto=nfct_tuple[2],l4proto=l4proto,
-            to_l4src=L4_Address(l4proto,nfct_tuple[4]),
-            to_l4dst=L4_Address(l4proto, nfct_tuple[5]),
-            back_l4src=L4_Address(l4proto,nfct_tuple2[4]),
-            back_l4dst=L4_Address(l4proto,nfct_tuple2[5]),protoinfo=indata[8],
+            to_l4src=L4_Address(l4proto, *nfct_tuple[4]),
+            to_l4dst=L4_Address(l4proto, *nfct_tuple[5]),
+            back_l4src=L4_Address(l4proto, *nfct_tuple2[4]),
+            back_l4dst=L4_Address(l4proto, *nfct_tuple2[5]),protoinfo=indata[8],
             to_packets=indata[9][0], to_bytes=indata[9][1], back_packets=indata[10][0], back_bytes=indata[10][1]),
-         Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, nfct_nat[2]), L4_Address(l4proto, nfct_nat[3])),
+         Nfct_Nat(nfct_nat[0], nfct_nat[1], L4_Address(l4proto, *nfct_nat[2]), L4_Address(l4proto, *nfct_nat[3])),
          *indata[3:8]
       ))
    from_raw = classmethod(from_raw)
