@@ -26,6 +26,8 @@ set_masq() {
 		if [ -z "$WANOLSR" ]; then
 			# Mask packets to WAN
 			iptables -t nat -A POSTROUTING -o $WANDEV -j MASQUERADE
+		elif [ -z "$LANOLSR" ]
+			iptables -t nat -A POSTROUTING -o $WANDEV -s $LANNET/$LANPRE -j MASQUERADE
 		fi
 	fi
 }
