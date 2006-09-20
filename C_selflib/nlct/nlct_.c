@@ -136,7 +136,7 @@ inline static PyObject *ct_nfctct_to_py(struct nfct_conntrack *ct, int type, uns
       ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_ORIGINAL]),
       ct_nfcfct_to_py_tuple(&ct->tuple[NFCT_DIR_REPLY]),
       NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      ct_nfctct_to_py_nat(&ct->nat, ct->tuple[NFCT_DIR_ORIGINAL].l3protonum, ct->tuple[NFCT_DIR_REPLY].l3protonum)
+      ct_nfctct_to_py_nat(&ct->nat, ct->tuple[NFCT_DIR_ORIGINAL].protonum, ct->tuple[NFCT_DIR_REPLY].protonum)
    );
    
    if (flags & NFCT_TIMEOUT) PyTuple_SetItem(rv, 3, PyLong_FromUnsignedLong(ct->timeout));
