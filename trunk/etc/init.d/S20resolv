@@ -2,6 +2,7 @@
 
 # remove old dns-entries,
 # they will be created again by ifup or by cron.minutely_ongateway
+rm -f /etc/resolv.conf
 ln -s /tmp/resolv.conf /etc/resolv.conf
 
 #if [ -n "$(nvram get on_store_autodns)" ]; then
