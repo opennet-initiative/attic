@@ -197,11 +197,11 @@ class L4_Address_ICMP(L4_Address):
    l4proto = IPPROTO_ICMP
    __slots__ = slots_relevant = ('type', 'code', 'id')
    def __init__(self, l4proto, ctype, code, id):
-      if not (0 <= self.type <= 255):
+      if not (0 <= ctype <= 255):
          raise ValueError('Type %r is invalid.' % (type,))
-      if not (0 <= self.code <= 255):
+      if not (0 <= code <= 255):
          raise ValueError('Code %r is invalid.' % (code,))
-      if not (0 <= self.id <= 65535):
+      if not (0 <= id <= 65535):
          raise ValueError('Id %r is invalid.' % (id,))
       self.type = ctype
       self.code = code
