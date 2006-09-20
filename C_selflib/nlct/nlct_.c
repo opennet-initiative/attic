@@ -107,8 +107,8 @@ inline static PyObject *ct_nfcfct_to_py_tuple(struct nfct_tuple *t) {
       ct_nfcfct_to_py_address(&t->dst, t->l3protonum),
       PyInt_FromLong((long) t->l3protonum),
       PyInt_FromLong((long) t->protonum),
-      ct_nfcfct_to_py_l4(&t->l4src, t->l3protonum),
-      ct_nfcfct_to_py_l4(&t->l4dst, t->l3protonum)
+      ct_nfcfct_to_py_l4(&t->l4src, t->protonum),
+      ct_nfcfct_to_py_l4(&t->l4dst, t->protonum)
    );
 }
 
