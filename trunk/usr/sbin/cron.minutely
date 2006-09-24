@@ -18,7 +18,7 @@ BEGIN {
 	if ("" == wdev) {
 		# Wifi dead? Try restart
 		system("logger -t cron.minutely no wifidev in /proc/net/wireless, restarting wifi")
-		system("ifdown wifi; wifi down; ifup wifi; wifi up")
+		system("ifdown wifi; wifi down; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)")
 		exit; # continue tests next minute
 		# "nvram get wl0_ifname"|getline wdev
 	}
@@ -60,6 +60,6 @@ BEGIN {
 	else if ("" != ostat && ostat == wstat) {
 		# Wifi dead? Try restart
 		system("logger -t cron.minutely restarting wifi="wdev)
-		system("ifdown wifi; wifi down; ifup wifi; wifi up")
+		system("ifdown wifi; wifi down; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)")
 	}
 }
