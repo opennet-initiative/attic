@@ -14,8 +14,16 @@ BEGIN {
 		if (/^$/) break
 		if (sub(":", "")) wdev = $1
 	}
-	if ("" == wdev) "nvram get wl0_ifname"|getline wdev
-        while(getline<"/proc/net/dev") {
+	
+	if ("" == wdev) {
+		# Wifi dead? Try restart
+		system("logger -t cron.minutely no wifidev in /proc/net/wireless, restarting wifi")
+		system("ifdown wifi; wifi down; ifup wifi; wifi up")
+		exit; # continue tests next minute
+		# "nvram get wl0_ifname"|getline wdev
+	}
+        	
+	while(getline<"/proc/net/dev") {
 		if (/^$/) break
 		if (sub(wdev":", "")) {
 			wstat=$0
