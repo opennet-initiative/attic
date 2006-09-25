@@ -17,7 +17,7 @@ BEGIN {
 	
 	if ("" == wdev) {
 		# Wifi dead?
-		if ( system("test ! -f /tmp/wifi_dead") ) {
+		if ( system("test -f /tmp/wifi_dead") ) {
 			# wait for another minute to see if it is really down
 			# remember the state
 			system("logger -t cron.minutely no wifidev in /proc/net/wireless, restarting wifi in one minute")
