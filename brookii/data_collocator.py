@@ -93,7 +93,7 @@ class Data_Collocator(asynchronous_transfer_base):
       self.input_process(data)
       nfct_dict = dict.fromkeys([Nfct_Connection_Wrapper(nfct_msg.connection_data) for nfct_msg in data])
       connections_lost = 0
-      for key in self.connections:
+      for key in self.connections.keys():
          if not (key in nfct_dict):
             connwrap = self.connections[key]
             if not (connwrap.finish_reliable):
