@@ -127,7 +127,7 @@ class Nfct_Connection(Nfct_Comparable):
          self.l3proto, self.protoinfo, self.l4proto)
 
    def __eq__(self, other):
-      if not (isinstance(self.__class__, other), isinstance(other.__class__, self)):
+      if not (isinstance(self.__class__, other) or isinstance(other.__class__, self)):
          return False
       
       for attrstr in self.slots_relevant:
