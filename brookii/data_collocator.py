@@ -101,7 +101,7 @@ class Data_Collocator(asynchronous_transfer_base):
             self.data_store(connwrap)
             del(self.connections[key])
             connections_lost += 1
-       self.logger.log(20, 'Connection verify cycle done. Expired %d lost connections.' % (connections_lost,))
+      self.logger.log(20, 'Connection verify cycle done. Expired %d lost connections.' % (connections_lost,))
 
 
    def fd_forget(self, fd):
