@@ -20,7 +20,7 @@ import time
 import logging
 from socket import AF_INET
 
-from socket_management import asynchronous_transfer_base, fd_wrap
+from socket_management import asynchronous_transfer_base, fd_wrap, Timer
 from nlct import NfctHandle, NFCT_MSG_UNKNOWN, NFCT_MSG_NEW, NFCT_MSG_UPDATE, NFCT_MSG_DESTROY
 
 _logger = logging.getLogger('brookii_main')
@@ -58,32 +58,56 @@ class Nfct_Connection_Wrapper:
       return '%s%s' % (self.__class__.__name__, (self.connection_data,))
 
 class Data_Collocator(asynchronous_transfer_base):
-   logger = logging.getLogger('DataAllocator')
-   def __init__(self, family=AF_INET):
+   logger = logging.getLogger('DataCollocator')
+   def __init__(self, family=AF_INET, connection_verify_interval=3600):
       asynchronous_transfer_base.__init__(self)
       self.nfct_handle = None
       self.fd = None
       self.family = family
       self.connections = {}
+      self.interval_connection_verify = connection_verify_interval
+      self.timer_connection_verify = None
       
    def __getinitargs__(self):
       return ()
+   
+   def timer_connection_verify_unregister(self):
+      if (self.timer_connection_verify):
+         self.timer_connection_verify.unregister()
+         self.timer_connection_verify = None
    
    def nfct_init(self):
       self.nfct_handle = nfct_handle = NfctHandle()
       self.fd = fd_wrap(nfct_handle.fileno(), self, nfct_handle)
       self.fd.fd_register_read()
-      now = datetime.datetime.now()
-      self.nfct_handle.dump_conntrack_table(self.family)
       self.fd_read(self.fd)
-      for (key, value) in self.connections.items():
-         if ((value.finish is None) or (value.finish < now)):
-            self.data_store(value)
+      self.connections_verify()
+      self.timer_connection_verify_unregister()
+      self.timer_connection_verify = Timer(self.interval_connection_verify, self.connections_verify, parent=self, persistence=True)
+
+   def connections_verify(self):
+      connections_active = len(self.connections)
+      self.logger.log(20, 'Starting connection verify cycle (cached connections: %d).' % (connections_active,))
+      now = datetime.datetime.now()
+      data = self.nfct_handle.dump_conntrack_table(self.family)
+      self.input_process(data)
+      nfct_dict = dict.fromkeys([Nfct_Connection_Wrapper(nfct_msg.connection_data) for nfct_msg in data])
+      connections_lost = 0
+      for key in self.connections:
+         if not (key in nfct_dict):
+            connwrap = self.connections[key]
+            if not (connwrap.finish_reliable):
+               connwrap.finish = now
+            self.data_store(connwrap)
             del(self.connections[key])
+            connections_lost += 1
+       self.logger.log(20, 'Connection verify cycle done. Expired %d lost connections.' % (connections_lost,))
+
 
    def fd_forget(self, fd):
       if (fd == self.fd):
          self.fd = self.nfct_handle = None
+         self.timer_connection_verify_unregister()
 
    def fd_read(self, fd):
       if not (self.fd == fd):
