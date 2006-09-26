@@ -8,11 +8,8 @@ set_wireless()
 {
 	# I had cases where $WIFIADR wasnt set from the beginning. So wait a little while
 	count=
-	while [ -z "$WIFIADR" ] && [ $((count++)) -lt 10 ]; do
-		logger "S53olsrd WIFIADR not set, sleeping for ten seconds"
-		sleep 10;
-		eval $(/usr/bin/netparam);
-	done;
+	if [ -z "$WIFIDEV" ]; then WIFIDEV=$(nvram get wl0_ifname); fi
+	if [ -z "$WIFIADR" ]; then WIFIADR=$(nvram get wifi_ipaddr); fi
 	
 	OLSRDEV=$WIFIDEV
 	OLSRDEVLIST=$WIFIDEV
