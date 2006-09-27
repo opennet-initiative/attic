@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "Content-type: text/opennet_csr"  
+echo                      
+cat /etc/openvpn/opennet_user/on_aps.csr

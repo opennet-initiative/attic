@@ -1,0 +1,10 @@
+#!/bin/sh
+
+while true; do
+	gw_addrs="$(/usr/sbin/working_gateways.sh) pool.ntp.org";
+	for gw_addr in $gw_addrs; do
+		echo "trying $gw_addr"
+		ping -c 1 $gw_addr >/dev/null 2>/dev/null && /usr/sbin/ntpclient -s -c 0 -i 5 -g 1000000 -h $gw_addr && return;
+	done;
+	sleep 3;
+done;
