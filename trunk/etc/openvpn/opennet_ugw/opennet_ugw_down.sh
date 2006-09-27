@@ -3,7 +3,7 @@ eval $(/usr/bin/netparam)
 
 # simply remove all SNAT-rules for the opennet_usergateway tunnel
 get_rulenum() {
-	iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "tap0" {print $1; exit}'
+	iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 ~ "^tap" {print $1; exit}'
 }
 while [ -n "$(get_rulenum)" ]; do
 	iptables -D POSTROUTING $(get_rulenum) -t nat
