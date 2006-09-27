@@ -31,20 +31,41 @@ usergateway_route()
 # $2 enthält die remote-adresse des WAN-Interfaces
 wan_route()
 {
+	IFNAME=$(nvram get wan_ifname)
+	WANDEV=$(ip addr show primary $IFNAME | awk '$1 == "inet" { print $2 }')
 	if [ "$1" = "add" ]; then
-		test $DEBUG && logger -t check_usergateway "aktiviere policy-routing für wan per table 4"
-		ip route flush table 4 2>/dev/null
+		
+		# get network parameter (formerly done in netparam)
+		on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
+		if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 		lan_ipaddr=$(nvram get lan_ipaddr)
 		if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 		wifi_ipaddr=$(nvram get wifi_ipaddr)
 		if [ -n "$wifi_ipaddr" ]; then WIFINET_PRE=$(ipcalc $wifi_ipaddr $(nvram get wifi_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 		
+		test $DEBUG && logger -t check_usergateway "aktiviere policy-routing für wan per table 4"
+		ip route flush table 4 2>/dev/null
 		if [ -n "$lan_ipaddr" ]; then ip route add throw $LANNET_PRE table 4; fi
 		if [ -n "$wifi_ipaddr" ]; then ip route add throw $WIFINET_PRE table 4; fi
 		ip route add default via $2 table 4
+		
+		test $DEBUG && logger -t check_usergateway "füge SNAT für WAN hinzu"
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $IPLOCAL
+
 	elif [ -n "$(ip route show table 4)" ]; then
 		test $DEBUG && logger -t check_usergateway "entferne policy-routing für wan per table 4"
 		ip route flush table 4 2>/dev/null
+		
+		test $DEBUG && logger -t check_usergateway "entferne SNAT für WAN"
+		# simply remove all SNAT-rules for the ppp device tunnel
+		get_rulenum() { 
+			iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "'$IFNAME'" {print $1; exit}'
+		}
+		while [ -n "$(get_rulenum)" ]; do
+			iptables -D POSTROUTING $(get_rulenum) -t nat
+		done
+
 	fi
 }
 
@@ -87,7 +108,7 @@ if [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then
 	usergateway_route del
 	return
 elif [ -z "$table_5" ]; then
-	logger -t check_usergateway "table 5 ist nicht vorhanden, prüfe ob tunnel aktiv ist und stoppe den"
+	logger -t check_usergateway "table 5 ist nicht vorhanden, stoppe tunnel (wenn aktiv)"
 	if [ -e /var/run/openvpn.opennet_ugw.pid ]; then
 		test $DEBUG && logger -t check_usergateway "stopping opennet_usergateway tunnel (route table 5 empty)"
 		/etc/init.d/S80openvpn stop opennet_ugw >/dev/null
@@ -97,8 +118,11 @@ fi
 table_4=$(ip route show table 4)
 # default route über WAN ist vorhanden, nun prüfe, ob WAN-Gegenstelle erreicht werden kann.
 if $(ping -c 1 $ip_remote >/dev/null 2>/dev/null); then
-	test $DEBUG && logger -t check_usergateway "ok, WAN-Gegenstelle $ip_remote kann extern erreicht werden"
-	if [ -z "$table_4" ]; then wan_route add $ip_remote; fi
+	test $DEBUG && [ "$1" != "quick" ] && logger -t check_usergateway "ok, WAN-Gegenstelle $ip_remote kann extern erreicht werden"
+	if [ -z "$table_4" ]; then
+		test $DEBUG && [ "$1" = "quick" ] && logger -t check_usergateway "ok, WAN-Gegenstelle $ip_remote kann extern erreicht werden"
+		wan_route add $ip_remote;
+	fi
 else
 	test $DEBUG && logger -t check_usergateway "no, WAN-Gegenstelle $ip_remote kann nicht extern erreicht werden"
 	/etc/init.d/S80openvpn stop opennet_ugw

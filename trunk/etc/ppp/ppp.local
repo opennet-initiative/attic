@@ -18,9 +18,9 @@ case "$ACTION" in
 		
 		logger "running ppp.local script ifup ppp"
 		
-		# SNAT
-		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
-		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $IPLOCAL
+		#~ # SNAT (now done in check_usergateway)
+		#~ iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
+		#~ iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $IPLOCAL
 
 		# activate policy routing (now done in check nagare to be independent of ppp)
 		#~ ip route flush table 4
@@ -52,13 +52,13 @@ case "$ACTION" in
         ifdown)
                 logger "running ppp.local script ifdown ppp"
 		
-		# simply remove all SNAT-rules for the ppp device tunnel
-		get_rulenum() {
-			iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "'$IFNAME'" {print $1; exit}'
-		}
-		while [ -n "$(get_rulenum)" ]; do
-			iptables -D POSTROUTING $(get_rulenum) -t nat
-		done
+		#~ # simply remove all SNAT-rules for the ppp device tunnel  (now done in check_usergateway)
+		#~ get_rulenum() { 
+			#~ iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "'$IFNAME'" {print $1; exit}'
+		#~ }
+		#~ while [ -n "$(get_rulenum)" ]; do
+			#~ iptables -D POSTROUTING $(get_rulenum) -t nat
+		#~ done
 
 		# reset dns
 		if [ -e /tmp/resolv.conf_ppp ]; then
