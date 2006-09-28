@@ -5,5 +5,5 @@ Section: net
 Depends: wl, openvpn, openssl-util, libgcc, olsrd, ntpclient, ip, olsrd-mod-httpinfo
 Priority: normal
 Description: The complete Opennet-Firmware in one package
-Version: 0.11ipkg-7
+Version: 0.11ipkg-8
 Architecture: mipsel
