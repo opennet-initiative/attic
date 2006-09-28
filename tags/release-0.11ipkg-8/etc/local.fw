@@ -1,0 +1,138 @@
+# Place your firewall addons here
+
+##############################################
+# Die firewall-Regeln sind auf diese Datei und die Datei /etc/init.d/S45firewall verteilt.
+# Das hat vor allem 'historische Gründe' ;)
+# 
+# /etc/init.d/S45firewall:
+#	konfiguriert generelle Filter-Regeln zur Kommunikation zwischen
+#	WIFI und LAN. Auch wird die Tabelle ipfilter hier angelegt.
+# /etc/local.fw:
+#	konfiguriert Filteregeln für die Tunnel (TUN, TAP) und für die
+#	Nutzung des WAN-Devices. Ausserdem werden hier ip-rules angelegt
+
+DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
+if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
+if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
+
+case $1 in
+        start)
+#variable defintions;
+        TUNDEV="tun0"
+	TAPDEV="tap+"
+	
+#### CHAIN INPUT
+	##### opennet_user tunnel ######################################################
+        iptables -I INPUT 1 -i $TUNDEV -m state --state INVALID -j DROP
+        iptables -I INPUT 2 -i $TUNDEV -p tcp --dport 22 -j ACCEPT
+        iptables -I INPUT 3 -i $TUNDEV -p tcp --dport 80 -j ACCEPT
+        iptables -I INPUT 4 -i $TUNDEV -p icmp -j ACCEPT
+        iptables -I INPUT 5 -i $TUNDEV -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -I INPUT 6 -i $TUNDEV -j DROP
+	$DEBUG && iptables -I INPUT 6 -i $TUNDEV -j LOG --log-prefix "TUN-IN:"
+        
+	##### opennet_ugw tunnel ######################################################
+        iptables -I INPUT -i $TAPDEV -j ACCEPT
+	#iptables -I INPUT 1 -i $TAPDEV -m state --state INVALID -j DROP
+        #iptables -I INPUT 2 -i $TAPDEV -p icmp -j ACCEPT
+	#iptables -I INPUT 3 -i $TAPDEV -p udp --dport 698 -j ACCEPT
+        #iptables -I INPUT 4 -i $TAPDEV -m state --state ESTABLISHED,RELATED -j ACCEPT
+        #iptables -I INPUT 5 -i $TAPDEV -j DROP
+	#$DEBUG && iptables -I INPUT 5 -i $TAPDEV -j LOG --log-prefix "TAP-IN:"
+
+    if [ -z "$WANOLSR" ]; then
+	##### wan ######################################################
+	iptables -I INPUT 1 -i $WANDEV -m state --state INVALID -j DROP
+	iptables -I INPUT 2 -i $WANDEV -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+	iptables -I INPUT 3 -i $WANDEV -p udp --sport 1602 -j ACCEPT
+	iptables -I INPUT 4 -i $WANDEV -j DROP
+	$DEBUG && iptables -I INPUT 4 -i $WANDEV -j LOG --log-prefix "WAN-IN:"
+    else
+	iptables -I INPUT -i $WANDEV -j ACCEPT
+    fi
+
+
+#### CHAIN FORWARD
+	##### opennet_user tunnel ######################################################
+	######### eingehende pakete
+		iptables -I FORWARD 1 -i $TUNDEV -o $LANDEV -m state --state INVALID -j DROP
+		iptables -I FORWARD 2 -i $TUNDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+		iptables -I FORWARD 3 -i $TUNDEV -o $LANDEV -j DROP
+		$DEBUG && iptables -I FORWARD 3 -i $TUNDEV -o $LANDEV -j LOG --log-prefix "TUN-FWIN:"
+	##### ausgehende pakete
+		iptables -I FORWARD 1 -i $LANDEV -o $TUNDEV -m state --state INVALID -j DROP
+		iptables -I FORWARD 2 -i $LANDEV -o $TUNDEV -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+		iptables -I FORWARD 3 -i $LANDEV -o $TUNDEV -j DROP
+		$DEBUG && iptables -I FORWARD 3 -i $LANDEV -o $TUNDEV -j LOG --log-prefix "TUN-FWOUT:"
+	##### opennet_ugw tunnel ######################################################
+	######### eingehende pakete
+		iptables -I FORWARD -i $TAPDEV -j ACCEPT
+		#iptables -I FORWARD 1 -i $TAPDEV -m state --state INVALID -j DROP
+		#iptables -I FORWARD 2 -i $TAPDEV -p udp --dport 698 -j ACCEPT
+		#iptables -I FORWARD 3 -i $TAPDEV -m state --state ESTABLISHED,RELATED -j ACCEPT
+		#iptables -I FORWARD 4 -i $TAPDEV -j DROP
+		#$DEBUG && iptables -I FORWARD 4 -i $TAPDEV -j LOG --log-prefix "TAP-FWIN:"
+	######### ausgehende pakete
+		iptables -I FORWARD -o $TAPDEV -j ACCEPT
+		#iptables -I FORWARD 1 -o $TAPDEV -m state --state INVALID -j DROP
+		#iptables -I FORWARD 2 -o $TAPDEV -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+		#iptables -I FORWARD 3 -o $TAPDEV -j DROP
+		#$DEBUG && iptables -I FORWARD 3 -o $TAPDEV -j LOG --log-prefix "TAP-FWOUT:"
+    if [ -z "$WANOLSR" ]; then
+	##### wan ######################################################
+	######### eingehende pakete	
+		iptables -I FORWARD 1 -i $WANDEV -o $LANDEV -m state --state INVALID -j DROP
+		iptables -I FORWARD 2 -i $WANDEV -o $LANDEV -s ! $LANNET/$LANPRE -d $LANNET/$LANPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+		iptables -I FORWARD 3 -i $WANDEV -o $LANDEV -d $LANNET/$LANPRE -j DROP
+		$DEBUG && iptables -I FORWARD 3 -i $WANDEV -o $LANDEV -d $LANNET/$LANPRE -j LOG --log-prefix "WAN-LAN-FWIN:"
+		if [ -n "$WIFIADR" ]; then
+			iptables -I FORWARD 1 -i $WANDEV -o $WIFIDEV -m state --state INVALID -j DROP
+			iptables -I FORWARD 2 -i $WANDEV -o $WIFIDEV -s ! $WIFINET/$WIFIPRE -d $WIFINET/$WIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+			iptables -I FORWARD 3 -i $WANDEV -o $WIFIDEV -d $WIFINET/$WIFIPRE -j DROP
+			$DEBUG && iptables -I FORWARD 3 -i $WANDEV -o $WIFIDEV -d $WIFINET/$WIFIPRE -j LOG --log-prefix "WAN-WIFI-FWIN:"
+		fi
+	######### ausgehende pakete
+		iptables -I FORWARD 1 -i $LANDEV -o $WANDEV -m state --state INVALID -j DROP
+		iptables -I FORWARD 2 -i $LANDEV -o $WANDEV -s $LANNET/$LANPRE -d ! $LANNET/$LANPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+		iptables -I FORWARD 3 -i $LANDEV -o $WANDEV -j DROP
+		$DEBUG && iptables -I FORWARD 3 -i $LANDEV -o $WANDEV -j LOG --log-prefix "WAN-LAN-FWOUT:"
+		if [ -n "$WIFIADR" ]; then
+			iptables -I FORWARD 1 -i $WIFIDEV -o $WANDEV -m state --state INVALID -j DROP
+			iptables -I FORWARD 2 -i $WIFIDEV -o $WANDEV -s $WIFINET/$WIFIPRE -d ! $WIFINET/$WIFIPRE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+			iptables -I FORWARD 3 -i $WIFIDEV -o $WANDEV -j DROP
+			$DEBUG && iptables -I FORWARD 3 -i $WIFIDEV -o $WANDEV -j LOG --log-prefix "WAN-WIFI-FWOUT:"
+		fi
+	# PPPoE MTU/MRU issue
+		iptables -I FORWARD -o $WANDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    else
+    		iptables -I FORWARD -o $WANDEV -j ACCEPT
+		iptables -I FORWARD -i $WANDEV -j ACCEPT
+    fi
+
+#### CHAIN OUTPUT
+	##### opennet_user tunnel ######################################################
+        iptables -I OUTPUT 1 -o $TUNDEV -j ACCEPT
+	##### opennet_ugw tunnel ######################################################
+	iptables -I OUTPUT -o $TAPDEV -j ACCEPT
+	##### wan ######################################################
+	iptables -I OUTPUT -o $WANDEV -j ACCEPT
+
+##### prepare tables for openvpn and wan/internet policy-routing ###########################
+        ip rule add unicast from $LANNET/$LANPRE table 3
+	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+	ip rule add unicast from $LANNET/$LANPRE table 4
+	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
+	# add special rule to ensure ugw-access to nagare
+	ip rule add unicast table 5
+#load tun module
+#       insmod tun   # not needed, loaded by /etc/modules.d
+        ;;
+        stop)
+	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
+        ip rule del unicast from $LANNET/$LANPRE table 3
+	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
+	ip rule del unicast from $LANNET/$LANPRE table 4
+	ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
+	ip rule del unicast table 5
+;;
+esac

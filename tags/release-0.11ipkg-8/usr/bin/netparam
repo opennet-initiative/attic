@@ -1,0 +1,162 @@
+#!/usr/bin/awk -f
+
+function prefix(mask,  i, p, m)
+{
+	split(mask, m, ".")
+	i = 1
+	p = 0
+	while((4 >= i) && (255 == m[i])) {
+		i++
+		p+=8
+	}
+	if (4 >= i) {
+		while(0 != m[i]) {
+			m[i] = int((m[i] + m[i]) % 256)
+			p++
+		}
+	}
+	return p
+}
+
+function netmask(pre,  i, m, x)
+{
+	m = ""
+	pre = pre + 0
+	for(i = 1; i <= 4; i++) {
+		if ("" != m) m = m"."
+		if (8 <= pre) {
+			pre -= 8
+			m = m"255"
+		}
+		else {
+			x = 0
+			while(0 < pre) {
+				x += 2**(8 - pre)
+				pre--
+			}
+			m = m""x
+		}
+	}
+	return m
+}
+
+function network(ip, mask,  i, a, m)
+{
+	split(ip, a, ".")
+	split(mask, m, ".")
+	for(i = 1; i <= 4; i++) {
+		a[i] -= a[i] % (256 - m[i])
+	}
+	return a[1]"."a[2]"."a[3]"."a[4]
+}
+
+function broadcast(ip, mask,  i, a, m)
+{
+	split(ip, a, ".")
+	split(mask, m, ".")
+	for(i = 1; i <= 4; i++) {
+		a[i] += 255 - m[i] - a[i] % (256 - m[i])
+	}
+	return a[1]"."a[2]"."a[3]"."a[4]
+}
+
+function printdev(dev, devname, wdev, var,  p)
+{
+	print var"DEV="devname
+	print var"ADR="ip[dev]
+	print var"MSK="mask[dev]
+	print var"PRE="pre[dev]
+	print var"NET="network(ip[dev], mask[dev])
+	print var"BRC="broadcast(ip[dev], mask[dev])
+	print var"MTU="mtu[dev]
+	if ("" != wdev && "" != ip[wdev] && "" != mask[wdev] && "" != ip[dev]) {
+		print var"OLSR="(network(ip[wdev], mask[wdev]) == network(ip[dev], mask[wdev])?1:"")
+	}
+}
+
+BEGIN {
+	dev = ""
+	o = FS
+	FS = "[: ]+"
+	while(getline<"/proc/net/dev") {
+		if (/:/) ifconfig[$2] = 1
+	}
+	while("ip addr show primary"|getline) {
+		if (match($0, "^[0-9]+:[ \t]+[^ \t@:]+")) {
+			dev = $2
+			sub("@.*","",dev)
+			if ($4 == "mtu") {
+				mtu[dev] = $5
+			}
+		}
+		else if ("inet" == $2 && "" == ip[dev]) {
+			ip[dev] = $3
+			pre[dev] = 32
+			if (sub("/.*","",ip[dev])) {
+				pre[dev] = $3
+				sub("[^/]*/","",pre[dev])
+			}
+			mask[dev] = netmask(pre[dev])
+		}
+		else if ("inet" == $2) {
+			if ( "" == ip[dev]) {
+				ip[dev] = $3
+				pre[dev] = 32
+				if (sub("/.*","",ip[dev])) {
+					pre[dev] = $3
+					sub("[^/]*/","",pre[dev])
+				}
+				mask[dev] = netmask(pre[dev])
+			}
+			else if ( dev == $(NF-1)) {
+				dev = $(NF-1)":"$NF
+				sub("@.*","",dev)
+				ip[dev] = $3
+				pre[dev] = 32
+				if (sub("/.*","",ip[dev])) {
+					pre[dev] = $3
+					sub("[^/]*/","",pre[dev])
+				}
+				mask[dev] = netmask(pre[dev])				
+			}
+		}
+	}
+	FS = o
+
+	wdev = ""
+	while(getline<"/proc/net/wireless") {
+		if (/^$/) break
+		if (sub(":", "")) wdev = $1
+	}
+	printdev(wdev, wdev, "", "WIFI")
+
+	dhcpwdev = wdev":0"
+	printdev(dhcpwdev, dhcpwdev, "", "DHCPWIFI")
+
+	printdev("lo", "lo", "", "LO")
+
+	ldev = ENVIRON["NVRAM_lan_ifname"]
+	if ("" == ldev) "nvram get lan_ifname"|getline ldev
+	ldevs = ENVIRON["NVRAM_lan_ifnames"]
+	if ("" == ldevs) "nvram get lan_ifnames"|getline ldevs
+	if ("" == ldev) ldev = "br0"
+	if ("" == ifconfig[ldev]) {
+		ldev = ldevs
+		if (match(ldev, "^([^ ]+)")) {
+			ldev = substr(ldev, RSTART, RLENGTH)
+		}
+		else {
+			ldev = "vlan0"
+		}
+	}
+	printdev(ldev, ""!=ip[ldev":0"]?ldev":0":ldev, wdev, "LAN")
+
+	dev = ENVIRON["NVRAM_wan_ifname"]
+	if ("" == dev) "nvram get wan_ifname"|getline dev
+	if (dev == ldev) dev = ""
+	if (dev == wdev) dev = ""
+	if (ldevs ~ dev) dev = ""
+	if ("" == dev) dev = "vlan1"
+	if ("" == ifconfig[dev]) dev = ""
+	printdev(dev, dev, wdev, "WAN")
+}

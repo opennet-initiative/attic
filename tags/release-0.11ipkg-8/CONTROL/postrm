@@ -1,0 +1,48 @@
+#!/bin/sh
+echo "  restoring replaced files"
+
+ln -sf /rom/bin/login /bin/login
+
+ln -sf /rom/etc/functions.sh /etc/functions.sh
+
+ln -sf /rom/etc/init.d/S40network /etc/init.d/S40network
+ln -sf /rom/etc/init.d/S45firewall /etc/init.d/S45firewall
+ln -sf /rom/etc/init.d/S50telnet /etc/init.d/S50telnet
+ln -sf /rom/etc/init.d/S50httpd /etc/init.d/S50httpd
+ln -sf /rom/etc/init.d/S50dropbear /etc/init.d/S50dropbear
+ln -sf /rom/etc/init.d/S50dnsmasq /etc/init.d/S50dnsmasq
+ln -sf /rom/etc/init.d/S60cron /etc/init.d/S60cron
+ln -sf /rom/etc/init.d/S60olsrd /etc/init.d/S60olsrd
+
+ln -sf /rom/etc/olsrd.conf /etc/olsrd.conf
+
+ln -sf /rom/etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
+
+ln -sf /rom/www/index.html /www/index.html
+
+ln -sf /rom/etc/ppp/ip-up /etc/ppp/ip-up
+ln -sf /rom/etc/ppp/ip-down /etc/ppp/ip-down
+
+# restore former firewall file
+ln -sf /rom/etc/firewall.user /etc/firewall.user
+
+# restoring Webinterface for firmware-update
+mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+
+# restoring banner
+ln -sf /rom/etc/banner /etc/banner
+
+mv -f /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories
+
+rm -f /www/on.css
+
+nvram unset on_fw_version
+nvram unset on_fw_pkgversion
+nvram commit
+
+echo "  restoring replaced files - done"
+echo " ################################################### "
+echo " #        please reboot after deinstallation       # "
+echo " #     bitte AP nach Deinstallation neu starten    # "
+echo " #  (warte bis Meldung 'Successfully terminated')  # "
+echo " ################################################### "

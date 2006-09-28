@@ -1,0 +1,29 @@
+#!/usr/bin/awk -f 
+
+# parameter is section name (usually main or device)
+# the sections of those files are printet to stdout,
+# duplicate keywords are removed. The first keyword 
+# found is used.
+
+BEGIN {
+	path="/etc/"
+	files[1] = path"olsrd.conf_new"
+	files[2] = path"olsrd.conf_initial"
+	
+	if ( ARGC > 1 ){ 
+		area = "^\\["ARGV[1]"\\]"
+	} else { area = "^\\[main\\]" }
+
+	for (number in files) {
+		parsing=""
+		while(getline<files[number] > 0) {
+			if (parsing == "")
+					{ if ($0 ~ area) { parsing = "true"; } }
+			else {
+				if (/^\[/) { break }
+				else if ($1 != "" && $1 !~ "^#" && remember !~ " "$1" ") 
+					{ print; remember=remember" "$1" " }
+			}
+		}
+	}
+}
