@@ -57,19 +57,24 @@ fi
 
 # check if user-tunnel or ugw-tunel exists twice. if so, kill both and restart one.
 for tun in user ugw; do
-	if [ $(ps | grep /var/run/openvpn.opennet_$tun.pid | grep -v grep | wc -l) -gt 1 ]; then
+#	if [ $(ps | grep /var/run/openvpn.opennet_$tun.pid | grep -v grep | wc -l) -gt 1 ]; then
+#	output of ps is dependent on the tty-size, so it might look good but it isn't
+#	therefore the only way is to use /proc directly
+#	greater than 3: one is the whole line, one is the grep and the other is the tunnel
+	if [ $(grep /var/run/openvpn.opennet_$tun.pid /proc/*/cmdline 2>/dev/null | wc -l) -gt 3 ]; then
 		logger "cron.hourly: there is more than one $tun-tunnel active. cleaning."
 		/etc/init.d/S80openvpn stop opennet_$tun
-		while [ -n "$(ps|grep /var/run/openvpn.opennet_$tun.pid|grep -v grep)" ]; do
-			kill $(ps|grep /var/run/openvpn.opennet_$tun.pid|grep -v grep|cut -b 0-5)
+		for pid in $(grep /var/run/openvpn.opennet_$tun.pid /proc/*/cmdline 2>/dev/null | cut -d'/' -f3); do
+			kill $pid 2>/dev/null;
 		done
 		rm -f /var/run/openvpn.opennet_$tun.pid
 		/etc/init.d/S80openvpn start opennet_$tun
 	fi
 done
 
-# check if user-tunnel is not running but keys and gateway is defined (might happen on openvpn-server errrs)
-if [ -z "$(ps|grep /var/run/openvpn.opennet_user.pid|grep -v grep)" ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ] && [ -n "$(nvram get on_gw)" ]; then
+# check if user-tunnel is not running but keys and gateway is defined (might happen on openvpn-server erros)
+# lessorequal 2: one is the whole line, one is the grep and the tunnel is missing
+if [ $(grep /var/run/openvpn.opennet_user.pid /proc/*/cmdline 2>/dev/null | wc -l) -le 2 ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ] && [ -n "$(nvram get on_gw)" ]; then
 	logger "cron.hourly: openvpn user-tunnel not running, try to (re)start"
 	rm -f /var/run/openvpn.opennet_user.pid
 	/etc/init.d/S80openvpn start opennet_user
