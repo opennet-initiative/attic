@@ -4,32 +4,35 @@
 #--------------- initialization formerly done in firstboot -------------
 echo "  initializing opennet-values"
 
-ssid=$(nvram get wl0_ssid)
-if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
-	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
-		nvram set wl0_mode=sta
-		nvram set wl0_infra=0
-		nvram set wl0_channel=1
-		nvram set wl0_ssid=olsr.opennet-forum.de
-		nvram set wl0_wds=
-		nvram set wl0_lazywds=0
-		nvram set wl0_wep=on
-		nvram set wl0_wep_bit=128
-		nvram set wl0_key=1
-		nvram set wl0_frag=512
-		nvram set wl0_rts=250
-		nvram set wl0_gmode_protection=auto
-		# deactivate ff dyngw functionality
-		nvram set ff_dyngw=0
-		# disable any wpa-settings
-		nvram set wl_wpa_psk=
-		nvram set wl_wpa_gtk_rekey=
-		nvram set wl0_wpa_gtk_rekey=
-		nvram set wl0_wpa_psk=
-		nvram unset wl0_akm
-		echo " ACHTUNG: WLAN Einstellungen / SSID wurde für opennet angepasst."
-	fi
-fi
+# wifi setup now done by opennet-wl ipk
+nvram unset wl0_on_init_override
+
+#ssid=$(nvram get wl0_ssid)
+#if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
+#	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
+#		nvram set wl0_mode=sta
+#		nvram set wl0_infra=0
+#		nvram set wl0_channel=1
+#		nvram set wl0_ssid=olsr.opennet-forum.de
+#		nvram set wl0_wds=
+#		nvram set wl0_lazywds=0
+#		nvram set wl0_wep=on
+#		nvram set wl0_wep_bit=128
+#		nvram set wl0_key=1
+#		nvram set wl0_frag=512
+#		nvram set wl0_rts=250
+#		nvram set wl0_gmode_protection=auto
+#		# deactivate ff dyngw functionality
+#		nvram set ff_dyngw=0
+#		# disable any wpa-settings
+#		nvram set wl_wpa_psk=
+#		nvram set wl_wpa_gtk_rekey=
+#		nvram set wl0_wpa_gtk_rekey=
+#		nvram set wl0_wpa_psk=
+#		nvram unset wl0_akm
+#		echo " ACHTUNG: WLAN Einstellungen / SSID wurde für opennet angepasst."
+#	fi
+#fi
 
 if [ -n "$(nvram get lan_ipaddr | grep ^192.168)" ]; then
 	nvram set lan_ipaddr=172.16.0.1
@@ -135,7 +138,7 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-8"
+nvram set on_fw_pkgversion="0.11ipkg-9"
 
 echo "  initializing opennet-values - done"
 
@@ -146,7 +149,7 @@ echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
 ########################################################################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-package 0.11ipkg-8 ------- " >>/etc/banner
+echo " -- modified with opennet-firmware 0.11ipkg-9 ------ " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 awk '!/Opennet-Interface/ {print}' /www/cgi-bin/webif/.categories >/www/cgi-bin/webif/.categories_bak

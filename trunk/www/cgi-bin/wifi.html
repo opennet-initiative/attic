@@ -22,13 +22,6 @@ wl0_gmode="$(nvram get wl0_gmode)"
 wl0_rateset="$(nvram get wl0_rateset)"
 wl0_rate="$(nvram get wl0_rate)"
 wl0_closed="$(nvram get wl0_closed)"
-if [ "$(nvram get wl0_mode)" = "ap" ]; then
-wmode=master
-elif [ "$(nvram get wl0_infra)" = "1" ]; then
-wmode=client
-else
-wmode=ad-hoc
-fi
 
 cat<<EOF
 <FORM ACTION="wifi.html" METHOD="POST">
@@ -92,65 +85,20 @@ TITLE="Ist diese Einstellung aktiviert, werden die bei der PPPOE-Einwahl übermit
 <TD COLSPAN="2"> </TD>
 </TR>
 <TR
-TITLE="Bestimmt die Art der IP-Adresskonfiguration für die WLAN-Karte.">
-<TD>WLAN-Modus:</TD>
-<TD><SELECT NAME="wmode" STYLE="width: 100%;">
-<OPTION
-VALUE='master' $(test "$wmode" = "master" && echo "selected=selected")>Master
-(Access Point)</OPTION>
-<OPTION
-VALUE='client' $(test "$wmode" = "client" && echo "selected=selected")>Managed
-(Klient)</OPTION>
-<OPTION
-VALUE='ad-hoc' $(test "$wmode" = "ad-hoc" && echo "selected=selected")>Ad-Hoc
-(Peer zu Peer)</OPTION></SELECT> </TD>
-</TR>
-<TR
 TITLE="Die ESSID bestimmt, in welchem Funknetz der Access Point teilnimmt. Alle Teilnehmer müssen dieselbe ESSID haben.">
 <TD>ESSID:</TD>
 <TD><INPUT NAME="wl0_ssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_ssid)"></TD>
+</TR>
+<TR                                                                             
+TITLE="Gib eine gültige BSSID ein. Diese Einstellung nie ändern, es sei denn, Du weisst, was Du tust."> 
+<TD>BSSID:</TD>                                                                 
+<TD><INPUT NAME="ff_bssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_bssid)"></TD> 
 </TR>
 <TR
 TITLE="Gib eine Kanalnummer von 1 bis 13 ein. In einigen Ländern sind die Kanäle 12 und 13 nicht erlaubt. In Japan darf man den Kanal 14 benutzen.">
 <TD>Kanal:</TD>
 <TD><INPUT NAME="wl0_channel" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_channel)"></TD>
 </TR>
-	<TR>
-	<TD COLSPAN="2"> </TD>
-	</TR>
-	<TR TITLE="WEP">
-	<TD>WEP-Status:</TD>
-	<TD>
-	<INPUT CLASS="radio" NAME="wl0_wep" TYPE="RADIO" VALUE="on"$(if [ "$(nvram get wl0_wep)" = "on" ];then echo ' checked="checked"';fi)>on
-	<INPUT CLASS="radio" NAME="wl0_wep" TYPE="RADIO" VALUE="off"$(if [ "$(nvram get wl0_wep)" != "on" ];then echo ' checked="checked"';fi)>off</TD>
-	</TR>
-	<TR TITLE="WEP-Key-Size">
-	<TD>WEP-Key-Size:</TD>
-	<TD>
-	<SELECT NAME="wl0_wep_bit" STYLE="width: 100%;">
-	<OPTION VALUE='128' $(test "$(nvram get wl0_wep_bit)" = "128" && echo "selected=selected")>128</OPTION>
-	<OPTION VALUE='64' $(test "$(nvram get wl0_wep_bit)" = "64" && echo "selected=selected")>64</OPTION>
-	</SELECT> </TD>
-	</TR>
-	<TR TITLE="WEP-Key 1">
-	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get wl0_key)" = "1" ];then echo ' checked="checked"';fi)>WEP-Key 1:</TD>
-	<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key1)"></TD>
-	</TR>
-	<TR TITLE="WEP-Key 2">
-	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="2"$(if [ "$(nvram get wl0_key)" = "2" ];then echo ' checked="checked"';fi)>WEP-Key 2:</TD>
-	<TD><INPUT NAME="wl0_key2" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key2)"></TD>
-	</TR>
-	<TR TITLE="WEP-Key 3">
-	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="3"$(if [ "$(nvram get wl0_key)" = "3" ];then echo ' checked="checked"';fi)>WEP-Key 3:</TD>
-	<TD><INPUT NAME="wl0_key3" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key3)"></TD>
-	</TR>
-	<TR TITLE="WEP-Key 4">
-	<TD><INPUT CLASS="radio" NAME="wl0_key" TYPE="RADIO" VALUE="4"$(if [ "$(nvram get wl0_key)" = "4" ];then echo ' checked="checked"';fi)>WEP-Key 4:</TD>
-	<TD><INPUT NAME="wl0_key4" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key4)"></TD>
-	</TR>
-	<TR>
-	<TD COLSPAN="2"> </TD>
-	</TR>
 <TR
 TITLE="Bestimmt, welche Antenne zum Empfang benutzt wird.">
 <TD>Empfangsantenne:</TD>
@@ -307,21 +255,7 @@ else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_wifi" ]; then
-case $wmode in
-master)
-wl0_mode=ap
-wl0_infra=1
-;;
-client)
-wl0_mode=sta
-wl0_infra=1
-;;
-*)
-wl0_mode=sta
-wl0_infra=0
-;;
-esac
-for V in wifi_proto wl0_mode wl0_infra wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns on_pppoe_keepdns lan_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_wep wl0_wep_bit wl0_key wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
+for V in wifi_proto wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns on_pppoe_keepdns lan_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu ff_bssid; do
 eval "C=\$$V"
 C=$(unescape $C)
 if [ "$V" = "lan_dns" ]; then

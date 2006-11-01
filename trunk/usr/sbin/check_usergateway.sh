@@ -83,6 +83,12 @@ if [ "$1" = "quick" ] && [ -n "$on_share_internet_blocked" ]; then
 	fi
 fi
 
+# only proceed if internet sharing is activated
+on_share_internet=$(nvram get on_share_internet)
+if [ "$on_share_internet" != "on" ]; then
+	  return
+fi
+
 # prüfe ob WANDEV Teil des WIFI-Netzes ist. Wenn ja, dann sofort abbrechen
 if [ "$(ipcalc $(nvram get wan_ipaddr) $(nvram get wan_netmask)|grep "NETWORK")" = "$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask)|grep "NETWORK")" ]; then
 	test $DEBUG && logger -t check_usergateway "WANNET Teil von WIFINET"

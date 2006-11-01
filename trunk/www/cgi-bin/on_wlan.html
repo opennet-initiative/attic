@@ -14,17 +14,15 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
 	read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
-	wl0_key1="$(nvram get wl0_key1)"
-	wl0_key2="$(nvram get wl0_key2)"
-	wl0_key3="$(nvram get wl0_key3)"
-	wl0_key4="$(nvram get wl0_key4)"
-	key_warning=
+
 cat<<EOF
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
 <div id="description">
 <br />
-	Hier müssen grundlegende Konfigurationen zur Beteiligung im Opennet eingestellt werden. Den notwendigen WEP-Key solltest Du erhalten haben, wenn Du bereits eine email an  <a href="mailto:admin@opennet-initiative.de"> admin@opennet-initiative.de</a> geschickt hast. Die Adresse des Accesspoints musst Du Dir selbst zuordnen, lege dazu einen Eintrag im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes">Opennet-Wiki </a>an. (Bitte berücksichtige die Informationen unter <a href="http://wiki.opennet-initiative.de/index.php/Mitmachen">'Mitmachen'</a>).<br><br>
+	Schön, dass Du Dich für das Mitmachen beim Opennet entschieden hast. Einen ersten Kontakt solltest Du bereits persönlich, über unsere regelmäßigen Treffen oder unsere Mailingliste/Forum geknüpft haben. Nun kann es auch schon los gehen!
+<br/>
+	Die Adresse des Accesspoints musst Du Dir selbst zuordnen, lege dazu einen Eintrag im <a href="http://wiki.opennet-initiative.de/index.php/Opennet_Nodes">Opennet-Wiki </a>an. (Bitte berücksichtige die Informationen unter <a href="http://wiki.opennet-initiative.de/index.php/Mitmachen">'Mitmachen'</a>).<br><br>
 </div>
 <script type="text/javascript">
 	document.getElementById('switch').style.display='inline';
@@ -39,70 +37,19 @@ cat<<EOF
 	<TD>IP-Adresse:</TD>
 	<TD><INPUT NAME="wifi_ipaddr" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr)"$(if [ "$(nvram get wifi_proto)" != "static" ];then echo ' disabled="disabled"';fi)></TD>
 	</TR>
-	<TR TITLE="WEP-Key">
-	<TD>verwendeter WEP-Key:</TD>
-	<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$wl0_key1"></TD>
-	</TR>
 EOF
-	if [ -n "$wl0_key2" ] && [ "$wl0_key1" != "$wl0_key2" ]; then
-		key_warning="on"
-cat<<EOF
-		<TR TITLE="WEP-Key">
-		<TD>zusätzlicher WEP-Key 2:</TD>
-		<TD><INPUT NAME="wl0_key2" SIZE="48" TYPE="TEXT" VALUE="$wl0_key2"></TD>
-		</TR>
-EOF
-	fi
-	if [ -n "$wl0_key3" ] && [ "$wl0_key1" != "$wl0_key3" ]; then
-		key_warning="on"
-cat<<EOF
-		<TR TITLE="WEP-Key 3">
-		<TD>zusätzlicher WEP-Key 3:</TD>
-		<TD><INPUT NAME="wl0_key3" SIZE="48" TYPE="TEXT" VALUE="$wl0_key3"></TD>
-		</TR>
-EOF
-	fi
-	if [ -n "$wl0_key4" ] && [ "$wl0_key1" != "$wl0_key4" ]; then
-		key_warning="on"
-cat<<EOF
-		<TR TITLE="WEP-Key 4">
-		<TD>zusätzlicher WEP-Key 4:</TD>
-		<TD><INPUT NAME="wl0_key4" SIZE="48" TYPE="TEXT" VALUE="$wl0_key4"></TD>
-		</TR>
-EOF
-	fi
 cat<<EOF
 	<TR>
 	<TD COLSPAN="2"><INPUT NAME="post_on_wlan" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
 	</TR></TBODY>
 	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if [ -n "$key_warning" ]; then
-cat<<EOF
-		<b>Achtung:</b> Auf dem AccessPoint sind mehrere WEP-Keys (mit unterschiedlichen Werten) gesetzt, im Opennet wird jedoch nur ein WEP-Key benötigt. Einige AccessPoints (bspw. LinkSys) ignorieren die gezielte Auswahl des ersten WEP-Keys- falls Du keinen Kontakt zum Opennet bekommst, solltest du überzählige Schlüssel entfernen.<br>
-EOF
-	fi
-	wl0_wep=on
-	wl0_wep_bit=128
-	wl0_key=1
-	DIRTY=
-	for V in wl0_wep wl0_wep_bit wl0_key; do
-		eval "C=\$$V"
-		C=$(unescape $C)
-		if [ "$C" != "$(nvram get $V)" ]; then
-			DIRTY=1
-			nvram set $V="$C"
-			echo "<b>Hinweis:</b> $V wurde auf \"$C\" gesetzt.<br>"
-		fi
-	done
-	if [ -n "$DIRTY" ]; then
-		nvram commit>/dev/null 2>&1
-	fi
+
 else
 	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 	DIRTY=
 	if [ -n "$post_on_wlan" ]; then
-		for V in wifi_ipaddr wl0_key1 wl0_key2 wl0_key3 wl0_key4; do
+		for V in wifi_ipaddr; do
 			eval "C=\$$V"
 			C=$(unescape $C)
 			if [ "$C" != "$(nvram get $V)" ]; then
