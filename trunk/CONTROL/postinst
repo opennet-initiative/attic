@@ -142,9 +142,6 @@ nvram set on_fw_pkgversion="0.11ipkg-9"
 
 echo "  initializing opennet-values - done"
 
-echo "ipt_LOG"  >/etc/modules.d/opennet-firmware
-echo "ipt_mac"  >>/etc/modules.d/opennet-firmware
-
 #--------------- initialization formerly done in firstboot -------------
 ########################################################################
 

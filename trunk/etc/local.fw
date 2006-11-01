@@ -124,8 +124,6 @@ case $1 in
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
 	# add special rule to ensure ugw-access to nagare
 	ip rule add unicast table 5
-#load tun module
-#       insmod tun   # not needed, loaded by /etc/modules.d
         ;;
         stop)
 	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
