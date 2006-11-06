@@ -159,4 +159,10 @@ BEGIN {
 	if ("" == dev) dev = "vlan1"
 	if ("" == ifconfig[dev]) dev = ""
 	printdev(dev, dev, wdev, "WAN")
+
+	# OLSRLAN device (package "opennet-olsrlan")
+	dev = ENVIRON["NVRAM_olsrlan_ifname"]
+	if ("" == dev) "nvram get olsrlan_ifname"|getline dev
+	if ("" != dev) printdev(dev,dev,wdev,"OLSRLAN")
+
 }

@@ -173,7 +173,6 @@ cat<<EOF
 <TR>
 <TD>
 EOF
-
 wget -O - http://127.0.0.1:8080/all|awk '
 /<h2>/, /<\/div>/ {
 gsub("border=0", "border=1 cellspacing=0 cellpadding=0")
@@ -437,27 +436,64 @@ MAC: $(ifconfig $WLDEV|awk 'sub("HWaddr","") {print $4}')</TD>
 <TR>
 <TD>WLAN-Status:</TD>
 <TD>
+SSID: $(wl -i $WLDEV ssid|awk 'sub("Current SSID:","") {print $1}'),
+Modus: $(wl -i $WLDEV status|awk 'sub("Mode:","") {print $1 $2}'),
+Kanal: $(wl -i $WLDEV channel|awk 'sub("current mac channel","") {print $1}'),
+BSSID: $(wl -i $WLDEV bssid|awk 'sub("bssid is","") {print $1}'),
+Rate: $(wl -i $WLDEV rate|awk 'sub("rate is","") {print $1}') Mbit/s,
+Sendeleistung: $(wl -i $WLDEV txpwr|awk 'sub("txpwr is","") {print $1}') mW,
+Signal: $(wl -i $WLDEV rssi|awk 'sub("rssi is","") {print $1}') dBm,
+Rauschen: $(wl -i $WLDEV noise|awk 'sub("noise is","") {print $1}') dBm
+</TD>
+</TR>
 EOF
 
-wl -i $WLDEV status 2>&1
+if [ "$(nvram get ff_httpinfo)" != "0" ];then
+
+cat<<EOF
+
+<TR>
+
+<TD>Nachbarn:</TD>
+<TD>
+EOF
+
+wget -O - http://127.0.0.1:8080/nodes|awk '
+/<h2>/,/<\/div>/ {
+if ($1~/<h2>/) {
+prnt=($1~/Links/)
+}
+else if (prnt) {
+sub("<""table[^>]+>", "<""table frame=void border=1 cellspacing=0 cellpadding=1 width=100%>")
+sub("<tr><t.>[^>]+</t.>", "<tr>")
+sub("<th>remote IP", "<th style=padding-right:100>IP")
+sub("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", "<a href=\"http://&/cgi-bin-status.html\">&</a>")
+print
+}
+}'
 
 cat<<EOF
 </TD>
 </TR>
+EOF
+
+fi
+
+cat<<EOF
 
 <TR>
-<TD>OpenVPN-Status:</TD>
+<TD>OpenVPN:</TD>
 <TD>
 EOF
 
 if [ -f  /tmp/openvpn_msg.txt ];then
 cat<<EOF
-vpn-tunnel active
+VPN-Tunnel aktiv ($(nvram get on_gw))  <img src="images/yes.gif" alt="yes" align="absmiddle">
 EOF
-echo -n " ($(nvram get on_gw))"
+#echo -n " ($(nvram get on_gw))"
 else
 cat<<EOF
-inactive, Details im System-Log  <img src="images/no.gif" alt="no" align="absmiddle">
+VPN-Tunnel inaktiv, Details im System-Log  <img src="images/no.gif" alt="no" align="absmiddle">
 EOF
 fi
 cat<<EOF
@@ -469,13 +505,13 @@ if [ -n  "$(ip route show table 5)" ];then
 cat<<EOF
 <TR>
 <TR>
-<TD>Internet-Freigabe:</TD>
+<TD>Internet:</TD>
 <TD>
 EOF
 if [ -f  /tmp/openvpn_ugw_msg.txt ];then
-	echo "user-gateway active"
+	echo "Freigabe / User-Gateway aktiv ($(nvram get on_ugw))   <img src="images/yes.gif" alt="yes" align="absmiddle">"
 else
-	echo "user-gateway inactive"
+	echo "Freigabe / User-Gateway inaktiv"
 	minutes=$(nvram get on_share_internet_blocked)
 	if [ -n "$minutes" ]; then
 		echo " (Reaktivierung in $minutes Minuten)"
@@ -495,7 +531,7 @@ cat<<EOF
 </TR>
 <TR>
 <TD>Ger&auml;teinfo:</TD>
-<TD>Boardtype: $(nvram get boardtype), Boardnum: $(nvram get boardnum)</TD>
+<TD>Bordtype: $(nvram get boardtype), Bordnummer: $(nvram get boardnum)</TD>
 </TR>
 <TR>
 <TD>Kernel-Log: </TD>

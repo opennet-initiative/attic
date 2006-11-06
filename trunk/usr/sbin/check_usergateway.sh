@@ -4,7 +4,7 @@
 # if WAN-device is active, policy-routing for WANDEV is activated
 
 # the existing route table 5 indicates that it is possible to share your wan-connection
-central_gateways="nagare.on-i.de"
+central_gateways=$(nvram get on_ugw)
 
 
 DEBUG=true
@@ -148,10 +148,6 @@ gws_table_5=$(ip route show table 5| awk '{print $1}')
 for central_gw in $central_gateways; do
 	# besorge die IP-addresse von nagare
 	central_gw_ip=$(nslookup $central_gw 2>/dev/null | tail -n 1 | awk '{ print $2 }')
-	#old way to get IP using ping
-	#central_gw_ip=$(ping -c 1 $central_gw 2>/dev/null | grep PING);
-	#central_gw_ip=${central_gw_ip#*\(};
-	#central_gw_ip=${central_gw_ip%%\)*};
 	if [ -n "$central_gw_ip" ]; then
 		if [ -z "$(echo $gws_table_5 | grep $central_gw_ip)" ]; then
 			# route noch nicht vorhanden
