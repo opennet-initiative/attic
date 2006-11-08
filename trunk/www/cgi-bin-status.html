@@ -150,7 +150,7 @@ if [ "$(nvram get wl0_mode)" != "ap" ];then
 
 cat<<EOF
  
-<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Scan">
+<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Suche">
 EOF
 
 fi
@@ -205,7 +205,7 @@ if [ "$(nvram get wl0_mode)" != "ap" ];then
 
 cat<<EOF
  
-<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Scan">
+<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Suche">
 EOF
 
 fi
@@ -271,7 +271,7 @@ EOF
 elif [ -n "$post_scan" ]; then
 
 cat<<EOF
-<H1>Status: WLAN Scan</H1>
+<H1>Status: WLAN Suche</H1>
 
 <FORM ACTION="cgi-bin-status.html" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="form">
@@ -284,7 +284,7 @@ if [ "$(nvram get wl0_mode)" != "ap" ];then
 
 cat<<EOF
  
-<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Scan">
+<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Suche">
 EOF
 
 fi
@@ -309,7 +309,7 @@ cat<<EOF
 <TH>Kanal</TH>
 <TH>Ad Hoc</TH>
 <TH>Signal</TH>
-<TH>WEP</TH>
+<TH>Open</TH>
 <TH>Max.</TH>
 <TH>BSSID</TH>
 </TR>
@@ -406,7 +406,7 @@ if [ "$(nvram get wl0_mode)" != "ap" ];then
 
 cat<<EOF
  
-<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Scan">
+<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Suche">
 EOF
 
 fi

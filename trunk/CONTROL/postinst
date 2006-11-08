@@ -1,38 +1,19 @@
 #!/bin/sh
 
+# helper functions
+
+startswith() { local str="$1"; local substr="$2";
+	[ -n "$str" -a -z "${str##$substr*}" ] && echo 1 || echo 0; }
+
+##
+## opennet-firmware postinst script
+##
+
 echo "  updating nvram variables to opennet defaults.."
 
-# obsolete var, wifi setup now done by opennet-wl ipk
-nvram unset wl0_on_init_override
-
-#ssid=$(nvram get wl0_ssid)
-#if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
-#	if [ -z "$ssid" ] || [ $ssid != "olsr.opennet-forum.de" ]; then
-#		nvram set wl0_mode=sta
-#		nvram set wl0_infra=0
-#		nvram set wl0_channel=1
-#		nvram set wl0_ssid=olsr.opennet-forum.de
-#		nvram set wl0_wds=
-#		nvram set wl0_lazywds=0
-#		nvram set wl0_wep=on
-#		nvram set wl0_wep_bit=128
-#		nvram set wl0_key=1
-#		nvram set wl0_frag=512
-#		nvram set wl0_rts=250
-#		nvram set wl0_gmode_protection=auto
-#		# deactivate ff dyngw functionality
-#		nvram set ff_dyngw=0
-#		# disable any wpa-settings
-#		nvram set wl_wpa_psk=
-#		nvram set wl_wpa_gtk_rekey=
-#		nvram set wl0_wpa_gtk_rekey=
-#		nvram set wl0_wpa_psk=
-#		nvram unset wl0_akm
-#		echo " ACHTUNG: WLAN Einstellungen / SSID wurde für opennet angepasst."
-#	fi
-#fi
-
-if [ -n "$(nvram get lan_ipaddr | grep ^192.168)" ]; then
+# configure lan interface (if not down yet like 172.16.0.x or 192.168.2.x)
+lanip=$(nvram get lan_ipaddr)
+if [ -z "$lanip" ] || (( [ $(startswith "$lanip" "172.16.0") = 0 ] && [ $(startswith "$lanip" "192.168.2.0") = 0 ] )); then
 	nvram set lan_ipaddr=172.16.0.1
 	nvram set lan_netmask=255.255.255.0
 	nvram set lan_proto=static
@@ -70,7 +51,7 @@ nvram set dhcp_num=50
 on_remoteconf=$(nvram get on_remoteconf)
 if [ -z "$on_remoteconf" ]; then
 	nvram set on_remoteconf="on"
-	echo "  - changed remoteconf => on (used for olsr configuration)"
+	echo "  - changed remoteconf => on \(used for olsr configuration\)"
 fi
 
 # limit txpwr, assume always a external Antenna
@@ -81,7 +62,7 @@ if [ -z "$on_ant_dbi" ]; then
 fi
 if [ -z "$ff_txpwr" ]; then
 	nvram set ff_txpwr=15
-	echo "  - changed wifi txpwr => 15 mW
+	echo "  - changed wifi txpwr => 15 mW"
 fi
 
 # activate automatic optimization of txpwr by default if not deactivated
@@ -94,12 +75,16 @@ fi
 # if the list of possible gateways is empty switch auto-search on
 on_gwaddrs=$(nvram get on_gwaddrs)
 if [ -z "$on_gwaddrs" ]; then
-	nvram set on_gwauto=on
-	echo "  - changed gateway selection => auto-search mode"
+	on_gwauto=$(nvram get on_gwauto)
+	if [ -z "$on_gwauto" ] || [ "$on_gwauto" != "on" ]; then 
+		nvram set on_gwauto=on
+		echo "  - changed gateway selection => auto-search mode"
+	fi
 fi
 
 # activate automatic selection of DNS-Servers by default
-if [ -z "$(nvram show 2>/dev/null | grep on_autodns)" ]; then
+on_autodns=$(nvram get on_autodns)
+if [ -z "$on_autodns" ]; then
 	nvram set on_autodns=on
 	echo "  - changed dns server detection => auto-search mode"
 fi
@@ -144,24 +129,15 @@ echo "##WEBIF:category:Opennet-Interface" >>/www/cgi-bin/webif/.categories
 
 ### bugfixes section (repairing of old bugs) ###########################
 
-if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
-	cd /www/cgi-bin/webif/
-	upgrade_sh_on_md5=$(md5sum upgrade.sh_on 2>/dev/null| cut -d" " -f1)
-	upgrade_sh_bak_md5=$(md5sum upgrade.sh_bak 2>/dev/null| cut -d" " -f1)
-	if [ -e upgrade.sh_bak ] && [ "$upgrade_sh_on_md5" = "$upgrade_sh_bak_md5" ]; then
-			echo "  - repairing broken (but hidden) firmware-update interface"
-			ln -sf /rom/www/cgi-bin/webif/upgrade.sh upgrade.sh_bak
-	elif [ -e upgrade.sh ] && [ "$upgrade_sh_on_md5" = "$upgrade_sh_bak_md5" ]; then
-			echo "  - repairing broken firmware-update interface"
-			ln -sf /rom/www/cgi-bin/webif/upgrade.sh .
-	fi
-fi
-
 rm -f /usr/sbin/check_nagare.sh
 
 rm -f /www/cgi-bin/18-localaccess
 rm -f /www/cgi-bin/on_localaccess.html
 rm -f /etc/init.d/S83wifiaccess
+
+
+# obsolete vars
+nvram unset wl0_on_init_override
 nvram unset on_wldhcp_num
 nvram unset on_wldhcp
 nvram unset on_wldhcp_start
@@ -171,6 +147,8 @@ nvram unset dhcpwl_ipaddr
 nvram unset dhcpwl_ifname
 nvram unset dhcpwl_netmask
 nvram unset on_wifi_access
+nvram unset on_sharedslh
+nvram unset on_sharedsl_blocked
 
 if [ -n "$(nvram get on_wifiaccess_route_override)" ]; then
 	nvram set on_wifidhcp_route_override=$(nvram get on_wifiaccess_route_override)
@@ -204,8 +182,6 @@ fi
 if [ -z "$(nvram get on_share_internet)" ]; then
 	nvram set on_share_internet=$(nvram get on_sharedsl)
 fi
-nvram unset on_sharedsl
-nvram unset on_sharedsl_blocked
 
 ########################################################################
 	
