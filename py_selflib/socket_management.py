@@ -922,7 +922,7 @@ def select_loop():
                   fd.fd_write()
                elif (wo_type is wo_type_errable):
                   fd.fd_err()
-            except StandardError:
+            except Exception:
                if (fd):
                   logger.log(40, 'Failed to process fd %r in mode %r. Trying to close. Error:' % (fd, wo_type), exc_info=True)
                   try:
