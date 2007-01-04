@@ -32,7 +32,7 @@ usergateway_route()
 wan_route()
 {
 	IFNAME=$(nvram get wan_ifname)
-	WANDEV=$(ip addr show primary $IFNAME | awk '$1 == "inet" { print $2 }')
+	WANADDR=$(ip addr show primary $IFNAME | awk '$1 == "inet" { print $2 }')
 	if [ "$1" = "add" ]; then
 		
 		# get network parameter (formerly done in netparam)
@@ -50,8 +50,8 @@ wan_route()
 		ip route add default via $2 table 4
 		
 		test $DEBUG && logger -t check_usergateway "füge SNAT für WAN hinzu"
-		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
-		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $IPLOCAL
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $WANADDR
+		iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $WANADDR
 
 	elif [ -n "$(ip route show table 4)" ]; then
 		test $DEBUG && logger -t check_usergateway "entferne policy-routing für wan per table 4"
