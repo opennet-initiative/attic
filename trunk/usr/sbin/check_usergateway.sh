@@ -122,10 +122,11 @@ elif [ -z "$table_5" ]; then
 fi
 
 table_4=$(ip route show table 4)
+wandev_snat=$(iptables -v -L POSTROUTING -n -t nat | awk '$4 == "all" && $3 == "SNAT" && $7 == "'$WANDEV'" { print $3; exit }')
 # default route über WAN ist vorhanden, nun prüfe, ob WAN-Gegenstelle erreicht werden kann.
 if $(ping -c 1 $ip_remote >/dev/null 2>/dev/null); then
 	test $DEBUG && [ "$1" != "quick" ] && logger -t check_usergateway "ok, WAN-Gegenstelle $ip_remote kann extern erreicht werden"
-	if [ -z "$table_4" ]; then
+	if [ -z "$table_4" ] || [ -z "$wandev_snat" ]; then
 		test $DEBUG && [ "$1" = "quick" ] && logger -t check_usergateway "ok, WAN-Gegenstelle $ip_remote kann extern erreicht werden"
 		wan_route add $ip_remote;
 	fi
