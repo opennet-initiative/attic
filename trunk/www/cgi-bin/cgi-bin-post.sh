@@ -8,8 +8,8 @@ cat<<EOF
 <TD HEIGHT="38" WIDTH="150"></TD>
 <TD HEIGHT="38" WIDTH="5"></TD>
 <TD HEIGHT="38" WIDTH="5"></TD>
-<TD ALIGN="right" CLASS="color" HEIGHT="38" WIDTH="150"><A HREF="http://add-on-it.de/opennet"><IMG ALT="" HEIGHT="31" BORDER="0" SRC="../images/addonit_blue.png"></TD>
-<TR>
+<TD ALIGN="right" CLASS="color" HEIGHT="38" WIDTH="150"><A HREF="http://add-on-it.de/opennet"><IMG ALT="" HEIGHT="31" BORDER="0" SRC="../images/addonit_blue.png"></A></TD>
+</TR>
 <TR>
 <TD HEIGHT="5" WIDTH="150"></TD>
 <TD HEIGHT="5" WIDTH="5"></TD>
@@ -22,7 +22,7 @@ cat<<EOF
 </TR>
 <TR>
 <TD HEIGHT="15" COLSPAN="5"></TD>
-<TR>
+</TR>
 </TBODY>
 </TABLE>
 </DIV>

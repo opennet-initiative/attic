@@ -6,15 +6,32 @@ INPUT {
 INPUT.radio {
   margin-bottom: 2px;
 }
+
+TABLE {
+		border-collapse: collapse;
+}
+
 TABLE.form,TABLE.formfixwidth {
   background-color: #bdceff;
   /*border: 3px solid gainsboro;*/
   border: solid 1px #00407a;
-  border-collapse: none;
+  border-collapse: collapse;
   position: relative;
   top: -1px;
   left: -1px;
-  padding: 2px;
+  padding: 2px 2px;
+}
+
+.form TD, .formfixwidth TD, .form TH, .formfixwidth TH {
+		padding: 3px;
+}
+
+TR.selector {
+	background-color: #819cc9;
+}
+
+.selector TD {
+	padding: 5px 25px 5px 10px;
 }
 
 TABLE.formfixwidth {

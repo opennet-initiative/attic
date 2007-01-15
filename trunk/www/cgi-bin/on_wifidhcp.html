@@ -78,11 +78,11 @@ Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch
 	document.getElementById('switch').style.display='inline';
 	document.getElementById('description').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 EOF
 	if [ -z "$(lsmod | grep ipt_mac)" ]; then
 cat<<EOF
-<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&amp;pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
 <br />
 EOF
 	else
@@ -92,7 +92,7 @@ cat<<EOF
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD>
-	<INPUT CLASS="checkbox" NAME="on_wifidhcp" TYPE="checkbox" $(test "$on_wifidhcp" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="on_wifidhcp_start.disabled=(0==this.checked);on_wifidhcp_num.disabled=(0==this.checked);on_wifidhcp_lease.disabled=(0==this.checked);"></TD>
+	<INPUT CLASS="checkbox" NAME="on_wifidhcp" TYPE="checkbox" $(test "$on_wifidhcp" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'") ONCHANGE="on_wifidhcp_start.disabled=(0==this.checked);on_wifidhcp_num.disabled=(0==this.checked);on_wifidhcp_lease.disabled=(0==this.checked);"></TD>
 	<TD colspan="3">automatische IP-Vergabe per WLAN heute erlauben (DHCP)
 	</TD></TR>
 
@@ -152,7 +152,7 @@ for addr in $new_maclist; do
 	allow=$(echo $maclist | grep $addr)
 	echo "<TR>"
 cat<<EOF	
-	<TD><INPUT CLASS="checkbox" NAME="on_wifidhcp_access$number" TYPE="checkbox" $(test -n "$allow" && echo "CHECKED='on'" && echo "VALUE='on'")></TD>
+	<TD><INPUT CLASS="checkbox" NAME="on_wifidhcp_access$number" TYPE="checkbox" $(test -n "$allow" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")></TD>
 EOF
 	echo "</TD><TD><INPUT NAME="on_wifidhcp_mac$number" VALUE="$addr" TYPE="hidden">$addr</TD>"
 	echo "<TD>"$(if [ -f /var/run/dhcp.leases ]; then awk -v addr="$addr" '$2 == addr {print $3}' /var/run/dhcp.leases; fi)"</TD>"

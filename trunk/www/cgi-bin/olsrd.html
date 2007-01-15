@@ -65,7 +65,7 @@ Wurde die Konfiguration der plugins oder die Konfiguration auf dem Gateway geänd
 	document.getElementById('switch').style.display='inline';
 	document.getElementById('description').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 <H2>Einstellungen</H2>
 <FORM ACTION="olsrd.html" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
@@ -73,7 +73,7 @@ Wurde die Konfiguration der plugins oder die Konfiguration auf dem Gateway geänd
 
 <TR
 TITLE="Ist diese Einstellung aktiviert, werden Veränderungen der Konfiguration von einer Datei des Gateways auf diesen AccessPoint übernommen.">
-<TD COLSPAN="3"><INPUT CLASS="checkbox" NAME="on_remoteconf" TYPE="checkbox" $(test "$(nvram get on_remoteconf)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>Synchronisation der Konfiguration mit Gateway (empfohlen)</TD>
+<TD COLSPAN="3"><INPUT CLASS="checkbox" NAME="on_remoteconf" TYPE="checkbox" $(test "$(nvram get on_remoteconf)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")>Synchronisation der Konfiguration mit Gateway (empfohlen)</TD>
 </TR>
 
 <TR>
@@ -202,7 +202,7 @@ cat<<EOF
 	document.getElementById('switch_3').style.display='inline';
 	document.getElementById('textarea_3').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 
 
 

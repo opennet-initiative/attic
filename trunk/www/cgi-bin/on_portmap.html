@@ -44,12 +44,12 @@ cat<<EOF
 	document.getElementById('switch').style.display='inline';
 	document.getElementById('description').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 	<FORM NAME="MAINFORM_INET" ACTION="on_portmap.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
 	<TR><TD colspan="2">
-	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "on" && echo "CHECKED='true'" && echo "VALUE='true'") ONCHANGE="var Number=1; while(eval('this.form.on_mapaddr'+Number)) {eval('this.form.on_mapaddr'+Number++).disabled=this.checked;};">Alle Internet-Ports an einen Zielrechner weiterleiten
+	<INPUT CLASS="checkbox" NAME="on_mapall2one" TYPE="checkbox" $(test "$(nvram get on_mapall2one)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='true'") ONCHANGE="var Number=1; while(eval('this.form.on_mapaddr'+Number)) {eval('this.form.on_mapaddr'+Number++).disabled=this.checked;};">Alle Internet-Ports an einen Zielrechner weiterleiten
 	</TD></TR>
 	
 	<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD>
@@ -62,7 +62,7 @@ for number in 1 2 3 4 5 6 7 8 9; do
 cat<<EOF
 	<TR TITLE="Gib die Adresse ein, auf die der Port gemappt werden soll.">
 	<TD WIDTH="20" >$((base_addr+$number))</TD>
-	<TD><INPUT NAME="on_mapaddr$number" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr$number)"$(test "$(nvram get on_mapall2one)" = "on" && echo "disabled='true'")></TD>
+	<TD><INPUT NAME="on_mapaddr$number" SIZE="20" TYPE="TEXT" VALUE="$(nvram get on_mapaddr$number)"$(test "$(nvram get on_mapall2one)" = "on" && echo "disabled='disabled'")></TD>
 	</TR>
 EOF
 	number=$(($number+1))
@@ -91,8 +91,8 @@ on_internal_port=$(echo $on_internal_mapping | cut -d'>' -f1)
 local_lan_addr=$(echo $on_internal_mapping | cut -d'>' -f2)
 cat<<EOF
 <TR>
-	<td NAME="on_intrlsport"><INPUT NAME="on_intrlsport$number" SIZE="20" TYPE="TEXT" VALUE="$on_internal_port"></td>
-	<td NAME="on_intrldaddr"><INPUT NAME="on_intrldaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
+	<td><INPUT NAME="on_intrlsport$number" SIZE="20" TYPE="TEXT" VALUE="$on_internal_port"></td>
+	<td><INPUT NAME="on_intrldaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
 	<td>
 </TR>	
 EOF
@@ -105,8 +105,8 @@ cat<<EOF
 	<td colspan="3">Mapping hinzufügen:</td>
 </TR>
 <TR>
-	<td NAME="on_new_intrlsport"><INPUT NAME="on_new_intrlsport" SIZE="20" TYPE="TEXT"></td>
-	<td NAME="on_new_intrldaddr"><INPUT NAME="on_new_intrldaddr" SIZE="20" TYPE="TEXT"></td>
+	<td><INPUT NAME="on_new_intrlsport" SIZE="20" TYPE="TEXT"></td>
+	<td><INPUT NAME="on_new_intrldaddr" SIZE="20" TYPE="TEXT"></td>
 	<td></td>
 </TR>	
 <TR><TD colspan="2"><HR /></TD></TR>
@@ -130,8 +130,8 @@ on_wan_port=$(echo $on_wan_mapping | cut -d'>' -f1)
 local_lan_addr=$(echo $on_wan_mapping | cut -d'>' -f2)
 cat<<EOF
 <TR>
-	<td NAME="on_wansport"><INPUT NAME="on_wansport$number" SIZE="20" TYPE="TEXT" VALUE="$on_wan_port"></td>
-	<td NAME="on_wandaddr"><INPUT NAME="on_wandaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
+	<td><INPUT NAME="on_wansport$number" SIZE="20" TYPE="TEXT" VALUE="$on_wan_port"></td>
+	<td><INPUT NAME="on_wandaddr$number" SIZE="20" TYPE="TEXT" VALUE="$local_lan_addr"></td>
 	<td>
 </TR>	
 EOF
@@ -144,8 +144,8 @@ cat<<EOF
 	<td colspan="3">Mapping hinzufügen:</td>
 </TR>
 <TR>
-	<td NAME="on_new_wansport"><INPUT NAME="on_new_wansport" SIZE="20" TYPE="TEXT"></td>
-	<td NAME="on_new_wandaddr"><INPUT NAME="on_new_wandaddr" SIZE="20" TYPE="TEXT"></td>
+	<td><INPUT NAME="on_new_wansport" SIZE="20" TYPE="TEXT"></td>
+	<td><INPUT NAME="on_new_wandaddr" SIZE="20" TYPE="TEXT"></td>
 	<td></td>
 </TR>	
 <TR><TD colspan="2"><HR /></TD></TR>

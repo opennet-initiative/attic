@@ -21,7 +21,7 @@ cat<<EOF
 <FORM ACTION="lan.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
 <TBODY>
-<tr></tr>
+<tr><td></td></tr>
 <TR><TD><B>Adressdaten des AccessPoints</B></TD></TR>
 <TR
 TITLE="Bestimmt die Betriebsart der 4 Ethernet-Anschlüsse. Falls noch nicht konfiguriert, wird die Vorgabe 'Statisch' verwendet.">
@@ -52,7 +52,7 @@ TITLE="Konfiguriert statische Routen im Format 'ip:netmask:gatewayip:metric:inte
 <TD>Statische Routen:</TD>
 <TD><INPUT NAME="static_route" SIZE="32" TYPE="TEXT" VALUE="$(nvram get static_route)"></TD>
 </TR>
-<tr></tr>
+<tr><td></td></tr>
 <TR><TD><B>Weitere Einstellungen</B></TD></TR>
 <TR
 TITLE="Schaltet die IP-Adressumsetzung (NAT/Masquerading) zwischen dem internen LAN und dem Drahtlos-Netzwerk aus. Für spezielle Anwendungen kann mit dieser Option das interne LAN mit dem Drahtlos-Netzwerk direkt kommunizieren.">
@@ -86,7 +86,7 @@ fi
 cat<<EOF
 </TD>
 </TR>
-<tr></tr>
+<tr><td></td></tr>
 <TR><TD><B>DHCP-Server auf dem AcessPoint</B></TD></TR>
 <TR
 TITLE="Startwert für die per DHCP zugewiesenen IP-Adressen.">
@@ -121,7 +121,7 @@ TITLE="Zeit (in Sekunden) nach der eine vergebene IP-Adresse neu vergeben werden
 
 <P><B>ACHTUNG:</B> Wird bei 'LAN_Protokoll' 'DHCP' ausgewählt, sucht der AccessPoint im LAN nach einem anderen DHCP-Server und versucht eine Adresse zu bekommen. Dies ist oft nicht gewollt. Um auf dem AccessPoint eine DHCP-Server zu betreiben, muss diesem eine statische IP (z.B. 172.16.0.1) zugewiesen werden und im unteren Teil  die maximale Zahl der DHCP-Benutzer größer 0 gesetzt werden.
 
-</SPAN></P>
+</P>
 EOF
 
 else

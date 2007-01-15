@@ -32,28 +32,28 @@ TITLE="Informationen zu OpenVPN und nötigen Dateien">
 <TR>
 EOF
 if [ -f  /tmp/openvpn_msg.txt ];then
-	echo "<td>Tunnel active </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td>"
+	echo "<td>Tunnel active </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td>"
 else
-	echo "<td>Tunnel inactive </td><td> <img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+	echo "<td>Tunnel inactive </td><td> <img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
 fi
 echo "<TD><INPUT NAME=\"openvpn_restart\" TITLE=\"Starte bzw. Neustarte OpenVPN jetzt\" TYPE=\"SUBMIT\" VALUE=\" OpenVPN neustarten\"></TD>"
 echo "</tr>"
 if [ -f  /etc/openvpn/opennet_user/on_aps.csr ];then
-	echo "<tr><td>Zertifikatanfrage (CSR) vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.csr">herunterladen</a></td></tr>"
+	echo "<tr><td>Zertifikatanfrage (CSR) vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td><a href="on_aps.csr">herunterladen</a></td></tr>"
 elif ! [ -f  /etc/openvpn/opennet_user/on_aps.key ] && ! [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo "<tr><td>Zertifikatanfrage (CSR) fehlt </td><td></td></tr>"
 fi
 echo "<tr>"
 if [ -f  /etc/openvpn/opennet_user/on_aps.key ];then
-	echo "<td>Schlüssel vorhanden </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.key">herunterladen</a></td>"
+	echo "<td>Schlüssel vorhanden </td><td> <img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td><a href="on_aps.key">herunterladen</a></td>"
 else
-	echo "<td>Schlüssel fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+	echo "<td>Schlüssel fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
 fi
 echo "</tr><tr>"
 if [ -f /etc/openvpn/opennet_user/on_aps.crt ];then
-	echo "<td>Zertifikat vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" align=\"absmiddle\"></td><td><a href="on_aps.crt">herunterladen</a></td>"
+	echo "<td>Zertifikat vorhanden </td><td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td><a href="on_aps.crt">herunterladen</a></td>"
 else
-	echo "<td>Zertifikat fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" align=\"absmiddle\"></td>"
+	echo "<td>Zertifikat fehlt </td><td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
 fi
 cat<<EOF
 </TR>
@@ -139,13 +139,13 @@ cat<<EOF
 <TR TITLE="email adresse"><TD>email-adresse:</TD>
 <TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="ap$(nvram get wifi_ipaddr | cut -d'.' -f4)@opennet-initiative.de" $(if [ -n "$openssl_EmailAddress" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
-<tr></tr>
+<tr><td></td></tr>
 <TR
 TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 <TD colspan="2">Geheimen Schlüssel und Anfrage zur Zertifizierung (CSR) generieren:</TD>
 <TD><INPUT NAME="gen_csr" TITLE="Secret Key und Request jetzt generieren" TYPE="SUBMIT" VALUE=" Generieren"></TD>
 </TR>
-<TR></TBODY>
+<TR><td></td></TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 
 EOF

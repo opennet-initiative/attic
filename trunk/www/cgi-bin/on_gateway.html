@@ -89,7 +89,7 @@ Unter 'OpenVPN-Test' wird angegeben, ob testweise eine OpenVPN Verbindung zum en
 	document.getElementById('switch').style.display='inline';
 	document.getElementById('description').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 <br />
 <H2>Gateway-Liste</H2>
 <FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
@@ -97,7 +97,7 @@ Unter 'OpenVPN-Test' wird angegeben, ob testweise eine OpenVPN Verbindung zum en
 TITLE="Gateway Konfiguration">
 <TBODY>
 <TR><TD colspan="4">
-	<INPUT CLASS="checkbox" NAME="on_gwauto" TYPE="checkbox" $(test "$gwauto" = "on" && echo "CHECKED='on'" && echo "VALUE='on'") ONCHANGE="var Number=1; while(eval('this.form.on_gw'+Number)) {eval('this.form.on_gw'+Number++).disabled=this.checked;}; this.form.on_gwtoadd.disabled=this.checked;">Automatische Gateway-Suche
+	<INPUT CLASS="checkbox" NAME="on_gwauto" TYPE="checkbox" $(test "$gwauto" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'") ONCHANGE="var Number=1; while(eval('this.form.on_gw'+Number)) {eval('this.form.on_gw'+Number++).disabled=this.checked;}; this.form.on_gwtoadd.disabled=this.checked;">Automatische Gateway-Suche
 	</TD></TR>
 <TR><TD colspan="4"><HR /></TD></TR>
 <TR>
@@ -119,7 +119,7 @@ for on_gwaddr in $(nvram get on_gwaddrs); do
 cat<<EOF
 <TR>
 	<td>$number. </td>
-	<td NAME="address"><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gw_addr" $(test "$gwauto" = "on" && echo "DISABLED='1'") ONCHANGE="document.getElementById('route$number').style.display='none';document.getElementById('vpntest$number').style.display='none';"></td>
+	<td><INPUT NAME="on_gw$number" SIZE="20" TYPE="TEXT" VALUE="$on_gw_addr" $(test "$gwauto" = "on" && echo "DISABLED='DISABLED'") ONCHANGE="document.getElementById('route$number').style.display='none';document.getElementById('vpntest$number').style.display='none';"></td>
 	<td id="route$number"> 
 EOF
 	blacklisted="$(nvram get on_gwblackaddrs | awk "/$on_gw_addr/"'{print}')"
@@ -173,8 +173,8 @@ cat<<EOF
 </TR><TR>
 	<td colspan="4">Gateway hinzufügen:</td>
 </TR>
-</TR>
-	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE="" $(test "$gwauto" = "on" && echo "DISABLED='1'")></td>
+<TR>
+	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE="" $(test "$gwauto" = "on" && echo "DISABLED='DISABLED'")></td>
 </TR>
 <TR><TD colspan="4"><HR /></TD></TR>
 <TR>
@@ -182,7 +182,7 @@ cat<<EOF
 </TR>
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
-
+</FORM>
 <br />
 <H2>Gateway-Blacklist</H2>
 <!-- show the following area only, if user likes more information -->
@@ -194,7 +194,7 @@ An dieser Stelle kannst Du gezielt einzelne Gateways sperren. Auch wenn diese in
 	document.getElementById('switch2').style.display='inline';
 	document.getElementById('description2').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 
 <FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
@@ -211,7 +211,7 @@ for on_gwblackaddr in $(nvram get on_gwblackaddrs); do
 cat<<EOF
 <TR>
 	<td>$number. </td>
-	<td NAME="address"><INPUT NAME="on_gwblack$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwblackaddr"></td>
+	<td><INPUT NAME="on_gwblack$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwblackaddr"></td>
 	<td> 
 EOF
 	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwblackaddr)" = "$on_gwblackaddr" ]; then
@@ -231,7 +231,7 @@ cat<<EOF
 </TR><TR>
 	<td colspan="3">Gateway zur Blacklist hinzufügen:</td>
 </TR>
-</TR>
+<TR>
 	<td></td><td><INPUT NAME="on_gwblacktoadd" SIZE="20" TYPE="TEXT" VALUE=""></td>
 </TR>
 <TR><TD colspan="3"><HR /></TD></TR>

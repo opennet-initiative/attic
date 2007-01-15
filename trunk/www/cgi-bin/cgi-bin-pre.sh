@@ -3,14 +3,14 @@ echo Content-type: text/html
 echo
 
 cat<<EOF
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 
 <HEAD>
 <TITLE>opennet.firmware - $TITLE</TITLE>
-<META CONTENT="text/html; charset=iso-8559-1" HTTP-EQUIV="Content-Type">
-<META HTTP-EQUIV="cache-control" CONTENT="no-cache" />
+<META CONTENT="text/html; charset=ISO-8859-1" HTTP-EQUIV="Content-Type">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache">
 <LINK HREF="../ff.css" REL="StyleSheet" TYPE="text/css">
-<LINK HREF="sven-ola*ät*gmx*de" REV="made" TITLE="Sven-Ola">
 EOF
 
 unescape()

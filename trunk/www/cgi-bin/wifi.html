@@ -67,17 +67,17 @@ cat<<EOF
 </TR>
 <TR style="display:$set_dns">
 	<TD colspan="2">
-	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='true'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.lan_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
+	<INPUT CLASS="checkbox" NAME="on_autodns" TYPE="checkbox" $(test "$(nvram get on_autodns)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'") ONCHANGE="var Number=1; this.form.lan_dns.disabled=this.checked;">Automatische Wahl der Gateways als DNS-Server
 	</TD>
 </TR>
 <TR style="display:$set_dns"
 TITLE="Diese Adresse wird angesprochen, um Internet-Namen mittels DNS in IP-Adressen aufzulösen.">
 	<TD>DNS-Server:</TD>
-	<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='true'")></TD>
+	<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_dns)"$(test "$(nvram get on_autodns)" = "on" && echo "disabled='disabled'")></TD>
 </TR>
 <TR
 TITLE="Ist diese Einstellung aktiviert, werden die bei der PPPOE-Einwahl übermittelten DNS-Server ignoriert">
-	<TD COLSPAN="2"><INPUT CLASS="checkbox" NAME="on_pppoe_keepdns" TYPE="checkbox" $(test "$(nvram get on_pppoe_keepdns)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>DNS-Server bei PPPoE-Einwahl nicht ändern</TD>
+	<TD COLSPAN="2"><INPUT CLASS="checkbox" NAME="on_pppoe_keepdns" TYPE="checkbox" $(test "$(nvram get on_pppoe_keepdns)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")>DNS-Server bei PPPoE-Einwahl nicht ändern</TD>
 </TR>
 
 </table></td></tr>

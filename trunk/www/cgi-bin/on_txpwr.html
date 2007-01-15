@@ -34,7 +34,7 @@ Eine hohe Sendeleistung ist nicht unbedingt die Vorraussetzung für eine gute Ver
 	document.getElementById('switch').style.display='inline';
 	document.getElementById('description').style.display='none';
 </script>
-<!-- ----------------------------------------------------------- -->
+<!-- ************************************************************ -->
 
 
 <H2>Sendeleistung</H2>
@@ -49,13 +49,14 @@ TITLE="Einstellung der Sendeleistung">
 <OPTION VALUE='1' $(test "$on_ant_dbi" = "1" && echo "selected=selected")>1dBi (bspw. AccessPoint-Antenne)</OPTION>
 <OPTION VALUE='8' $(test "$on_ant_dbi" = "8" && echo "selected=selected")>8dBi (bspw. Rappl-Omni)</OPTION>
 <OPTION VALUE='0' $(test "$on_ant_dbi" = "0" && echo "selected=selected")>unbekannt (Vorsicht)</OPTION>
+</SELECT>
 </TD>
 <TD> Sende-Leistung<br />
 <INPUT NAME="ff_txpwr" SIZE="4" TYPE="TEXT" VALUE="$(nvram get ff_txpwr)" ONCHANGE="if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '1') && (this.value > 84)) {alert('Achtung: Maximalwert für Sendeleistung 84mW'); this.form.ff_txpwr.value=84;} else if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '8') && (this.form.ff_txpwr.value > 19)) {alert('Achtung: Maximalwert für Sendeleistung 19mW'); this.form.ff_txpwr.value=19;};">mW
 </TD>
 </TR>
 <TR>
-		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="Sendeleistung nach jedem Neustart einmal optmieren" NAME="on_autoadapttxpwr" TYPE="checkbox" $(test "$(nvram get on_autoadapttxpwr)" = "on" && echo "CHECKED='on'" && echo "VALUE='on'")>einmalige automatische Anpassung nach jedem Neustart</TD>
+		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="Sendeleistung nach jedem Neustart einmal optmieren" NAME="on_autoadapttxpwr" TYPE="checkbox" $(test "$(nvram get on_autoadapttxpwr)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")>einmalige automatische Anpassung nach jedem Neustart</TD>
 </TR>
 
 <TR>
