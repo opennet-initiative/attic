@@ -5,11 +5,57 @@
 startswith() { local str="$1"; local substr="$2";
 	[ -n "$str" -a -z "${str##$substr*}" ] && echo 1 || echo 0; }
 
+endswith() { local str="$1"; local substr="$2";
+	[ -n "$str" -a -z "${str##*$substr}" ] && echo 1 || echo 0; }
+
 ##
 ## opennet-firmware postinst script
 ##
 
 echo "  updating nvram variables to opennet defaults.."
+
+if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
+	# german channel setup
+	nvram set wl0_country_code=DE
+	# enable ad hoc
+	nvram set wl0_mode=sta
+	nvram set wl0_infra=0
+	# disable wep (not really needed)
+	nvram set wl0_wep=off
+	# disable wpa (not really needed)
+	nvram unset wl_wpa_psk
+	nvram unset wl_wpa_gtk_rekey
+	nvram unset wl0_wpa_gtk_rekey
+	nvram unset wl0_wpa_psk
+	nvram unset wl0_akm
+	# disable wds
+	nvram unset wl0_lazywds
+	nvram unset wl0_wds
+	# set b/g mode
+	nvram set wl0_gmode=1 
+	nvram set wl0_gmode_protection=auto
+	echo "  - changed wifi mode => DE, ad-hoc, no wep/wpa/wds, b/g mode"
+
+	# set ssid (if not yet like *.opennet-initiative.de)
+	ssid=$(nvram get wl0_ssid)
+	if [ -z "$ssid" ] || [ $(endswith "$ssid" "opennet-initiative.de") = 0 ]; then
+		nvram set wl0_ssid=olsr.opennet-initiative.de
+		nvram set wl0_channel=1
+		echo "  - changed ssid => olsr.opennet-initiative.de, channel 1"
+		nvram unset ff_bssid  # set default later...
+	fi	
+
+	# set bssid (if not set yet)
+	bssid=$(nvram get ff_bssid)
+	if [ -z "$bssid" ]; then
+		nvram set ff_bssid="02:ca:ff:ee:ba:be"
+		echo "  - changed bssid => 02:ca:ff:ee:ba:be"
+	fi
+
+	# misc wifi params
+	nvram set wl0_frag=512
+	nvram set wl0_rts=250
+fi
 
 # configure lan interface (if not down yet like 172.16.0.x or 192.168.2.x)
 lanip=$(nvram get lan_ipaddr)
@@ -59,6 +105,7 @@ on_ant_dbi=$(nvram get on_ant_dbi)
 ff_txpwr=$(nvram get ff_txpwr)
 if [ -z "$on_ant_dbi" ]; then
 	nvram set on_ant_dbi=8
+	echo "  - changed antenna dbi => 15 mW"
 fi
 if [ -z "$ff_txpwr" ]; then
 	nvram set ff_txpwr=15
@@ -113,59 +160,46 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-9"
+nvram set on_fw_pkgversion="0.11ipkg-10"
 
 ### switch from openwrt to opennet-specific ############################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-firmware 0.11ipkg-9 ------ " >>/etc/banner
+echo " -- modified with opennet-firmware 0.11ipkg-10 ----- " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
+### add Opennet-Interface to openwrt-Webinterface ######################
 awk '!/Opennet-Interface/ {print}' /www/cgi-bin/webif/.categories >/www/cgi-bin/webif/.categories_bak
 rm /www/cgi-bin/webif/.categories
 cp /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories
 
 echo "##WEBIF:category:Opennet-Interface" >>/www/cgi-bin/webif/.categories
 
+
 ### bugfixes section (repairing of old bugs) ###########################
 
-rm -f /usr/sbin/check_nagare.sh
+# openvpn-path changed after 0.10ipkg-1, so move the files
+if [ -e /etc/openvpn/on_aps.key ]; then mv -f /etc/openvpn/on_aps.key /etc/openvpn/opennet_user/; fi
+if [ -e /etc/openvpn/on_aps.crt ]; then	mv -f /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/; fi
+if [ -e /etc/openvpn/on_aps.csr ]; then mv -f /etc/openvpn/on_aps.csr /etc/openvpn/opennet_user/; fi
 
-rm -f /www/cgi-bin/18-localaccess
-rm -f /www/cgi-bin/on_localaccess.html
-rm -f /etc/init.d/S83wifiaccess
+# some filenames changed after release-0.11ipkg-3
+rm -f /usr/sbin/check_nagare.sh		# now /usr/sbin/check_usergateway.sh
+rm -f /www/cgi-bin/18-localaccess	# now /www/cgi-bin/18-wifidhcp
+rm -f /www/cgi-bin/on_localaccess.html  # now /www/cgi-bin/on_wifidhcp
+rm -f /etc/init.d/S82wifiaccess		# now /etc/init.d/S82wifidhcp
 
+# renamed var on_sharedsl into on_share_internet since release-0.11ipkg-3
+if [ -z "$(nvram get on_share_internet)" ]; then
+	nvram set on_share_internet=$(nvram get on_sharedsl)
+fi
 
-# obsolete vars
-nvram unset wl0_on_init_override
-nvram unset on_wldhcp_num
-nvram unset on_wldhcp
-nvram unset on_wldhcp_start
-nvram unset on_wldhcp_lease
-nvram unset dhcpwl_proto
-nvram unset dhcpwl_ipaddr
-nvram unset dhcpwl_ifname
-nvram unset dhcpwl_netmask
-nvram unset on_wifi_access
-nvram unset on_sharedslh
-nvram unset on_sharedsl_blocked
-
+# renamed var on_wifiaccess_route_override since release-0.11ipkg-3
 if [ -n "$(nvram get on_wifiaccess_route_override)" ]; then
 	nvram set on_wifidhcp_route_override=$(nvram get on_wifiaccess_route_override)
-	nvram unset on_wifiaccess_route_override
 fi
 
-if [ -e /etc/openvpn/on_aps.key ]; then
-	mv -f /etc/openvpn/on_aps.key /etc/openvpn/opennet_user/
-fi
-if [ -e /etc/openvpn/on_aps.crt ]; then
-	mv -f /etc/openvpn/on_aps.crt /etc/openvpn/opennet_user/
-fi
-if [ -e /etc/openvpn/on_aps.csr ]; then
-	mv -f /etc/openvpn/on_aps.csr /etc/openvpn/opennet_user/
-fi
-
-
+# renamed opennet_dsl into opennet_ugw since release-0.11ipkg-3
 if [ -e /etc/openvpn/opennet_dsl ]; then
 	if [ -e /etc/openvpn/opennet_dsl/on_ugws.key ]; then
 		mv -f /etc/openvpn/opennet_dsl/on_ugws.key /etc/openvpn/opennet_ugw/on_ugws.key
@@ -179,9 +213,35 @@ if [ -e /etc/openvpn/opennet_dsl ]; then
 	rm -rf /etc/openvpn/opennet_dsl
 fi
 
-if [ -z "$(nvram get on_share_internet)" ]; then
-	nvram set on_share_internet=$(nvram get on_sharedsl)
+# obsolete vars since release-0.11ipkg-3
+nvram unset on_wldhcp_num
+nvram unset on_wldhcp
+nvram unset on_wldhcp_start
+nvram unset on_wldhcp_lease
+nvram unset dhcpwl_proto
+nvram unset dhcpwl_ipaddr
+nvram unset dhcpwl_ifname
+nvram unset dhcpwl_netmask
+nvram unset on_wifi_access
+nvram unset on_sharedsl
+nvram unset on_sharedsl_blocked
+nvram unset on_wifiaccess_route_override
+
+# pre release-0.11ipkg-5 might result in broken firmware-update interface
+if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
+	cd /www/cgi-bin/webif/
+	upgrade_sh_on_md5=$(md5sum upgrade.sh_on 2>/dev/null| cut -d" " -f1)
+	if [ -e upgrade.sh_bak ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh_bak|cut -d" " -f1)" ]; then
+			echo "repairing broken (but hidden) firmware-update interface"
+			ln -sf /rom/www/cgi-bin/webif/upgrade.sh upgrade.sh_bak
+	elif [ -e upgrade.sh ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh|cut -d" " -f1)" ]; then
+			echo "repairing broken firmware-update interface"
+			ln -sf /rom/www/cgi-bin/webif/upgrade.sh .
+	fi
 fi
+
+
+
 
 ########################################################################
 	
