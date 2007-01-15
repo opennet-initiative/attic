@@ -83,11 +83,12 @@ if [ "$1" = "quick" ] && [ -n "$on_share_internet_blocked" ]; then
 	fi
 fi
 
+# **** proceed anyway, SNAT and policy-routing is important for WAN-broadband usage.
 # only proceed if internet sharing is activated
-on_share_internet=$(nvram get on_share_internet)
-if [ "$on_share_internet" != "on" ]; then
-	  return
-fi
+#on_share_internet=$(nvram get on_share_internet)
+#if [ "$on_share_internet" != "on" ]; then
+#	  return
+#fi
 
 # prüfe ob WANDEV Teil des WIFI-Netzes ist. Wenn ja, dann sofort abbrechen
 if [ "$(ipcalc $(nvram get wan_ipaddr) $(nvram get wan_netmask)|grep "NETWORK")" = "$(ipcalc $(nvram get wifi_ipaddr) $(nvram get wifi_netmask)|grep "NETWORK")" ]; then
