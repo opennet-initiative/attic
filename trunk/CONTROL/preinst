@@ -6,6 +6,7 @@ rm -f /bin/login
 rm -f /etc/functions.sh
 
 rm -f /etc/init.d/S40network
+rm -f /etc/init.d/S35firewall # new place of firewall-config in rc6
 rm -f /etc/init.d/S45firewall
 rm -f /etc/init.d/S50telnet
 rm -f /etc/init.d/S50httpd
@@ -26,8 +27,12 @@ rm -f /etc/ppp/ip-down
 # remove former firewall file to provide clearer structure
 rm -f /etc/firewall.user
 
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
 # restoring Webinterface (be)for firmware-update/upgrade
-mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+mv -f /www/cgi-bin/webif/$upgrade_bak /www/cgi-bin/webif/$upgrade 2>/dev/null
 mv -f /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories 2>/dev/null
 
 echo "  removing files to replace - done"
