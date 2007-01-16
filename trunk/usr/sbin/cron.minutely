@@ -6,7 +6,7 @@ BEGIN {
 	# i like shell scripting better: check if gateway is recent
 	system("/usr/sbin/cron.minutely_ongateway")
 	
-	# check if nagare is still reached via WANDEV
+	# check if usergateway can still be reached via WANDEV
 	system("/usr/sbin/check_usergateway.sh quick")
 		
 	# Get counters of wifi for check

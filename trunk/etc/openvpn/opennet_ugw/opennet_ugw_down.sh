@@ -10,7 +10,7 @@ while [ -n "$(get_rulenum)" ]; do
 done
 
 
-# cause nagare might be unreachable and WAN might be down its better to search for the rules to remove
+# cause usergateway might be unreachable and WAN might be down its better to search for the rules to remove
 
 # dont use ugw-tunnel for user-tunneld packages
 RULENUM=$(iptables -L POSTROUTING -t nat --line-numbers -n | awk "/$WIFINET\/$WIFIPRE/"'&& /dpt:1600/ {print $1; exit}')

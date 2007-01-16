@@ -80,5 +80,5 @@ if [ $(grep /var/run/openvpn.opennet_user.pid /proc/*/cmdline 2>/dev/null | wc -
 	/etc/init.d/S80openvpn start opennet_user
 fi
 
-# check if nagare_ip is still the same
+# check if IP of usergateway is still the same
 /usr/sbin/check_usergateway.sh

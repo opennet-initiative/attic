@@ -122,7 +122,7 @@ case $1 in
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 3
 	ip rule add unicast from $LANNET/$LANPRE table 4
 	ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
-	# add special rule to ensure ugw-access to nagare
+	# add special rule to ensure ugw-access to ugw
 	ip rule add unicast table 5
         ;;
         stop)

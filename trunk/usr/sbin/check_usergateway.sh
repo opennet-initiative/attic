@@ -1,5 +1,5 @@
 #!/bin/sh
-# script to check, if nagare is reachable via WANDEV or if IP of nagare has changed
+# script to check, if usergateway is reachable via WANDEV or if IP of usergateway has changed
 # if called with parameter "quick", only availablility of WANDEV and special routes are checked
 # if WAN-device is active, policy-routing for WANDEV is activated
 
@@ -106,7 +106,7 @@ table_5=$(ip route show table 5)
 
 if [ -z "$WANDEV" ] || [ -z "$ip_remote" ]; then
 	# keine default-route gefunden, entferne policy-routing und stoppe tunnel
-	# AcHTUNG: wenn nicht per hand, wird der tunnel zu nagare (table 5) erst wieder durch cron-hourly gestartet
+	# AcHTUNG: wenn nicht per hand, wird der tunnel zum usergateway (table 5) erst wieder durch cron-hourly gestartet
 	if [ -e /var/run/openvpn.opennet_ugw.pid ]; then
 		test $DEBUG && -t check_usergateway "WAN-default route fehlt, stoppe opennet_usergateway tunnel"
 		/etc/init.d/S80openvpn stop opennet_ugw
@@ -148,7 +148,7 @@ if [ "$1" = "quick" ]; then return; fi
 gws_table_5=$(ip route show table 5| awk '{print $1}')
 
 for central_gw in $central_gateways; do
-	# besorge die IP-addresse von nagare
+	# besorge die IP-addresse vom usergateway
 	central_gw_ip=$(nslookup $central_gw 2>/dev/null | tail -n 1 | awk '{ print $2 }')
 	if [ -n "$central_gw_ip" ]; then
 		if [ -z "$(echo $gws_table_5 | grep $central_gw_ip)" ]; then
@@ -163,7 +163,7 @@ for central_gw in $central_gateways; do
 				/etc/init.d/S80openvpn start opennet_ugw
 			fi
 		else
-			test $DEBUG && logger -t check_usergateway "no, nagare kann nicht extern erreicht werden"
+			test $DEBUG && logger -t check_usergateway "no, $central_gw kann nicht extern erreicht werden"
 			/etc/init.d/S80openvpn stop opennet_ugw
 			usergateway_route del $ip_remote $central_gw_ip
 		fi

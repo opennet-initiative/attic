@@ -23,7 +23,7 @@ case "$ACTION" in
 		#~ iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
 		#~ iptables -t nat -A POSTROUTING -o $IFNAME -s $DHCPWIFINET_PRE -j SNAT --to-source $IPLOCAL
 
-		# activate policy routing (now done in check nagare to be independent of ppp)
+		# activate policy routing (now done in check_usergateway to be independent of ppp)
 		#~ ip route flush table 4
 		#~ ip route add throw $LANNET/$LANPRE table 4
 		#~ ip route add throw $WIFINET/$WIFIPRE table 4
@@ -46,7 +46,7 @@ case "$ACTION" in
 		# restart portmapping to forward packets before filtering
 		/etc/init.d/S82portmapping restart
 		
-		# enable direct access to nagare and start usergateway tunnel
+		# enable direct access to ugw and start usergateway tunnel
 		/usr/sbin/check_usergateway.sh
 
                 ;;
@@ -73,6 +73,6 @@ case "$ACTION" in
 			nvram unset lan_dns_store
 		fi
 
-		# disable direct access to nagare and stop usergateway tunnel
+		# disable direct access to ugw and stop usergateway tunnel
 		/usr/sbin/check_usergateway.sh
 esac
