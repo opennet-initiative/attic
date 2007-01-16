@@ -93,7 +93,7 @@ cat<<EOF
 EOF
 	warning="Achtung: Der eingegebene Port wird vermutlich nicht vom Gateway an Deinen AccessPoint weitergeleitet.\n\nDie durch den VPN-Tunnel von einem Gateway an Deinen AccessPoint weitergleiteten Ports sind abhängig von Deiner AccessPoint-IP-Adresse bzw. Deinem VPN-Zertfikat.\nBasierend auf dem Zertifikat bzw. der Adresse Deines AccessPoints wurde ermittelt, dass die Ports von $base_addr bis $((base_addr+9)) an Deinen AccessPoint weitergeleitet werden."
 
-	sport_check="ONCHANGE=\"if ((this.value < $base_addr) || (this.value > eval($base_addr+9))) {this.style.color='red'; alert('$warning');} else {this.style.color=''};\""
+	sport_check="ONCHANGE=\"if ((this.value !='' && (this.value < $base_addr) || (this.value > eval($base_addr+9)))) {this.style.color='red'; alert('$warning');} else {this.style.color=''};\""
 	
 	show_portmap vpn "$sport_check" "" "$sport_check"
 cat<<EOF	
@@ -133,7 +133,6 @@ else
 
 	for source in vpn wifi wan; do
 		if [ -n "$(eval echo "\$post_"$source"_portmap")" ]; then
-			echo "testing the whole crap"
 			number=1
 			portmap_newlist=
 			# refresh all stored values
