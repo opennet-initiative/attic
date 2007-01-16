@@ -43,48 +43,22 @@ map_all_ports() {
         
 	# (un)Mapping Internet Ports
 	
-	echo "** Internet (VPN-Tunnel) ports **"
-	#calculate the port base
-        port=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
-        last_port=$(($port+9))
-
-        if [ "$(nvram get on_mapall2one)" = "on" ]; then
-                ip=$(nvram get on_mapaddr0)
-                if [ -n "$ip" ]; then map_port_to_ip $port:$last_port $ip $TUNDEV $1; fi
-        else
-                #try to map all ten ports
-                for V in 0 1 2 3 4 5 6 7 8 9; do
-                        ip=$(nvram get on_mapaddr$V)
-                        if [ -n "$ip" ]; then map_port_to_ip $port $ip $TUNDEV $1; fi
-                        port=$(($port+1))
-                done
-        fi
-	
-	# (un)Mapping Opennet Ports
-	
-	if [ -n "$WIFIDEV" ]; then
-		echo "** Opennet (WLAN-Access) ports **"
-		for on_internal_mapping in $(nvram get on_intrlmap); do
-			port=$(echo $on_internal_mapping | cut -d'>' -f1)
-			ip=$(echo $on_internal_mapping | cut -d'>' -f2)
-			map_port_to_ip $port $ip $WIFIDEV $1
-		done
-	fi
-	
-	# (un)Mapping WAN Ports
-	
-	if [ -n "$WANDEV" ]; then
-		echo "** Internet (WAN-Access) ports **"
-		for on_wan_mapping in $(nvram get on_wanmap); do
-			port=$(echo $on_wan_mapping | cut -d'>' -f1)
-			ip=$(echo $on_wan_mapping | cut -d'>' -f2)
-			map_port_to_ip $port $ip $WANDEV $1
-		done
-	fi
+	for source in vpn wifi wan; do
+		SOURCEDEV=$(echo $source | tr [a-z] [A-Z])"DEV"
+		SOURCEDEV=$(eval echo \$$SOURCEDEV)
+		if [ -n "$SOURCEDEV" ]; then
+			echo "** $source ports **"
+			for on_mapping in $(nvram get "on_"$source"map"); do
+				port=$(echo $on_mapping | cut -d'>' -f1)
+				ip=$(echo $on_mapping | cut -d'>' -f2)
+				map_port_to_ip $port $ip $SOURCEDEV $1
+			done
+		fi	
+	done
 }
 
 # get network parameter (formerly done in netparam)
-TUNDEV=tun+
+VPNDEV=tun+
 
 on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
 if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi

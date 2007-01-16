@@ -243,6 +243,27 @@ fi
 # pre release 0.11ipkg-10 delivered /debian-binary - and shouldnt
 rm -rf /debian-binary
 
+# portforwarding variables changed and unified in 0.11ipkg-10, transfer former variables
+if [ -n "$(nvram show 2>/dev/null | grep on_map)" ]; then
+	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt )
+	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4)1; fi
+	base_addr=$((10000+10*($base_addr-1)))
+
+	mapall2one=$(nvram get on_mapall2one); mapall2one_addr=$(nvram get on_mapaddr0)
+	portmap_newlist=
+	for n in 0 1 2 3 4 5 6 7 8 9; do
+		if [ "$mapall2one" = "on" ]; then destaddr=$mapall2one_addr;
+		else destaddr=$(nvram get on_mapaddr$n); fi
+		nvram unset on_mapaddr$n;
+		[ -n "$destaddr" ] && portmap_newlist="$portmap_newlist $(($base_addr+$n))>$destaddr"
+	done
+	portmap_newlist=$(echo $portmap_newlist); nvram set on_vpnmap="$portmap_newlist"
+	nvram unset on_mapaddr0; nvram unset on_mapall2one
+fi
+if [ -n "$(nvram get on_intrlmap)" ]; then
+	nvram set on_wifimap=$(nvram get on_intrlmap); nvram unset on_intrlmap; nvram unset 
+fi
+
 ########################################################################
 
 
