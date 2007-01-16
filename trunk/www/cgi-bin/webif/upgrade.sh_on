@@ -4,4 +4,4 @@ echo
 echo "<html><head>"
 echo "<meta http-equiv=\"refresh\" content=\"0; URL=/cgi-bin/firmware.html\">"
 echo "</head></html>"
-##WEBIF:name:System:4:Firmware Upgrade
+##WEBIF:name:System:400:Firmware Upgrade
