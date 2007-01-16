@@ -17,6 +17,7 @@ case "$ACTION" in
                 [ -f /tmp/env.txt ] || env > /tmp/env.txt
 		
 		logger "running ppp.local script ifup ppp"
+		ip rule add unicast from $IPLOCAL table 4
 		
 		#~ # SNAT (now done in check_usergateway)
 		#~ iptables -t nat -A POSTROUTING -o $IFNAME -s $LANNET_PRE -j SNAT --to-source $IPLOCAL
@@ -51,6 +52,7 @@ case "$ACTION" in
                 ;;
         ifdown)
                 logger "running ppp.local script ifdown ppp"
+		ip rule del unicast from $IFNAME table 4
 		
 		#~ # simply remove all SNAT-rules for the ppp device tunnel  (now done in check_usergateway)
 		#~ get_rulenum() { 
