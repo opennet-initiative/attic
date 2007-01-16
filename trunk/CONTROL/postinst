@@ -232,23 +232,30 @@ if [ -e /www/cgi-bin/webif/upgrade.sh_on ]; then
 	cd /www/cgi-bin/webif/
 	upgrade_sh_on_md5=$(md5sum upgrade.sh_on 2>/dev/null| cut -d" " -f1)
 	if [ -e upgrade.sh_bak ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh_bak|cut -d" " -f1)" ]; then
-			echo "repairing broken (but hidden) firmware-update interface"
+			echo "  - repairing broken (but hidden) firmware-update interface"
 			ln -sf /rom/www/cgi-bin/webif/upgrade.sh upgrade.sh_bak
 	elif [ -e upgrade.sh ] && [ "$upgrade_sh_on_md5" = "$(md5sum upgrade.sh|cut -d" " -f1)" ]; then
-			echo "repairing broken firmware-update interface"
+			echo "  - repairing broken firmware-update interface"
 			ln -sf /rom/www/cgi-bin/webif/upgrade.sh .
 	fi
 fi
 
-
-
+# pre release 0.11ipkg-10 delivered /debian-binary - and shouldnt
+rm -rf /debian-binary
 
 ########################################################################
+
+
+# openwrt firmware upgrade interface name changed after rc5
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
 	
 # wenn key's auf dem AP, blockiere OpenWrt-Interface zum firmware-update
-if ! [ -e upgrade.sh_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
-	mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-	ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+if ! [ -e $upgrade_bak ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] || [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
+	mv -f /www/cgi-bin/webif/$upgrade /www/cgi-bin/webif/$upgrade_bak 2>/dev/null
+	ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/$upgrade 2>/dev/null
 fi
 
 nvram commit
