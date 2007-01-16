@@ -1,4 +1,8 @@
 #!/bin/sh
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
 
 export DATE="5.9.2005"
 export TITLE="Verwaltung: OpenVPN"
@@ -41,9 +45,9 @@ if [ -z "${ffout##*.key}" ] && ! [ -f  /etc/openvpn/opennet_user/on_aps.key ]; t
 	echo "geheimer Schlüssel wurde hochgeladen und in /etc/openvpn/opennet_user/ als Datei on_aps.key gespeichert"
 	cp "$ffout" /etc/openvpn/opennet_user/on_aps.key
 	# blockiere Webfrontend zum Firmware-Update
-	if ! [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
-		mv -f /www/cgi-bin/webif/upgrade.sh /www/cgi-bin/webif/upgrade.sh_bak 2>/dev/null
-		ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+	if ! [ -e /www/cgi-bin/webif/$upgrade_bak ]; then
+		mv -f /www/cgi-bin/webif/$upgrade /www/cgi-bin/webif/$upgrade_bak 2>/dev/null
+		ln -s /www/cgi-bin/webif/upgrade.sh_on /www/cgi-bin/webif/$upgrade 2>/dev/null
 	fi
 elif [ -z "${ffout##*.crt}" ] && ! [ -f  /etc/openvpn/opennet_user/on_aps.crt ]; then
 	echo "Zertifikat wurde hochgeladen und in  /etc/openvpn/opennet_user/ als Datei on_aps.crt gespeichert"

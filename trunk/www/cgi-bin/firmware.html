@@ -1,4 +1,9 @@
 #!/bin/sh
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
+
 export DATE="5.9.2005"
 export TITLE="Verwaltung: Firmware"
 . ${0%/*}/cgi-bin-pre.sh
@@ -104,7 +109,7 @@ cat<<EOF
 <br /><br />
 <H2>Komplettes Firmware-Update</H2>
 EOF
-if [ -e /www/cgi-bin/webif/upgrade.sh_bak ]; then
+if [ -e /www/cgi-bin/webif/$upgrade_bak ]; then
 	echo "<b>Hinweis: </b> Das OpenWrt-Webfrontend zur Firmware-Aktualisierung ist deaktiviert, da sich geheime Schlüssel auf dem AccesPoint befinden.<br /><br />"
 fi
 cat<<EOF
@@ -157,7 +162,7 @@ TITLE="Wähle deinen geheimen Schlüssel (*.key) und lade ihn hoch">
 EOF
 else
 # (re)aktiviere OpenWRT-Webfrontend zum Firmware-Update
-mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+mv -f /www/cgi-bin/webif/$upgrade_bak /www/cgi-bin/webif/$upgrade 2>/dev/null
 cat<<EOF
 <b>WARNUNG: Ein Firmware-update kann deinen Router zerstören.</b>
 <TABLE BORDER="0" CLASS="note">
@@ -199,7 +204,7 @@ TITLE="Wähle eine Prüfsummen-Datei oder eine Firmware-Datei. Die Opennet-Firmwar
 <TD><INPUT NAME="post_firm" TITLE="Die ausgewählte Firmware-Datei übertragen und dann sofort in den Flash-Speicher des Gerätes 'einbrennen'." TYPE="SUBMIT" VALUE="Prüfsummen-Datei oder Firmware laden" CLASS="note"></TD>
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
-Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen. Benutze für andere Firmware-Dateien das <a href="webif/upgrade.sh">OpenWrt Webinterface</a>.<br />
+Diese opennet-Version des Firmware-Updates kann nur mit Herstellerunabhängigen *.trx-Dateien umgehen. Andere kannst du an dieser Stelle nicht hochladen. Benutze für andere Firmware-Dateien das <a href="webif/$upgrade">OpenWrt Webinterface</a>.<br />
 <b>Hinweis:</b> Es ist sinnvoll, vorher eine passende Prüfsummen-Datei auf den AccessPoint zu laden. Wird der Name der heraufgeladenden Firmware in der Prüfsummendatei gefunden, wird der AccessPoint nur geflasht, wenn die Firmware-Datei fehlerfrei ist. Wird der Name nicht gefunden, wird die Datei nicht geprüft und einfach auf den AccessPoint geschrieben. Firmware-Dateien sollten darum nicht umbenannt werden.
 
 

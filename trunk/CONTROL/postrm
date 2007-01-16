@@ -26,8 +26,12 @@ ln -sf /rom/etc/ppp/ip-down /etc/ppp/ip-down
 # restore former firewall file
 ln -sf /rom/etc/firewall.user /etc/firewall.user
 
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
 # restoring Webinterface for firmware-update
-mv -f /www/cgi-bin/webif/upgrade.sh_bak /www/cgi-bin/webif/upgrade.sh 2>/dev/null
+mv -f /www/cgi-bin/webif/$upgrade_bak /www/cgi-bin/webif/$upgrade 2>/dev/null
 
 # restoring banner
 ln -sf /rom/etc/banner /etc/banner
