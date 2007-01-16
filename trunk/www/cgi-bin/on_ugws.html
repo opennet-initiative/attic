@@ -32,7 +32,7 @@ on_share_internet_blocked="$(nvram get on_share_internet_blocked)"
 cat<<EOF
 In diesem Bereich kannst Du Deinen Breitband-Anschluss für Opennet-Mitglieder zur Nutzung freigeben.<br />
 <!-- show the following area only, if user likes more information -->
-<a id="switch1" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<a id="switch1" href="#" onclick="document.getElementById('description1').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
 <div id="description1">
 <br />
 Wenn Du selbst einen Breitband-Anschluss besitzt, kannst Du diesen hier für die Nutzung im Opennet freigeben. Die Verbindung zum Breitband-Anschluss muss dabei über die WAN-Buchse deines AccessPoint hergestellt werden. Wenn Du DSL nutzt, kannst den AP auch für die Einwahl ins Internet nutzen (siehe <a href="wan.html">WAN</a>)<br />
@@ -50,7 +50,7 @@ if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -
 cat<<EOF
 <H2>Vorübergehende Deaktivierung</H2>
 <!-- show the following area only, if user likes more information -->
-<a id="switch2" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
+<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
 <div id="description2">
 Hier kannst Du für eine von Dir wählbare Zeit - maximal einen Tag - deine Internetfreigabe vorübergehend deaktivieren. Nach Ablauf dieser Zeit wird - wie zu erwarten - Dein Breitbandanschluss wieder für andere Opennet-Nutzer freigegeben. Du kannst während dieser Zeit selbstverständlich die Internet-Freigabe manuell reaktivieren.
 </div>
@@ -109,7 +109,7 @@ fi
 cat<<EOF
 
 <!-- show the following area only, if user likes more information -->
-<a id="switch3" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
+<a id="switch3" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
 <div id="description3">
 <b>User-Gateway-Tunnel:</b> ist der Tunnel aktiv, teilst Du Deinen Internetzugang.
 <br /><br />
@@ -320,7 +320,7 @@ cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
-	<TD>Der Internetzugang wurde deaktiviert und wird automatisch in $block_min Minuten neu gestartet.</TD>
+	<TD>Die Freigabe Deines Internetzugangs wurde deaktiviert und wird automatisch in $block_min Minuten neu gestartet.</TD>
 	</TR></TBODY>
 	</TABLE>
 EOF
