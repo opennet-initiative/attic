@@ -443,7 +443,7 @@ prnt=($1~/Links/)
 else if (prnt) {
 sub("<""table[^>]+>", "<""table frame=void border=0 cellspacing=0 cellpadding=1 width=\"100%\">")
 sub("<tr><t.>[^>]+</t.>", "<tr>")
-sub("<th>remote IP", "<th style=padding-right:100>IP")
+sub("<th>remote IP", "<th>IP")
 sub("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", "<a href=\"http://&/cgi-bin-status.html\">&</a>")
 print
 }
