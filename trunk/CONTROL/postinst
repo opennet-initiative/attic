@@ -156,6 +156,16 @@ if [ -z "$(nvram get wan_device)" ]; then
 	fi;
 fi
 
+# change ppp-options so peer-connection is continously checked
+if [ -z "$(grep lcp-echo-interval /etc/ppp/options)" ]; then
+	echo "lcp-echo-interval 3" >>/etc/ppp/options;
+	echo "  - changed ppp-options => lcp-echo-interval 3"
+fi
+if [ -z "$(grep lcp-echo-failure /etc/ppp/options)" ]; then
+	echo "lcp-echo-failure 5" >>/etc/ppp/options;
+	echo "  - changed ppp-options => lcp-echo-failure 5"
+fi
+
 # set firmware-version to nvram variables
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
