@@ -49,7 +49,10 @@ if [ -n "$post_on_wifidhcp" ]; then
 	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifidhcp stop >/dev/null; fi
 	nvram set on_wifidhcp_macaddrs="$maclist";
 	nvram commit>/dev/null 2>&1
-	if [ -n "$MACLIST_CHANGED" ]; then /etc/init.d/S82wifidhcp start >/dev/null; fi
+	if [ -n "$MACLIST_CHANGED" ]; then
+		/etc/init.d/S82wifidhcp start >/dev/null;
+		/etc/init.d/S82portmapping restart dhcpwifi >/dev/null;
+	fi
 fi
 	eval $(netparam)
 	on_wifidhcp=$(nvram get on_wifidhcp)
@@ -70,9 +73,9 @@ cat<<EOF
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr...</a>
 <div id="description">
-An dieser Stelle kann eingestellt werden, wie bzw. ob lokale Clients über WLAN auf den Acesspoint zugreifen können. Die Automatische IP-Vergabe muss dabei nicht immer sinnvoll sein und kann zu Konflikten mit benachbarten Accesspoints führen. Möglicherweise ist es günstiger, am zu verbindenden Rechner die Adresse (Netzwerkkonfiguration) per Hand einzustellen. Die IP-Adresse sollte dabei im Netz 192.168.35.0/24 liegen, also beispielsweise 192.168.35.5. Als Netzmaske muss 255.255.254.0 eingeben werden, als Gateway 192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4). Als Nameserver kannst du deinen AccessPoint benutzen ( $(nvram get wifi_ipaddr) ).<br/>
-Beachtet weiterhin, dass auf dem Rechner der WEP-Key von Opennet eingegeben werden muss. Diesen findest Du im Bereich <a href="on_wlan.html">Wireless Lan</a>.<br/><br/>
-Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch) gedacht. Bitte bedenkt, dass durch die Verwendung dieser Lösung der Opennet-Funkkanal zusätzlich belastet wird. Ausserdem ist zu beachten, dass die Strecke zwischen eurem per WLAN verbundenen Rechner und dem Accesspoint relativ ungesichert ist, da der OpenVPN-Tunnel des Opennets erst am Accesspoint beginnt. Es müssen daher gegebenenfalls weitere Sicherheitsmassnahmen getroffen werden (bspw. ein weiterer OpenVPN-Tunnel).<br/>
+An dieser Stelle kann eingestellt werden, wie bzw. ob lokale Clients über WLAN auf den Acesspoint zugreifen können. Ein Zugriff ist dabei auf den AccessPoint selber, den OpenVPN-Tunnel des AccessPoints sowie auf über das WAN-Device mit dem AccessPoint verbundene Netzwerke (bspw. Breitband-Internet). Bei entsprechender <a href="on_portmap.html">Konfiguration des Portmappings</a> ist auch ein Zugriff auf einzelne Rechner im LAN möglich.<br/><br/>
+Die automatische IP-Vergabe für muss dabei aber nicht immer sinnvoll sein und kann zu Konflikten mit benachbarten Accesspoints führen. Möglicherweise ist es günstiger, am zu verbindenden Rechner die Adresse (Netzwerkkonfiguration) per Hand einzustellen. Die IP-Adresse sollte dabei im Netz 192.168.35.0/24 liegen, also beispielsweise 192.168.35.5. Als Netzmaske muss 255.255.254.0 eingeben werden, als Gateway 192.168.34.$(nvram get wifi_ipaddr | cut -d'.' -f4). Als Nameserver kannst du deinen AccessPoint benutzen ( $(nvram get wifi_ipaddr) ). In diesem Fall muss hier lediglich die MAC-Adresse des zugreifenden Rechners freigegeben werden.<br/><br/>
+Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch) gedacht. Bitte bedenkt, dass durch die Verwendung dieser Lösung der Opennet-Funkkanal zusätzlich belastet wird. Ausserdem ist zu beachten, dass die Strecke zwischen eurem per WLAN verbundenen Rechner und dem Accesspoint ungesichert ist, da der OpenVPN-Tunnel des Opennets erst am Accesspoint beginnt. Es müssen daher gegebenenfalls weitere Sicherheitsmassnahmen getroffen werden (bspw. ein weiterer OpenVPN-Tunnel).<br/>
 </div>
 <script type="text/javascript">
 	document.getElementById('switch').style.display='inline';
@@ -120,10 +123,9 @@ cat<<EOF
 	<TD><INPUT NAME="on_wifidhcp_lease" SIZE="6" TYPE="TEXT" VALUE="$(nvram get on_wifidhcp_lease)" $(if [ "$on_wifidhcp" != "on" ];then echo ' disabled="disabled"';fi)>
 	Sekunden</TD>
 	</TR>
-	<TR>
 
 	<TR><TD colspan="4"><HR /></TD></TR>
-	<TR><TD colspan="4">Zugriffsgenehmigung auf den OpenVPN-Tunnel nach MAC-Adresse:</TD></TR>
+	<TR><TD colspan="4">Zugriffsgenehmigung auf den OpenVPN-Tunnel, die WAN-Verbindungen (Breitband) und eventuell freigegebene Ports im LAN nach MAC-Adresse:</TD></TR>
 	<TR><TD></TD><TD><B>MAC-Adresse</B></TD><TD><B>IP-Adresse</B></TD><TD><B>Name</B></TD></TR>	
 EOF
 
@@ -154,7 +156,7 @@ for addr in $new_maclist; do
 cat<<EOF	
 	<TD><INPUT CLASS="checkbox" NAME="on_wifidhcp_access$number" TYPE="checkbox" $(test -n "$allow" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")></TD>
 EOF
-	echo "</TD><TD><INPUT NAME="on_wifidhcp_mac$number" VALUE="$addr" TYPE="hidden">$addr</TD>"
+	echo "<TD><INPUT NAME="on_wifidhcp_mac$number" VALUE="$addr" TYPE="hidden">$addr</TD>"
 	echo "<TD>"$(if [ -f /var/run/dhcp.leases ]; then awk -v addr="$addr" '$2 == addr {print $3}' /var/run/dhcp.leases; fi)"</TD>"
 	echo "<TD>"$(if [ -f /var/run/dhcp.leases ]; then awk -v addr="$addr" '$2 == addr {print $4}' /var/run/dhcp.leases; fi)"</TD></TR>"
 	: $((number++))

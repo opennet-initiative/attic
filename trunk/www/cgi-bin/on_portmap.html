@@ -5,7 +5,7 @@ export TITLE="Verwaltung: Portmapping"
 . ${0%/*}/cgi-bin-pre.sh
 
 	show_portmap () {
-	# $1 contains the field description, here one of: vpn wifi wan
+	# $1 contains the field description, here one of: vpn wifi dhcpwifi wan
 	# $2 contains additional strings for sport INPUT field
 	# $3 contains additional strings for daddr INPUT field
 	# $4 is like $2 for new mappings
@@ -99,16 +99,39 @@ EOF
 cat<<EOF	
 
 <!-- ******************************************************************** -->
+EOF
+
+cat<<EOF
 	<H2>Weiterleitung aus dem Opennet</H2>
 	<p>Die folgenden Ports werden aus dem Opennet (WLAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus nicht (direkt) erreichbar.</p>
 EOF
 	show_portmap wifi
 cat<<EOF
 <!-- ******************************************************************** -->
-	<H2>Weiterleitung aus dem Internet (WAN-Anschluss)</H2>
+	<H2>Weiterleitung aus dem DHCP-Funknetz</H2>
 	<!-- show the following area only, if wan is activated (has an ip address) -->
 	<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 	<div id="description2">
+	<p>Die folgenden Ports werden aus dem WLAN von Rechnern ohne olsr mit einer Adresse im lokalen Wireless DHCP-Bereich an Rechner im lokalen Netzwerk weitergeleitet.</p>
+EOF
+	show_portmap dhcpwifi
+cat<<EOF
+	</div>
+EOF
+	if [ -z "$(lsmod | grep ipt_mac)" ]; then
+cat<<EOF
+<script type="text/javascript">
+	document.getElementById('switch2').style.display='inline';
+	document.getElementById('description2').style.display='none';
+</script>
+EOF
+	fi
+cat<<EOF
+<!-- ******************************************************************** -->
+	<H2>Weiterleitung aus dem Internet (WAN-Anschluss)</H2>
+	<!-- show the following area only, if wan is activated (has an ip address) -->
+	<a id="switch3" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
+	<div id="description3">
 	<p>Die folgenden Ports werden aus dem Internet (WAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus direkt erreichbar.</p>
 EOF
 	show_portmap wan
@@ -118,8 +141,8 @@ EOF
 	if [ -z "$(ip addr show primary $(nvram get wan_ifname) | awk '$1 == "inet" { print $2 }')" ]; then
 cat<<EOF
 <script type="text/javascript">
-	document.getElementById('switch2').style.display='inline';
-	document.getElementById('description2').style.display='none';
+	document.getElementById('switch3').style.display='inline';
+	document.getElementById('description3').style.display='none';
 </script>
 <!-- ******************************************************************** -->	
 EOF
@@ -127,11 +150,7 @@ EOF
 else
 	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 	
-	echo -n "<PRE>"
-	/etc/init.d/S82portmapping stop
-	echo "</PRE>"
-
-	for source in vpn wifi wan; do
+	for source in vpn wifi dhcpwifi wan; do
 		if [ -n "$(eval echo "\$post_"$source"_portmap")" ]; then
 			number=1
 			portmap_newlist=
@@ -152,18 +171,18 @@ else
 	done
 
 	nvram commit>/dev/null 2>&1
+	echo -n "<PRE>"
+	/etc/init.d/S82portmapping restart
+	echo "</PRE>"
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
 	<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
-	Portmapping wird nun aktualisiert</TD>
+	Portmapping wurde aktualisiert</TD>
 	</TR></TBODY>
 	</TABLE>
 EOF
-	echo -n "<PRE>"
-	/etc/init.d/S82portmapping start
-	echo "</PRE>"
 fi
 
 . ${0%/*}/cgi-bin-post.sh

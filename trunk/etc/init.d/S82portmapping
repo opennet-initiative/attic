@@ -3,6 +3,26 @@
 
 test -n "$FAILSAFE" && exit
 
+# first argument limits mapping to a special device (used for dhcpwifi-restart)
+map_all_ports() {
+	echo -n "Mapping ports"        
+	
+	if [ -n "$1" ]; then sources="$1";
+	else sources="vpn wifi dhcpwifi wan";
+	fi
+	for source in $sources; do
+		SOURCEDEV=$(echo $source | tr [a-z] [A-Z])"DEV"
+		SOURCEDEV=$(eval echo \$$SOURCEDEV)
+		if [ -n "$SOURCEDEV" ]; then
+			echo -e -n "\n** $source ports ** "
+			for on_mapping in $(nvram get "on_"$source"map"); do
+				port=$(echo $on_mapping | cut -d'>' -f1)
+				ip=$(echo $on_mapping | cut -d'>' -f2)
+				map_port_to_ip $port $ip $SOURCEDEV
+			done
+		fi	
+	done
+}
 
 map_port_to_ip() {
         # Note the different handling of --dport in the following iptables lines.                                                                            
@@ -10,52 +30,92 @@ map_port_to_ip() {
         intrldestip=$(echo $2 | cut -d':' -f1)                                                                                                       
         # Did the user enter an internal (after NAT) port?
         if [ $2 = $intrldestip ]; then
-                # set internal dport (after NAT) to same as external (before NAT) dport
-                intrldport=$1
+                intrldport=$1	# set internal dport (after NAT) to same as external (before NAT) dport
+        else
+                intrldport=$(echo $2 | cut -d':' -f2)	# if we have a destination with port change, use the given port as internal (after NAT) dport
+        fi
+	INPUTDEV="$3"
+	dnat() {
+		for packet in udp tcp; do
+			iptables -t nat -A PREROUTING -p $packet -i $INPUTDEV -s $source --dport $1 -j DNAT --to-destination $2; echo -n "+"
+		done
+	}
+	
+	forward() {
+		for packet in udp tcp; do
+			iptables -I FORWARD 2 -i $INPUTDEV -o $LANDEV -s $source -d $LANNET_PRE $macfilter -m state --state NEW -p $packet --dport $intrldport -j ACCEPT; echo -n "+"
+		done
+	}
 
-        else
-                # if we have a destination with port change, use the given port as internal (after NAT) dport
-                intrldport=$(echo $2 | cut -d':' -f2)
-        fi
-        if [ "$4" = "map" ]; then
-                echo "forwarding port(s) "$1" to "$2
-                ACT_APPEND="A"; ACT_INSERT="I"; rulenum="2"
-                echo "accepting packets to $intrldestip port(s) $intrldport"
-        else
-                echo "deleting portforwarding of "$1" to "$2
-                ACT_APPEND="D"; ACT_INSERT="D"; rulenum=""
-                echo "deleting rule accepting packets to $intrldestip port(s) $intrldport"
-        fi
-        iptables -t nat -$ACT_APPEND PREROUTING -p udp -i $3 --dport $1 -j DNAT --to-destination $2
-        iptables -t nat -$ACT_APPEND PREROUTING -p tcp -i $3 --dport $1 -j DNAT --to-destination $2
-        
-	if [ "$3" = "$WIFIDEV" ]; then # new connections from DHCPWIFINET are handled separately in S82wifidhcp
-		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
-		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $DHCPWIFINET_PRE -d $LANNET_PRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
-	else
-		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET_PRE -d $LANNET_PRE -m state --state NEW -p tcp --dport $intrldport -j ACCEPT
-		iptables -$ACT_INSERT FORWARD $rulenum -i $3 -o $LANDEV -s ! $LANNET_PRE -d $LANNET_PRE -m state --state NEW -p udp --dport $intrldport -j ACCEPT
-	fi
+	case "$INPUTDEV" in
+		"$WIFIDEV")
+			source="! $DHCPWIFINET_PRE"; macfilter=""; dnat $1 $2; forward
+		;;
+		"$DHCPWIFIDEV")
+			source="$DHCPWIFINET_PRE"
+			INPUTDEV="$WIFIDEV"
+			dnat $1 $2;
+			mac_addrs=$(nvram get on_wifidhcp_macaddrs)
+			for mac_addr in $mac_addrs; do
+				macfilter="-m mac --mac-source $mac_addr"; forward
+			done;
+		;;
+		*)
+			source="! $LANNET_PRE"; macfilter=""; dnat $1 $2; forward
+		;;
+	esac
+	
 }
 
-# takes one argument: 'map' or ('unmap' or anything else - doesn't actually matter)
-map_all_ports() {
-        
-	# (un)Mapping Internet Ports
-	
-	for source in vpn wifi wan; do
+# first argument limits unmapping to a special device (used for dhcpwifi-restart)
+unmap_all_ports() {
+	echo -n "Un-Mapping ports"
+	if [ -n "$1" ]; then sources="$1";
+	else sources="vpn wifi dhcpwifi wan";
+	fi
+	for source in $sources; do
 		SOURCEDEV=$(echo $source | tr [a-z] [A-Z])"DEV"
 		SOURCEDEV=$(eval echo \$$SOURCEDEV)
-		if [ -n "$SOURCEDEV" ]; then
-			echo "** $source ports **"
-			for on_mapping in $(nvram get "on_"$source"map"); do
-				port=$(echo $on_mapping | cut -d'>' -f1)
-				ip=$(echo $on_mapping | cut -d'>' -f2)
-				map_port_to_ip $port $ip $SOURCEDEV $1
-			done
-		fi	
+		echo -e -n "\n** $source ports ** "
+		case "$SOURCEDEV" in
+			"$WIFIDEV")
+				source="!$DHCPWIFINET_PRE"
+			;;
+			"$DHCPWIFIDEV")
+				source="$DHCPWIFINET_PRE"
+				SOURCEDEV="$WIFIDEV"
+			;;
+			*)
+				source="!$LANNET_PRE"
+			;;
+		esac
+		unmap_PREROUTING $SOURCEDEV "$source"
+		unmap_FORWARD $SOURCEDEV "$source"
 	done
 }
+
+
+# has to be called with two parameters and will remove all matching entries
+# first: source device
+# second: source address range
+unmap_PREROUTING() {
+	get_rulenum() {
+		iptables -L PREROUTING -t nat --line-numbers -n -v | awk -v sdev="$1" -v saddr="$2" '$7 == sdev && $9 == saddr && $13 ~ "to:" {print $1; exit}'
+	}
+	while $(iptables -D PREROUTING $(get_rulenum $1 $2) -t nat 2>/dev/null); do echo -n "-"; done
+}
+
+# has to be called with two parameters and will remove all matching entries
+# first: source device
+# second: source address range
+unmap_FORWARD() {
+	get_rulenum() {
+		iptables -L FORWARD --line-numbers -n -v | awk -v sdev="$1" -v saddr="$2" -v LANDEV="$LANDEV" '$7 == sdev && $8 == LANDEV && $9 == saddr && /NEW/ {print $1; exit}'
+	}
+	while $(iptables -D FORWARD $(get_rulenum $1 $2) 2>/dev/null); do echo -n "-"; done
+}
+
+
 
 # get network parameter (formerly done in netparam)
 VPNDEV=tun+
@@ -67,29 +127,25 @@ lan_ipaddr=$(nvram get lan_ipaddr)
 if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 
 WIFIDEV=$(nvram get wifi_ifname)
+DHCPWIFIDEV=$(nvram get on_wifidhcp_ifname)
 WANDEV=$(nvram get wan_ifname)
 LANDEV=$(nvram get lan_ifname)
 
 case $1 in
         start)
-		map_all_ports "unmap" >/dev/null 2>/dev/null
-		echo "Mapping ports"
-		map_all_ports "map"
-		echo "."
+		$0 restart $2
 	;;
         stop)
-		echo "Un-Mapping ports"
-		map_all_ports "unmap"
+		unmap_all_ports $2
 		echo "."
         ;;
         restart)
-		echo "Un-Mapping ports"
-		map_all_ports "unmap"
-		echo "Mapping ports"
-		map_all_ports "map"
+		unmap_all_ports $2
+		echo "."
+		map_all_ports $2
 		echo "."
         ;;
         *)
-                echo "Usage: $0 start|stop|restart"
+                echo "Usage: $0 start|stop|restart [\"device\"]"
         ;;
 esac
