@@ -315,7 +315,7 @@ chan="&nbsp;";
 adhoc="no";
 rssi="0";
 titl=" ";
-wep="no";
+open="yes";
 rate="&nbsp;";
 bssid="&nbsp;";
 do {
@@ -336,7 +336,7 @@ if (5 < rssi) rssi = 5;
 }
 if (/Capability:/) {
 for(i = 4; i <= NF; i++) {
-if ($i~/^WEP/) wep="yes";
+if ($i~/^WEP/) open="no";
 }
 }
 if (/Supported Rates:/) {
@@ -351,7 +351,7 @@ print "<td>"ssid"</td>"
 print "<td>"chan"</td>"
 print "<td><img src=\"images/"adhoc".gif\" alt=\""adhoc"\" style=\"vertical-align:middle;\"></td>"
 print "<td><img src=\"images/power"rssi".gif\" title=\""titl"\" alt=\""power"\" style=\"vertical-align:middle;\"></td>"
-print "<td><img src=\"images/"wep".gif\" alt=\""wep"\" style=\"vertical-align:middle;\"></td>"
+print "<td><img src=\"images/"open".gif\" alt=\""open"\" style=\"vertical-align:middle;\"></td>"
 print "<td>"rate"</td>"
 print "<td>"bssid"</td>"
 print "</tr>";
