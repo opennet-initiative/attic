@@ -5,10 +5,7 @@ eval $(/usr/bin/netparam)
 get_rulenum() {
 	iptables -L POSTROUTING -t nat --line-numbers -n -v | awk '$4 == "SNAT" && $8 ~ "^tap" {print $1; exit}'
 }
-while [ -n "$(get_rulenum)" ]; do
-	iptables -D POSTROUTING $(get_rulenum) -t nat
-done
-
+while $(iptables -D POSTROUTING $(get_rulenum) -t nat 2>/dev/null); do : ; done
 
 # cause usergateway might be unreachable and WAN might be down its better to search for the rules to remove
 

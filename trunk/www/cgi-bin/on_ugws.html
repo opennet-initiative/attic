@@ -46,7 +46,7 @@ Um einen zentralen Gateway einzubinden (und somit Internet freizugeben) musst Du
 <!-- ************************************************************ -->
 <br />
 EOF
-if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n  "$(ip route show table 5)" ]; then
+if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n  "$(ip route show table 4)" ]; then
 cat<<EOF
 <H2>Vorübergehende Deaktivierung</H2>
 <!-- show the following area only, if user likes more information -->
@@ -111,10 +111,11 @@ cat<<EOF
 <!-- show the following area only, if user likes more information -->
 <a id="switch3" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">Erklärung</a>
 <div id="description3">
-<b>User-Gateway-Tunnel:</b> ist der Tunnel aktiv, teilst Du Deinen Internetzugang.
-<br /><br />
-<b>Internet-Freigabe möglich/nicht möglich:</b> Hier wird angezeigt, ob die Firmware auf dem AP einen Internetzugang am WAN-Anschluss erkannt hat, den Du teilen kannst. Dies wird stündlich geprüft, Du kannst den Test auch manuell starten. Wenn Du einen Breitbandzugang am WAN-Port angeschlossen hast, und hier angegeben wird, dass eine Freigabe nicht möglich ist, so solltest Du Dich im <a href="http://forum.on-i.de">Forum</a> melden, sehr wahrscheinlich sind nicht alle möglichen Verbindungsoptionen berücksichtigt worden.
-<br /><br />
+<b>Internet freigegeben: </b>Ist ein zentraler Opennet-Gateway über deinen Breitbandanschluss ins Opennet eingebunden, wird dies hier angezeigt. Damit ist dein Internetanschluss freigegeben.<br />
+<b>User-Gateway-Tunnel: </b>Ist der Tunnel aktiv, teilst Du Deinen Internetzugang. Ist der zentrale Gateway dennoch nicht eingebunden, so verweist dies auf ein (vorübergehendes) Problem mit deinem Breitbandanschluss oder mit dem zentralen Gateway. Sobald dieses Problem behoben ist, wird dein Breitbandanschluss wieder automatisch freigegeben.<br /><br />
+<b>Internet-Freigabe möglich/nicht möglich: </b>Zusammenfassung der darunter aufgeführten Prüfungen<br />
+<b>WAN-Anschluss ok: </b>Wenn Du einen Breitbandanschluss (bspw. DSL-Modem) mit dem AccessPoint verbunden hast, wird dies hier angezeigt. Praktisch wird geprüft, ob eine default-Route zum WAN-Anschluss zeigt und die ensprechende 'Gegenstelle' erreichbar ist.<br/>
+<b>zentraler Gateway über WAN erreichbar: </b>Ist der zentrale Gateway nicht über den WAN-Anschluss erreichbar, kann dein Breitbandanschluss nicht geteilt werden.<br /><br />
 </div>
 <script type="text/javascript">
 	document.getElementById('switch3').style.display='inline';
@@ -127,35 +128,52 @@ TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 EOF
 if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	if [ -n "$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap"')" ]; then
+		echo "<tr><td>Internet freigegeben<br>(zentraler Gateway eingebunden)</td>"
+		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
+	else
+		echo "<tr><td>Internet nicht freigegeben<br>(zentraler Gateway nicht eingebunden)</td>"
+		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
+	fi
 	if [ -f  /tmp/openvpn_ugw_msg.txt ];then
-		echo "<tr><td></td><tr /><tr><td>User-Gateway-Tunnel aktiv</td><td> <img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
+		echo "<tr><td>-- User-Gateway-Tunnel aktiv</td>"
+		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
 	else
 		if [ -f  /var/run/openvpn.opennet_ugw.pid ];then
-			echo "<tr><td></td><tr /><tr><td>User-Gateway-Tunnel startend</td>"
-			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
+			echo "<tr><td>-- User-Gateway-Tunnel startend</td>"
+			echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
 		else
-			echo "<tr><td></td><tr /><tr><td>User-Gateway-Tunnel nicht aktiv</td>"
-			echo "<td> <img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
+			echo "<tr><td>-- User-Gateway-Tunnel nicht aktiv</td>"
+			echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
 		fi	
 	fi
+	echo "<tr><td colspan="3"><hr></td></tr>"
 fi
-	if [ -n  "$(ip route show table 5)" ];then
-cat<<EOF
-	<tr>
-	<td>Internet-Freigabe möglich </td>
-	<td> <img src="../images/yes.gif" alt="yes" style="vertical-align:middle;"></td>
-EOF
+if [ -f  "/tmp/ugw_reachable" ];then
+	echo "<tr><td>Internet-Freigabe möglich </td>"
+	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td>"
+	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
+	echo "<tr><td>-- WAN-Anschluss ok.</td>"
+	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+	echo "<tr><td>-- Zentraler Gateway über WAN erreichbar</td>"
+	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+else
+	echo "<tr><td>Internet-Freigabe nicht möglich </td>"
+	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
+	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
+	if [ -n "$(ip route show table 4)" ]; then
+		echo "<tr><td>-- WAN-Anschluss ok</td>"
+		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+		echo "<tr><td>-- zentraler Gateway über WAN nicht erreichbar</td>"
+		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
 	else
-cat<<EOF
-	<tr>
-	<td>Internet-Freigabe nicht möglich </td>
-	<td> <img src="../images/no.gif" alt="no" style="vertical-align:middle;"></td>
-EOF
+		echo "<tr><td>-- WAN-Anschluss nicht ok</td>"
+		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
+		echo "<tr><td>-- (zentraler Gateway über WAN nicht erreichbar)</td>"
+		echo "<td></td></tr>"
 	fi
-cat<<EOF
-	<TD><INPUT NAME="ugw_check" TITLE="check" TYPE="SUBMIT" VALUE="prüfen/starten"></TD>
-	</tr>
-EOF
+fi
+	echo "<tr><td colspan=\"3\"><hr></td></tr>"
 
 if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
 	if [ "$on_share_internet" = "on" ];then
@@ -324,15 +342,6 @@ cat<<EOF
 	</TR></TBODY>
 	</TABLE>
 EOF
-elif [ -n "$ugw_start" ]; then
-	/usr/sbin/check_usergateway.sh
-cat<<EOF
-<TABLE BORDER="0" CLASS="note">
-<TBODY><TR><TD>
-Versuch, einen Tunnel zum externen Gateway aufzubauen, gestartet.
-<TD></TR></TBODY>
-</TABLE>
-EOF
 elif [ -n "$gen_csr" ]; then
 	if [ -f /etc/openvpn/opennet_ugw/on_ugws.key ] || [ -f /etc/openvpn/opennet_ugw/on_ugws.csr ]; then
 cat<<EOF
@@ -477,17 +486,21 @@ cat<<EOF
 </TABLE>
 EOF
 elif [ -n "$ugw_check" ]; then
-	check_usergateway.sh >/dev/null
 cat<<EOF
 	<TABLE BORDER="0" CLASS="note">
 	<TBODY>
 	<TR>
 	<TD>
-	Test wurde durchgeführt. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">Internet-Freigabe</a>- Seite. Das kann durchaus noch etwas (~1min.) dauern.
+	Starte die Tests, diese können bei Problemen durchaus einige Sekunden (~30) dauern. Die Ergebnisse siehst Du wieder auf der <a href="on_ugws.html">Internet-Freigabe</a>- Seite.
 	</TD>
 	</TR></TBODY>
 	</TABLE>
 EOF
+	echo -n "<pre>prüfe WAN-Anschluss ... "
+	check_WAN.sh >/dev/null
+	echo -n "done ... prüfe Erreichbarkeit des zentralen Gateways ... "
+	check_usergateway.sh checkonly >/dev/null
+	echo "done."
 elif [ -n "$ugw_switch" ]; then
 	on_share_internet="$(nvram get on_share_internet)"
 	if [ "$on_share_internet" = "on" ]; then

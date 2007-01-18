@@ -478,17 +478,25 @@ cat<<EOF
 </TR>
 
 EOF
-if [ -n  "$(ip route show table 5)" ];then
+if [ -f /tmp/ugw_reachable ];then
 cat<<EOF
 <TR>
 <TR>
 <TD>Internet:</TD>
 <TD>
 EOF
+
 if [ -f  /tmp/openvpn_ugw_msg.txt ];then
-	echo "Freigabe / User-Gateway aktiv ($(nvram get on_ugw))   <img src=\"images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\">"
+	echo "Freigabe aktiv / "
+	if [ -n "$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap"')" ]; then
+		echo "zentraler Gateway ($(nvram get on_ugw)) eingebunden"
+		echo "<img src=\"images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\">"
+	else
+		echo "zentraler Gateway ($(nvram get on_ugw)) nicht eingebunden"
+		echo "<img src=\"images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\">"
+	fi
 else
-	echo "Freigabe / User-Gateway inaktiv"
+	echo "Internet-Freigabe inaktiv"
 	minutes=$(nvram get on_share_internet_blocked)
 	if [ -n "$minutes" ]; then
 		echo " (Reaktivierung in $minutes Minuten)"

@@ -1,5 +1,7 @@
 #!/bin/sh
 eval $(/usr/bin/netparam)
+ip rule add unicast from $ifconfig_local table 3
+
 ip route flush table 3
 ip route add throw $LANNET/$LANPRE table 3
 ip route add throw $WIFINET/$WIFIPRE table 3

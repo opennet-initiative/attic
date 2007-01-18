@@ -72,13 +72,15 @@ for tun in user ugw; do
 	fi
 done
 
-# check if user-tunnel is not running but keys and gateway is defined (might happen on openvpn-server erros)
+# check if tunnel is not running but keys and gateway is defined (might happen on openvpn-server errors)
 # lessorequal 2: one is the whole line, one is the grep and the tunnel is missing
 if [ $(grep /var/run/openvpn.opennet_user.pid /proc/*/cmdline 2>/dev/null | wc -l) -le 2 ] && [ -f /etc/openvpn/opennet_user/on_aps.key ] && [ -f /etc/openvpn/opennet_user/on_aps.crt ] && [ -n "$(nvram get on_gw)" ]; then
 	logger "cron.hourly: openvpn user-tunnel not running, try to (re)start"
 	rm -f /var/run/openvpn.opennet_user.pid
 	/etc/init.d/S80openvpn start opennet_user
 fi
-
-# check if IP of usergateway is still the same
-/usr/sbin/check_usergateway.sh
+if [ $(grep /var/run/openvpn.opennet_ugw.pid /proc/*/cmdline 2>/dev/null | wc -l) -le 2 ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n "$(nvram get on_ugw)" ] && [ "$(nvram get on_share_internet)" = "on" ]; then
+	logger "cron.hourly: openvpn ugw-tunnel not running, try to (re)start"
+	rm -f /var/run/openvpn.opennet_ugw.pid
+	/etc/init.d/S80openvpn start opennet_ugw
+fi
