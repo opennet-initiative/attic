@@ -1,5 +1,5 @@
 #!/bin/sh
-ip rule del unicast from $ifconfig_local table 3
+#~ ip rule del unicast from $ifconfig_local table 3
 
 # simply remove all SNAT-rules for the opennet_user tunnel
 get_rulenum() {
