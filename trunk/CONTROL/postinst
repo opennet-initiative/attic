@@ -34,7 +34,7 @@ if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 	# set b/g mode
 	nvram set wl0_gmode=1 
 	nvram set wl0_gmode_protection=auto
-	echo "  - changed wifi mode => DE, ad-hoc, no wep/wpa/wds, b/g mode"
+	echo "  - set default: wifi mode => DE, ad-hoc, no wep/wpa/wds, b/g mode"
 
 	# set ssid (if not yet like *.opennet-initiative.de)
 	ssid=$(nvram get wl0_ssid)
@@ -66,6 +66,12 @@ if [ -z "$lanip" ] || (( [ $(startswith "$lanip" "172.16.0") = 0 ] && [ $(starts
 	echo "  - changed lan interface => ip 172.16.0.1, mask 255.255.255.0"
 fi
 
+# remove preset gateway (now handled by olsrd)
+if [ -n "$(nvram get lan_gateway)" ]; then
+	nvram unset lan_gateway
+	echo "  - changed lan gateway => removed"
+fi
+
 WIFIDEV="$(awk '$1 ~ ":$" {gsub(":",""); print $1; exit} ' /proc/net/wireless)"
 if [ -z $(nvram get wifi_ifname) ]; then
 	nvram set wifi_ipaddr=192.168.33.127
@@ -92,6 +98,7 @@ nvram set lan_ifnames="$ifnames"
 # especially on asus dhcp_start is by default not set to an integer value, so fix this
 nvram set dhcp_start=100
 nvram set dhcp_num=50
+echo "  - set default: dhcp => activated"
 
 # activate automatic olsrd configuration
 on_remoteconf=$(nvram get on_remoteconf)
@@ -255,7 +262,7 @@ rm -rf /debian-binary
 
 # portforwarding variables changed and unified in 0.11ipkg-10, transfer former variables
 if [ -n "$(nvram show 2>/dev/null | grep on_map)" ]; then
-	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt )
+	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
 	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4)1; fi
 	base_addr=$((10000+10*($base_addr-1)))
 
