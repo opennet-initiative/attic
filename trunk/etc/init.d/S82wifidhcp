@@ -59,15 +59,15 @@ LANDEV=$(nvram get lan_ifname)
 
 case $1 in
         start)
-        if [ -n "$(lsmod | grep ipt_mac)" ]; then
+        if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$wifi_ipaddr" ] && [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then
 		echo "enabling access to tunnel/wan (if selected)"
 		mac_access "create"
 	else
-		echo "wifidhcp disabled (iptables-extra not installed)"
+		echo "wifidhcp disabled"
 	fi
         ;;
         stop)
-        if [ -n "$(lsmod | grep ipt_mac)" ]; then
+        if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$wifi_ipaddr" ] && [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then
 		echo "removing access to tunnel/wan"
 		mac_access "remove"
 	fi
