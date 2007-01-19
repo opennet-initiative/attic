@@ -25,24 +25,28 @@ set_masq() {
 	fi
 
 	# Mask packets from LAN to WIFI
-	iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
+	if [ -n "$LANOLSR" ]; then
+		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
+	fi
 	if [ -n "$WANDEV" ] && [ -n "$WANOLSR" ] && [ -z "$LANOLSR" ]; then
 		iptables -t nat -A POSTROUTING -o $WANDEV -s $LANNET/$LANPRE -j MASQUERADE
 	fi
 	
 	# if WIFI(LANOLSR/WANOLSR)-access from DHCP-WIFI is required, enable following lines
-	#~ iptables -t nat -A POSTROUTING -o $WIFIDEV -s $DHCPWIFINET_PRE -j MASQUERADE
-	#~ if [ -n "$WANDEV" ] && [ -n "$WANOLSR" ] && [ -z "$LANOLSR" ]; then
-		#~ iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
-	#~ elif [ -n "$LANOLSR" ]; then
-		#~ iptables -t nat -A POSTROUTING -o $LANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
-	#~ fi
+	if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$(nvram get on_wifidhcp_access_opennet)" ]; then
+		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $DHCPWIFINET_PRE -j MASQUERADE
+		if [ -n "$WANDEV" ] && [ -n "$WANOLSR" ] && [ -z "$LANOLSR" ]; then
+			iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
+		elif [ -n "$LANOLSR" ]; then
+			iptables -t nat -A POSTROUTING -o $LANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
+		fi
+	fi
 
 	# Mask packets from LAN and DHCP-WIFI to WAN
 	if [ -n "$WANDEV" ] && [ -z "$WANOLSR" ]; then
 		# Mask packets to WAN
 		iptables -t nat -A POSTROUTING -o $WANDEV -s $LANNET/$LANPRE -j MASQUERADE
-		iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
+		[ -n "$on_wifidhcp_ipaddr" ] && iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
 	fi
 }
 
