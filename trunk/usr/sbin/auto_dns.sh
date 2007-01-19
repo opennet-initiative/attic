@@ -1,5 +1,8 @@
 #!/bin/sh
 
+DEBUG="false"
+if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
+
 if [ "$(nvram get on_autodns)" = "on" ]; then
 	# check if recent dns-server's are overwritten with ppp-values
 	if [ -e /tmp/resolv.conf_ppp ]; then
@@ -28,7 +31,7 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 	new_dns="$(echo $new_dns)"
 	
 	if [ "$lan_dns" != "$new_dns" ];then
-		logger -t "auto_dns.sh" "updating $RESOLV_CONF"
+		$DEBUG && logger -t "auto_dns.sh" "updating $RESOLV_CONF"
 		nvram set $DNS_VAR="$new_dns"
 		resolv=
 		awk '!/nameserver/' $RESOLV_CONF > $RESOLV_CONF_"new"
