@@ -124,6 +124,7 @@ case $1 in
 	ip rule add unicast from $LANNET/$LANPRE table 4
 	[ -n "$DHCPWIFIPRE" ] && ip rule add unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
 	ip rule add iif lo table 4
+	ip rule add unicast from all table 5
         ;;
         stop)
 	eval $(/usr/bin/netparam)        ### S45firewall setzt beim stoppen die Parameter nicht
@@ -133,5 +134,6 @@ case $1 in
 	ip rule del unicast from $LANNET/$LANPRE table 4
 	[ -n "$DHCPWIFIPRE" ] && ip rule del unicast from $DHCPWIFINET/$DHCPWIFIPRE table 4
 	ip rule del iif lo table 4
+	ip rule del unicast from all table 5
 ;;
 esac
