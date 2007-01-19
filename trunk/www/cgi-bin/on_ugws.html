@@ -243,7 +243,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Verwaltung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
 cat<<EOF
 <a id="switch4" href="#" onclick="document.getElementById('vpn_upload_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -262,7 +262,7 @@ TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch4').style.display='inline';
@@ -274,7 +274,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Erstellung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
 cat<<EOF
 <a id="switch5" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -316,7 +316,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 
 
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z  "$(ip route show table 5)" ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch5').style.display='inline';

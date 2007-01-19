@@ -45,6 +45,8 @@ if [ -n "$add_gw" ]; then
 		# refresh gateway values
 		/usr/sbin/cron.minutely_ongateway refresh
 	fi
+elif [ -n "$del_gw_test" ]; then
+	nvram set on_gwaddrs="$(nvram get on_gwaddrs | awk 'BEGIN {RS=":| "; ORS=":: "} $1 ~ "^192.168.0"')"
 elif [ -n "$add_blackgw" ]; then
 	number=1
 	on_gwblackaddrs_new=
@@ -92,6 +94,11 @@ Unter 'OpenVPN-Test' wird angegeben, ob testweise eine OpenVPN Verbindung zum en
 <!-- ************************************************************ -->
 <br />
 <H2>Gateway-Liste</H2>
+EOF
+	if [ -e /tmp/openvpn_ugw_msg.txt ]; then
+		echo "<p><b>HINWEIS:</b> User-Gateway-Tunnel ist aktiv. Eine Verbindung zu den Opennet-Gateways über diesen Tunnel ist nicht möglich. Für alle Gateways, die aktuell nur (bzw. am besten) über den User-Gateway-Tunnel erreichbar sind, schlägt der OpenVPN-Test daher fehl.</p>"
+	fi
+cat<<EOF
 <FORM ACTION="on_gateway.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
 TITLE="Gateway Konfiguration">
@@ -169,9 +176,10 @@ done
 cat<<EOF
 
 <TR>
-<TD> </TD>
+<TD colspan="2"></td> <td colspan="2"><INPUT NAME="del_gw_test" TITLE="TestCounter zurücksetzen" TYPE="SUBMIT" VALUE="Testcounter zurücksetzen"></TD>
 </TR><TR>
-	<td colspan="4">Gateway hinzufügen:</td>
+	<td></td><td colspan="3">Gateway hinzufügen:</td>
+	
 </TR>
 <TR>
 	<td></td><td><INPUT NAME="on_gwtoadd" SIZE="20" TYPE="TEXT" VALUE="" $(test "$gwauto" = "on" && echo "DISABLED='DISABLED'")></td>
@@ -184,6 +192,8 @@ cat<<EOF
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
 </FORM>
 <br />
+
+
 <H2>Gateway-Blacklist</H2>
 <!-- show the following area only, if user likes more information -->
 <a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen</a>

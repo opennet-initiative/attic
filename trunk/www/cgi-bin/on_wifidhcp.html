@@ -83,14 +83,22 @@ Die hier angebotene Lösung ist nur für die sporadische Nutzung (bspw. bei Besuch
 </script>
 <!-- ************************************************************ -->
 EOF
-	if [ -z "$(lsmod | grep ipt_mac)" ]; then
+	if [ ! -e /usr/lib/iptables/libipt_mac.so ]; then
 cat<<EOF
-<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&amp;pkg=iptables-extra">Paket iptables-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, musst Du das <a href="webif/ipkg.sh?action=install&amp;pkg=iptables-mod-ipopt">Paket iptables-mod-ipopt installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br />
+EOF
+	elif [ -z "$(lsmod | grep ipt_mac)" ]; then
+cat<<EOF
+<br /><br /><b>HINWEIS: </b> Wenn Du die lokale Unterverteilung ohne olsr nutzen willst, muss das Modul zur MAC-Filterung (Zugangskontrolle über die Hardware-Adresse deiner WLAN-Karte) geladen sein. Du musst dafür den AP <a href="reset.html">neu starten</a><br />
 <br />
 EOF
 	else
+		if [ -z "$(nvram get on_wifidhcp_keep)" ]; then
+			echo "<br/>Hinweis: Die automatische Vergabe von IP-Adressen per WLAN wird täglich gegen Mitternacht deaktiviert."
+		fi
 cat<<EOF
-	<br/>Hinweis: Die automatische Vergabe von IP-Adressen per WLAN wird täglich gegen Mitternacht deaktiviert.
+	
 	<FORM NAME="wifidhcp" ACTION="on_wifidhcp.html" CLASS="form" METHOD="POST">
 	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 	<TBODY>
