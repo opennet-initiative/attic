@@ -18,6 +18,11 @@ case "$1" in
 	nvram set on_wifidhcp_netmask="255.255.254.0"
 	nvram set on_wifidhcp_proto=static
 	ifup on_wifidhcp
+    else
+ 	nvram unset on_wifidhcp_ifname
+	nvram unset on_wifidhcp_ipaddr
+	nvram unset on_wifidhcp_netmask
+	nvram unset on_wifidhcp_proto
     fi
     
     # bring up wan as the latest device to have all other device-parameters for calling ip-up
