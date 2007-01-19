@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Will run every day (at 00:XX, depending on wifi ip-adress)
-if [ -n "$(nvram get on_wifidhcp)" ]; then
+if [ -n "$(nvram get on_wifidhcp)" ] && [ -z "$(nvram get on_wifidhcp_keep)" ]; then
 	nvram set on_wifidhcp=""
 	nvram commit
 	/etc/init.d/S50dnsmasq restart >/dev/null
