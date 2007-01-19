@@ -6,11 +6,14 @@ BEGIN {
 	# i like shell scripting better: check if gateway is recent
 	system("/usr/sbin/cron.minutely_ongateway")
 	
-	# check if WAN has a working defaukt route and activate policy-routing
+	# check if WAN has a working default route and activate policy-routing
 	system("/usr/sbin/check_WAN.sh")
 	
 	# check if usergateway can still be reached via WANDEV
 	system("/usr/sbin/check_usergateway.sh")
+	
+	# update dns entries
+	system("/usr/sbin/auto_dns.sh")
 		
 	# Get counters of wifi for check
 	while(getline<"/proc/net/wireless") {

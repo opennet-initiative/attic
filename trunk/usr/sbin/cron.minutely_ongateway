@@ -33,7 +33,6 @@ testcount=5 # how often it will be tried to establish a connection till gateway
             # is decalred as not to work
 
 old_gwaddrs=$(nvram get on_gwaddrs)
-if [ -z "old_gwaddrs" ]; then update_dns=true; else update_dns=false; fi
 
 #################################################################################
 # try to establish openvpn tunnel
@@ -50,7 +49,7 @@ test_vpngateway()
 	fi
 
 	# if gateway could only be reached over a local tunnel, dont use it.
-	if [ -n "$(route -n | awk '$1 == "'$gw'" && $8 ~ "^tap|^tun" { print $8; exit }')" ]; then return; fi
+	if [ -n "$(route -n | awk '$1 == "'$1'" && $8 ~ "^tap|^tun" { print $8; exit }')" ]; then return; fi
 	
 	# check if it is possible to open tunnel to the gateway (10 sec. maximum)
 	# test-parameters; '--dev null' will be prefaced
@@ -139,8 +138,8 @@ fi
 on_gwcount=$(nvram get on_gwcount)
 blacklist=$(nvram get on_gwblackaddrs)
 found_first_gw=
-changed_gw=
 
+on_gw=$(nvram get on_gw)
 on_gwaddrs=
 for on_gwaddr in $old_gwaddrs; do
 	
@@ -159,24 +158,30 @@ for on_gwaddr in $old_gwaddrs; do
 	
 	# if first gateway is not found yet, continue searching for it
 	if [ -z "$found_first_gw" ] && [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
-		if [ "$on_gwaddr" != "$(nvram get on_gw)" ]; then
-			if [ -z "$(nvram get on_gw)" ] || [ $on_gwcount -gt 5 ]; then
+		if [ "$on_gwaddr" != "$on_gw" ]; then
+			if [ -z "$on_gw" ] || [ $on_gwcount -gt 5 ]; then
 				logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
 		
 				# set gateway information
 				nvram set on_gw=$on_gwaddr
 		
-		
-				#
-		
 				/etc/init.d/S80openvpn restart opennet_user
-				changed_gw="changed"
 				on_gwcount=0
 
 			else
 				on_gwcount=$(($on_gwcount+1))
 			fi
 		else
+			# stop vpn-tunnel if its not working cause route goes trough ugw-tunnel
+			# this might be a problem on usergateways, before the ugw-tunnel is working the user-vpn-gateway is reachable, so might be started
+			# if than all gateways best reached via the ugw-tunnel, the user-tunnel runs forever complaining about not working.
+			if [ -n "$(ip route show to $on_gw |  awk '$5 ~ "^tap"')" ] \
+				&& [ -n "$(echo "$old_gwaddrs" | awk 'BEGIN {RS=" ";FS=":"} $1 ==  "'$on_gw'" && $2 == "n"')" ]; then
+					logger -t cron.minutely_ongateway "stopping nonworking gateway"
+					nvram unset on_gw
+					/etc/init.d/S80openvpn stop opennet_user
+			fi
+						
 			on_gwcount=0
 		fi
 		nvram set on_gwcount=$on_gwcount
@@ -187,38 +192,6 @@ done
 # store updated values
 on_gwaddrs=$(echo $on_gwaddrs)
 nvram set on_gwaddrs="$on_gwaddrs"
-
-if [ "$(nvram get on_autodns)" = "on" ]; then
-	# check if recent dns-server's are overwritten with ppp-values
-	if [ -e /tmp/resolv.conf_ppp ]; then
-		RESOLV_CONF="/tmp/resolv.conf_ppp"
-		DNS_VAR="lan_dns_store"
-	else
-		RESOLV_CONF="/tmp/resolv.conf"
-		DNS_VAR="lan_dns"
-	fi
-	if [ -n "$changed_gw" ] || ! [ -f $RESOLV_CONF ] || $update_dns ; then
-	# update dns entries
-		# use the two first gateways as possible dns-servers
-		logger -t "cron.minutely.ongateway" "creating $RESOLV_CONF"
-		gw_addrs=$(/usr/sbin/working_gateways.sh)
-		dnsaddrs=
-		lan_dns=
-		for gw_addr in $gw_addrs; do
-			if [ -z "$dnsaddrs" ]; then
-				dnsaddrs="nameserver $gw_addr";
-				lan_dns="$gw_addr";
-			else
-				dnsaddrs="$dnsaddrs\nnameserver $gw_addr";
-				lan_dns="$lan_dns $gw_addr";
-				break;
-			fi
-		done
-		nvram set $DNS_VAR="$lan_dns"
-		echo -e $dnsaddrs > $RESOLV_CONF
-		chmod +r $RESOLV_CONF
-	fi
-fi
 
 # remove registration
 rm -f /var/run/cron.minutely_ongateway.pid
