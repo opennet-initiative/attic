@@ -34,9 +34,8 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 		$DEBUG && logger -t "auto_dns.sh" "updating $RESOLV_CONF"
 		nvram set $DNS_VAR="$new_dns"
 		resolv=
-		awk '!/nameserver/' $RESOLV_CONF > $RESOLV_CONF_"new"
-		for dns in $new_dns; do echo "nameserver $dns" >>$RESOLV_CONF_"new"; done
-		cp $RESOLV_CONF_"new" $RESOLV_CONF
-		#~ chmod +r $RESOLV_CONF
+		awk '!/nameserver/' $RESOLV_CONF > $RESOLV_CONF"_new"
+		for dns in $new_dns; do echo "nameserver $dns" >>$RESOLV_CONF"_new"; done
+		mv $RESOLV_CONF"_new" $RESOLV_CONF
 	fi
 fi
