@@ -165,10 +165,14 @@ fi
 
 # change ppp-options so peer-connection is continously checked
 if [ -z "$(grep lcp-echo-interval /etc/ppp/options)" ]; then
+	# copy file, to support pre rc6-versions
+	if [ -L /etc/ppp/options ]; then cp -f /rom/etc/ppp/options /etc/ppp/options; fi
 	echo "lcp-echo-interval 3" >>/etc/ppp/options;
 	echo "  - changed ppp-options => lcp-echo-interval 3"
 fi
 if [ -z "$(grep lcp-echo-failure /etc/ppp/options)" ]; then
+	# copy file, to support pre rc6-versions
+	if [ -L /etc/ppp/options ]; then cp -f /rom/etc/ppp/options /etc/ppp/options; fi
 	echo "lcp-echo-failure 5" >>/etc/ppp/options;
 	echo "  - changed ppp-options => lcp-echo-failure 5"
 fi
@@ -177,12 +181,12 @@ fi
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
 nvram set on_fw_version="$(echo $_version)"
-nvram set on_fw_pkgversion="0.11ipkg-10"
+nvram set on_fw_pkgversion="0.11ipkg-9pre10"
 
 ### switch from openwrt to opennet-specific ############################
 
 rm -f /etc/banner; cp /rom/etc/banner /etc/banner; 
-echo " -- modified with opennet-firmware 0.11ipkg-10 ----- " >>/etc/banner
+echo " -- modified with opennet-firmware 0.11ipkg-9pre10 - " >>/etc/banner
 echo " --------------------------------------------------- " >>/etc/banner
 
 ### add Opennet-Interface to openwrt-Webinterface ######################
