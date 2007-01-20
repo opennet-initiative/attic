@@ -25,7 +25,7 @@ set_masq() {
 	fi
 
 	# Mask packets from LAN to WIFI
-	if [ -n "$LANOLSR" ]; then
+	if [ -z "$LANOLSR" ]; then
 		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $LANNET/$LANPRE -j MASQUERADE
 	fi
 	if [ -n "$WANDEV" ] && [ -n "$WANOLSR" ] && [ -z "$LANOLSR" ]; then
