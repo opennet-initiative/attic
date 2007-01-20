@@ -1,4 +1,27 @@
 #!/bin/sh
+
+# upgrade olsrd if the version is too old (like the one provided in RC5-ONX)
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC5*}" ] && [ "$(md5sum /usr/sbin/olsrd | cut -d" " -f1)" != "06689a4613551928ffcd2dbbfcb8a5b0" ]; then
+	echo "############################################################################"
+	echo "# Der installierte olsrd ist veraltet. Starte automatisches update..."
+	if [ -L /usr/lib/ipkg/info/olsrd.list ]; then
+		cp -f /rom/usr/lib/ipkg/info/olsrd.list /usr/lib/ipkg/info/olsrd.list
+	fi
+	if [ ! -f /tmp/olsrd_0.4.10-1_mipsel.ipk ]; then
+		ipkg install -force-reinstall olsrd
+	else
+		ipkg install /tmp/olsrd_0.4.10-1_mipsel.ipk
+	fi
+	if [ $? != 0 ]; then
+		echo "# Abbruch: Aktualisierung von olsrd fehlgeschlagen."
+		echo "############################################################################"
+		exit 1
+	fi
+	echo "# olsrd wurde erfolgreich aktualisiert"
+	echo "############################################################################"
+fi
+
 echo "  removing files to replace"
 
 rm -f /bin/login
@@ -20,7 +43,6 @@ rm -f /etc/olsrd.conf
 rm -f /etc/ssl/openssl.cnf
 
 rm -f /www/index.html
-rm -f /www/cgi-bin/16-olsrd
 
 rm -f /etc/ppp/ip-up
 rm -f /etc/ppp/ip-down
