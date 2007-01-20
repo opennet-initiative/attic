@@ -266,9 +266,7 @@ rm -rf /debian-binary
 
 # portforwarding variables changed and unified in 0.11ipkg-10, transfer former variables
 if [ -n "$(nvram show 2>/dev/null | grep on_map)" ]; then
-	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
-	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4)1; fi
-	base_addr=$((10000+10*($base_addr-1)))
+	base_addr=$((10000+10*($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)))
 
 	mapall2one=$(nvram get on_mapall2one); mapall2one_addr=$(nvram get on_mapaddr0)
 	portmap_newlist=
