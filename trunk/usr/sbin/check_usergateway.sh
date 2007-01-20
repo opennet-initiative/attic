@@ -8,6 +8,7 @@
 DEBUG="false"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 
+test -d /tmp/lock || mkdir -p /tmp/lock
 if [ -e /tmp/lock/check_usergateway.sh ];then exit; fi
 echo "running" >/tmp/lock/check_usergateway.sh
 
@@ -46,7 +47,7 @@ if [ -n "$table_4_default_route" ]; then
 else
 	$DEBUG && logger -t check_usergateway "no, missing default routing policy for WAN-device"
 	rm -f /tmp/ugw_reachable
-	ugw_wan_route del
+	if [ -n "$(ip route show table 5)" ]; then ugw_wan_route del; fi
 fi
 
 
