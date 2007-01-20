@@ -86,7 +86,7 @@ cat<<EOF
 <!-- ************************************************************ -->
 EOF
 	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
-	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4)1; fi
+	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4); fi
 	base_addr=$((10000+10*($base_addr-1)))
 cat<<EOF
 	<p>Basierend auf dem Zertifikat bzw. der Adresse Deines AccessPoints wurde ermittelt, dass die <b>Ports von $base_addr bis $((base_addr+9))</b> an Deinen AccessPoint weitergeleitet werden. In den meisten Fällen macht nur eine Weiterleitung dieser Ports Sinn.</p>
