@@ -26,7 +26,12 @@ openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
 openssl_organizationalUnitName="user gateways"
 
+if [ ! -f  /etc/openvpn/opennet_ugw/on_ugws.key ] || [ ! -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+	nvram unset on_share_internet
+fi
+
 on_share_internet="$(nvram get on_share_internet)"
+
 on_share_internet_blocked="$(nvram get on_share_internet_blocked)"
 
 cat<<EOF
