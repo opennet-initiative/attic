@@ -49,16 +49,21 @@ map_port_to_ip() {
 
 	case "$INPUTDEV" in
 		"$WIFIDEV")
-			source="! $DHCPWIFINET_PRE"; macfilter=""; dnat $1 $2; forward
+			source="WIFINET_PRE"
+			[ -n "$DHCPWIFINET_PRE" ] && source="! $DHCPWIFINET_PRE"
+			macfilter=""; dnat $1 $2; forward
 		;;
 		"$DHCPWIFIDEV")
+			[ -z "$DHCPWIFINET_PRE" ] && return
 			source="$DHCPWIFINET_PRE"
 			INPUTDEV="$WIFIDEV"
 			dnat $1 $2;
-			mac_addrs=$(nvram get on_wifidhcp_macaddrs)
-			for mac_addr in $mac_addrs; do
-				macfilter="-m mac --mac-source $mac_addr"; forward
-			done;
+			if [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then
+				mac_addrs=$(nvram get on_wifidhcp_macaddrs)
+				for mac_addr in $mac_addrs; do
+					macfilter="-m mac --mac-source $mac_addr"; forward
+				done;
+			fi
 		;;
 		*)
 			source="! $LANNET_PRE"; macfilter=""; dnat $1 $2; forward
@@ -79,9 +84,11 @@ unmap_all_ports() {
 		echo -e -n "\n** $source ports ** "
 		case "$SOURCEDEV" in
 			"$WIFIDEV")
-				source="!$DHCPWIFINET_PRE"
+				source="WIFINET_PRE"
+				[ -n "$DHCPWIFINET_PRE" ] && source="!$DHCPWIFINET_PRE"
 			;;
 			"$DHCPWIFIDEV")
+				[ -z "$DHCPWIFINET_PRE" ] && break
 				source="$DHCPWIFINET_PRE"
 				SOURCEDEV="$WIFIDEV"
 			;;
@@ -119,6 +126,9 @@ unmap_FORWARD() {
 
 # get network parameter (formerly done in netparam)
 VPNDEV=tun+
+
+on_wifi_ipaddr=$(nvram get on_wifi_ipaddr)
+if [ -n "$on_wifi_ipaddr" ]; then WIFINET_PRE=$(ipcalc $on_wifi_ipaddr $(nvram get on_wifi_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
 
 on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
 if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi

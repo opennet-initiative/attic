@@ -16,6 +16,7 @@ if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 add_fw_rules() {
 	iptables -I OUTPUT 1 -p udp --dport 1602 -o ! $WANDEV -d $1 -j DROP
 	$DEBUG && iptables -I OUTPUT 1 -p udp --dport 1602 -o ! $WANDEV -d $1 -j LOG --log-prefix "ugw wrong interface:"
+	:
 }
 
 del_fw_rules() {
