@@ -5,12 +5,25 @@ if test -z "$FAILSAFE"; then
 	test -n "$ff_pw" || ff_pw=admin
 	cat > /var/etc/httpd.conf <<EOM
 A:*
-/cgi-bin:root:$ff_pw
 .asp:text/html
+/cgi-bin:root:$ff_pw 
+/cgi-bin:admin:$ff_pw 
+.svg:image/svg+xml          
+.png:image/png    
+.gif:image/gif
+.jpg:image/jpg
 EOM
 	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Opennet Webadmin, Log in as root"
-	# make olsrd.conf visible
-	ln -sf /var/etc/olsrd.conf /www/olsrd.conf
 else
-	/usr/sbin/httpd -p 80 -h /www -r "Opennet Webadmin, FAILSAFE"
+	cat > /var/etc/httpd.conf <<EOM
+A:*
+.asp:text/html
+.svg:image/svg+xml          
+.png:image/png    
+.gif:image/gif
+.jpg:image/jpg
+EOM
+	/usr/sbin/httpd -c /var/etc/httpd.conf -p 80 -h /www -r "Opennet Webadmin, FAILSAFE"
 fi
+# make olsrd.conf visible
+ln -sf /var/etc/olsrd.conf /www/olsrd.conf
