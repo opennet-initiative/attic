@@ -8,19 +8,20 @@ if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 wan_policyroute() {
 	if [ "$1" = "add" ]; then
 		# check if route is still there
-		if [ -n "$(ip route show table 4 | awk '$3 == "'$wan_default_route'"')" ]; then
-				return;
-		fi
+		[ "$table_4_default_route" = "$wan_default_route" ] && return
 		
 		$DEBUG && logger -t check_WAN "aktiviere policy-routing für WAN per table 4"
 		
 		LANNET_PRE=$(get_NETPRE lan)
 		WIFINET_PRE=$(get_NETPRE wifi)
+		TAPADDR_NET="$(ifconfig tap0 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4" " $8; exit}')"
+		[ -n "$TAPADDR_NET" ] && TAPNET_PRE="$(ipcalc $TAPADDR_NET | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
 		
 		ip route flush table 4 2>/dev/null
 		
-		if [ -n "$LANNET_PRE" ]; then ip route add throw $LANNET_PRE table 4; fi
-		if [ -n "$WIFINET_PRE" ]; then ip route add throw $WIFINET_PRE table 4; fi
+		[ -n "$TAPNET_PRE" ] && ip route add throw $TAPNET_PRE table 4
+		[ -n "$LANNET_PRE" ] && ip route add throw $LANNET_PRE table 4
+		[ -n "$WIFINET_PRE" ] && ip route add throw $WIFINET_PRE table 4
 		ip route add default via $wan_default_route dev $WANDEV table 4
 	else
 		$DEBUG && logger -t check_WAN "entferne policy-routing für WAN per table 4"
@@ -65,11 +66,11 @@ else
 	wan_default_route=$(cat /tmp/wan_default_route)
 fi
 
-table_4="$(ip route show table 4)"
+table_4_default_route=$(ip route show table 4 | awk '$1 == "default" {print $3}')
 
 # if there is no default route over the WAN-device available deactivate policy-routing for WAN
 if [ -z "$wan_default_route" ]; then
-	if [ -n "$table_4" ]; then wan_policyroute del; fi
+	if [ -n "$table_4_default_route" ]; then wan_policyroute del; fi
 	return
 fi
 

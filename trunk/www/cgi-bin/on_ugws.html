@@ -51,7 +51,7 @@ Um einen zentralen Gateway einzubinden (und somit Internet freizugeben) musst Du
 <!-- ************************************************************ -->
 <br />
 EOF
-if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n  "$(ip route show table 4)" ]; then
+if [ -z "$on_share_internet_blocked" ] && [ "$on_share_internet" = "on" ] && [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ -n "$(ip route show table 4 | awk '$1 == "default"')" ]; then
 cat<<EOF
 <H2>Vorübergehende Deaktivierung</H2>
 <!-- show the following area only, if user likes more information -->
@@ -166,7 +166,7 @@ else
 	echo "<tr><td>Internet-Freigabe nicht möglich </td>"
 	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
 	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
-	if [ -n "$(ip route show table 4)" ]; then
+	if [ -n "$(ip route show table 4 | awk '$1 == "default"')" ]; then
 		echo "<tr><td>-- WAN-Anschluss ok</td>"
 		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
 		echo "<tr><td>-- zentraler Gateway über WAN nicht erreichbar</td>"
