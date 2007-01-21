@@ -7,7 +7,7 @@ TAPADDR_NET="$(ifconfig tap0 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {pr
 ip route flush table 3
 [ -n "$TAPNET_PRE" ] && ip route add throw $TAPNET_PRE table 3
 ip route add throw $LANNET/$LANPRE table 3
-[ -n "$DHCPWIFIPRE" ] && ip route add throw $DHCPWIFINET/$DHCPWIFIPRE table 3
+[ -n "$WIFIPRE" ] && ip route add throw $WIFINET/$WIFIPRE table 3
 ip route add default via $route_vpn_gateway dev $dev table 3
 iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $ifconfig_local
 [ -n "$DHCPWIFIPRE" ] && iptables -t nat -A POSTROUTING -o $dev -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $ifconfig_local
