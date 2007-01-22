@@ -1,4 +1,6 @@
 #!/bin/sh
+# dont execute script if not running on an Router (while using PackageBuilding-system)
+[ -z "$(nvram show 2>/dev/null)" ] && echo -e "\nopennet-firmware*.ipk preinstall skipped" && exit
 
 # upgrade olsrd if the version is too old (like the one provided in RC5-ONX)
 _version=$(nvram get on_fw_version)
