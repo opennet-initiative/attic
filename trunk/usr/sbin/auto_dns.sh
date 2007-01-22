@@ -14,7 +14,7 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 	fi
 
 	lan_dns=$(nvram get $DNS_VAR)
-	new_dns=$(route -n \
+	new_dns=$(route -n | sort \
 	| awk '
 	BEGIN { max = -1; }
 	$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
