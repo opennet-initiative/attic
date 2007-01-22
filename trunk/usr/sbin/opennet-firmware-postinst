@@ -291,6 +291,20 @@ if [ -n "$(nvram get on_intrlmap)" ]; then
 	nvram set on_wifimap=$(nvram get on_intrlmap); nvram unset on_intrlmap; nvram unset 
 fi
 
+# change /etc/init.d/S05nvram to enable dhcp
+# see http://wiki.openwrt.org/OpenWrtDocs/Configuration
+awk '{ 	if ( /linksys bug/ && /lan_proto/ && /dhcp/ && !/#~/  ) {
+		comment = 1; print "### commented out following lines by opennet-firmware ####"
+	}
+	if ($0 == "" && comment == 1) {
+		comment = 0; print "### commented out previous lines by opennet-firmware ####"
+	}
+	if (comment == 1) print "#~ "$0;
+	else print $0
+	}' /etc/init.d/S05nvram >/tmp/S05nvram
+cp -f /tmp/S05nvram S05nvram
+
+
 ### end bugfixes/adaptions (overall relevance) 
 ###############################################################################
 ###############################################################################
