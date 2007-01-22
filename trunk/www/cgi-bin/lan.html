@@ -93,9 +93,8 @@ TITLE="Startwert für die per DHCP zugewiesenen IP-Adressen.">
 <TD>DHCP-Start-IP:</TD>
 <TD>
 EOF
-
-netparam|grep LANNET=|cut -d'=' -f2|cut -d'.' -f1-3
-
+eval $(/usr/bin/netparam)
+echo $LANNET|cut -d'.' -f1-3
 cat<<EOF
 .
 <INPUT NAME="dhcp_start" SIZE="6" TYPE="TEXT" VALUE="$(nvram get dhcp_start)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
