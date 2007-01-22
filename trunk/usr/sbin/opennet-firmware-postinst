@@ -303,6 +303,7 @@ awk '{ 	if ( /linksys bug/ && /lan_proto/ && /dhcp/ && !/#~/  ) {
 	else print $0
 	}' /etc/init.d/S05nvram >/tmp/S05nvram
 cp -f /tmp/S05nvram S05nvram
+chmod +x /etc/init.d/S05nvram 
 
 
 ### end bugfixes/adaptions (overall relevance) 
