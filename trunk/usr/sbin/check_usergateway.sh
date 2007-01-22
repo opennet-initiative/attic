@@ -74,8 +74,6 @@ if [ "$1" != "checkonly" ] && [ -n "$(ip route show table 5)" ]; then
 				$DEBUG && logger -t check_usergateway "waiting for registered connections to suspend"
 				sleep 5;
 			done
-			#old rule is not working on rc6, mybe on rc5, test it later
-			#while [ -n "$(cat /proc/net/ip_conntrack | grep 'port=1600 .*=192.168.0.251')" ]; do sleep 5; done
 			echo 30 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout
 			echo 180 > /proc/sys/net/ipv4/netfilter/ip_conntrack_udp_timeout_stream
 			$DEBUG && logger -t check_usergateway "done. all connections updated"
@@ -91,9 +89,11 @@ if [ "$1" != "checkonly" ] && [ -n "$on_share_internet_blocked" ]; then
 		nvram unset on_share_internet_blocked
 		nvram set on_share_internet="on"
 		nvram commit
-		#~ if [ -n "$table_4" ]; then /etc/init.d/S80openvpn start opennet_ugw; fi
-		/etc/init.d/S80openvpn start opennet_ugw
 	fi
+fi
+
+if [ "$on_share_internet" = "on" ] && [ ! -e /var/run/openvpn.opennet_ugw.pid ]; then
+	/etc/init.d/S80openvpn start opennet_ugw
 fi
 
 rm /tmp/lock/check_usergateway.sh
