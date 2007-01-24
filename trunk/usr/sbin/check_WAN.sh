@@ -4,6 +4,19 @@
 DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 
+# if some of the needed variables still available, then you can give them as parameters
+get_NETPRE() {
+	dev=$(nvram get $1"_ifname")
+	dev_ipaddr=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
+	dev_netmask=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
+	
+	if [ -n "$dev_ipaddr" ]; then
+		erg="$(ipcalc $dev_ipaddr $dev_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
+		if [ "$erg" != "0.0.0.0/-8" ]; then echo $erg; fi
+	fi
+}
+
+
 # $1 enthält entweder 'add' oder 'del'
 wan_policyroute() {
 	if [ "$1" = "add" ]; then
@@ -22,19 +35,12 @@ wan_policyroute() {
 		[ -n "$TAPNET_PRE" ] && ip route add throw $TAPNET_PRE table 4
 		[ -n "$LANNET_PRE" ] && ip route add throw $LANNET_PRE table 4
 		[ -n "$WIFINET_PRE" ] && ip route add throw $WIFINET_PRE table 4
+		ip route add throw $WANNET_PRE table 4
+		#~ ip route add throw 10.1.0.1 table 4
 		ip route add default via $wan_default_route dev $WANDEV table 4
 	else
 		$DEBUG && logger -t check_WAN "entferne policy-routing für WAN per table 4"
 		ip route flush table 4 2>/dev/null
-	fi
-}
-
-get_NETPRE() {
-	dev_ipaddr=$(nvram get $1"_ipaddr")
-	dev_netmask=$(nvram get $1"_netmask")
-	
-	if [ -n "$dev_ipaddr" ]; then
-		ipcalc $dev_ipaddr $dev_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'
 	fi
 }
 
@@ -52,6 +58,17 @@ if [ "$WIFIBRD" = "$WANBRD" ]; then return; fi
 # if interface have died recently, remove temporarily stored wan_default_route
 if [ -z "$(ip addr | grep $WANDEV)" ]; then
 	rm -r /tmp/wan_default_route
+fi
+
+# add/update rules to exclude WAN-traffic from user and usergateway-tunnel traffic
+WANNET_PRE=$(get_NETPRE wan)
+old_wannet_pre=$(cat tmp/wan_net_pre 2>/dev/null)
+if [ "$WANNET_PRE" != "$old_wannet_pre" ]; then
+	ip route del throw $old_wannet_pre table 3 2>/dev/null
+	ip route add throw $WANNET_PRE table 3
+	ip route del throw $old_wannet_pre table 4 2>/dev/null
+	ip route add throw $WANNET_PRE table 4
+	echo $WANNET_PRE >/tmp/wan_net_pre
 fi
 
 # if there is a default route over the WAN-device remove this default route and store it in /tmp/wan_default_route
@@ -76,6 +93,7 @@ fi
 
 # check if target of WAN-default route could be reached. If so, activate policy routing. If not, deactivate it.
 # one ping not able to reach the target takes appr. 10 seconds, so dont increase the failure-counter to high
+# this is a feature for people who might use the opennet-usertunnel as a backup connection.
 max_ping_failure=3
 count=1
 while [ $((count++)) -le $max_ping_failure ]; do
