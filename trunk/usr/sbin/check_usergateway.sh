@@ -12,6 +12,18 @@ test -d /tmp/lock || mkdir -p /tmp/lock
 if [ -e /tmp/lock/check_usergateway.sh ];then exit; fi
 echo "running" >/tmp/lock/check_usergateway.sh
 
+# helper function
+get_NETPRE() {
+	dev=$(nvram get $1"_ifname")
+	dev_ipaddr=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
+	dev_netmask=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
+	
+	if [ -n "$dev_ipaddr" ]; then
+		erg="$(ipcalc $dev_ipaddr $dev_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
+		if [ "$erg" != "0.0.0.0/-8" ]; then echo $erg; fi
+	fi
+}
+
 ugw_wan_route () {
 	if [ "$1" = "add" ]; then
 		# check if route is still there
@@ -29,11 +41,30 @@ ugw_wan_route () {
 	fi
 }
 
+ugw_update_snat () {
+	WIFINET_PRE=$(get_NETPRE wifi)
+	
+	# remove old rule
+	RULENUM=$(iptables -L POSTROUTING -t nat --line-numbers -n | awk ' $5 == "$WIFINET_PRE" && /dpt:1600/ {print $1; exit}')
+	[ -n "$RULENUM" ] && iptables -D POSTROUTING $RULENUM -t nat
+	
+	iptables -t nat -A POSTROUTING -o $(nvram get wan_ifname) -s $WIFINET_PRE -d $on_ugw_ip -p udp --dport 1600 -j SNAT --to-source $wanaddr
+}
+
+ugw_update_dnat () {
+	# remove old rule
+	RULENUM=$(iptables -L PREROUTING -t nat --line-numbers -n | awk '/192.168.0.251/ && /dpt:1600/ {print $1; exit}')
+	[ -n "$RULENUM" ] && iptables -D PREROUTING $RULENUM -t nat
+
+	iptables -t nat -A PREROUTING -d 192.168.0.251 -p udp --dport 1600 -j DNAT --to-destination $on_ugw_ip
+}
+
 table_4_default_route=$(ip route show table 4 | awk '$1 == "default" {print $3}')
-on_ugw_ip=
+on_ugw=$(nvram get on_ugw)
+on_ugw_ip=$(nslookup $on_ugw 2>/dev/null | tail -n 1 | awk '{ print $2 }')
+wanaddr="$(ip addr show primary $(nvram get wan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }')"
+
 if [ -n "$table_4_default_route" ]; then
-	on_ugw=$(nvram get on_ugw)
-	on_ugw_ip=$(nslookup $on_ugw 2>/dev/null | tail -n 1 | awk '{ print $2 }')
 	if $(ping -c 1 $on_ugw_ip >/dev/null 2>/dev/null); then
 		$DEBUG && logger -t check_usergateway "ok, $on_ugw can be reached via WAN-device"
 		if [ ! -e /tmp/ugw_reachable ]; then
@@ -50,10 +81,23 @@ else
 	if [ -n "$(ip route show table 5)" ]; then ugw_wan_route del; fi
 fi
 
+# check if current usergateway-ip has an DNAT-rule in PREROUTING (might got lost if IP of usergateway has changed)
+if [ -n "$on_ugw_ip" ] && \
+	[ "$(iptables -L PREROUTING -t nat -n | awk 'BEGIN{FS=" +|:"} /192.168.0.251/ && /dpt:1600/ {print $10; exit}')" != "$on_ugw_ip" ]; then
+	$DEBUG && logger -t check_usergateway "aktualisiere DNAT für usergateway"
+	ugw_update_dnat
+fi
+
+# check if current usergateway-ip has an SNAT-rule in POSTROUTING (might got lost if IP of WANDEVICE has changed)
+if [ -n "$on_ugw_ip" ] && \
+	[ "$(iptables -L POSTROUTING -t nat --line-numbers -n | awk 'BEGIN{FS=" +|:"} $6 == "'$on_ugw_ip'" && /dpt:1600/ {print $11; exit}')" != "$wanaddr" ]; then
+	$DEBUG && logger -t check_usergateway "aktualisiere SNAT für usergateway"
+	ugw_update_snat
+fi
 
 # check if there are any connections trough a usergateway-tunnel which are double-tunneld
 if [ "$1" != "checkonly" ] && [ -n "$(ip route show table 5)" ]; then
-	wanaddr="$(ip addr show primary $(nvram get wan_ifname) | awk '$1 == "inet" { print $2 }')"
+	wanaddr="$(ip addr show primary $(nvram get wan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }')"
 	vpn_conns="$(cat /proc/net/ip_conntrack | \
 			awk '
 				BEGIN {FS=" +|="}
