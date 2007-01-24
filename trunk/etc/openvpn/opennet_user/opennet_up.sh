@@ -5,7 +5,9 @@ TAPADDR_NET="$(ifconfig tap0 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {pr
 [ -n "$TAPADDR_NET" ] && TAPNET_PRE="$(ipcalc $TAPADDR_NET | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
 
 ip route flush table 3
-[ -n "$TAPNET_PRE" ] && ip route add throw $TAPNET_PRE table 3
+# if TAP not available set rule to the predefined value to enable routing from Usergateways.
+[ -z "$TAPNET_PRE" ] && TAPNET_PRE="10.2.0.0/16"
+ip route add throw $TAPNET_PRE table 3
 ip route add throw $LANNET/$LANPRE table 3
 [ -n "$WIFIPRE" ] && ip route add throw $WIFINET/$WIFIPRE table 3
 ip route add default via $route_vpn_gateway dev $dev table 3
