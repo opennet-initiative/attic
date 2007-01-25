@@ -424,7 +424,22 @@ Rauschen: $(wl -i $WLDEV noise|awk 'sub("noise is","") {print $1}') dBm
 </TD>
 </TR>
 EOF
-
+if [ -n "$(grep $(nvram get wan_ifname) /var/etc/olsrd.conf)" ]; then
+cat<<EOF
+<TR>
+<TD colspan="2"><b>ACHTUNG:</b> WAN ist mit IP $(ip addr show primary $(nvram get wan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }') Teil des Opennet. OLSR auf WAN aktiviert.
+</TD>
+</TR>
+EOF
+fi
+if [ -n "$(grep $(nvram get lan_ifname) /var/etc/olsrd.conf)" ]; then
+cat<<EOF
+<TR>
+<TD colspan="2"><b>ACHTUNG:</b> LAN ist mit IP $(ip addr show primary $(nvram get lan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }') Teil des Opennet. OLSR auf LAN aktiviert.
+</TD>
+</TR>
+EOF
+fi
 if [ "$(nvram get ff_httpinfo)" != "0" ];then
 
 cat<<EOF
