@@ -293,7 +293,7 @@ fi
 
 # change /etc/init.d/S05nvram to enable dhcp
 # see http://wiki.openwrt.org/OpenWrtDocs/Configuration
-awk '{ 	if ( /linksys bug/ && /lan_proto/ && /dhcp/ && !/#~/  ) {
+awk '{ 	if ( /linksys bug/ && /lan/ && !/#~/ ) {
 		comment = 1; print "### commented out following lines by opennet-firmware ####"
 	}
 	if ($0 == "" && comment == 1) {
@@ -302,9 +302,8 @@ awk '{ 	if ( /linksys bug/ && /lan_proto/ && /dhcp/ && !/#~/  ) {
 	if (comment == 1) print "#~ "$0;
 	else print $0
 	}' /etc/init.d/S05nvram >/tmp/S05nvram
-cp -f /tmp/S05nvram S05nvram
+mv -f /tmp/S05nvram /etc/init.d/
 chmod +x /etc/init.d/S05nvram 
-
 
 ### end bugfixes/adaptions (overall relevance) 
 ###############################################################################
