@@ -27,12 +27,12 @@ if [ -n "$post_on_debug" ]; then
 	done
 	if [ -n "$DIRTY" ]; then nvram commit>/dev/null 2>&1; fi
 		
-	if [ -n "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" != "on" ]; then
+	if [ -e /usr/lib/iptables/libipt_LOG.so] && [ -n "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" != "on" ]; then
 		REBOOT=1;
 		cp /etc/modules.d/30-opennet-firmware /tmp/30-opennet-firmware_bak
 		awk '$1 !~ "ipt_LOG"' /tmp/30-opennet-firmware_bak > /etc/modules.d/30-opennet-firmware
 		rm /tmp/30-opennet-firmware_bak
-	elif [ -z "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" = "on" ]; then
+	elif [ -e /usr/lib/iptables/libipt_LOG.so] && [ -z "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" = "on" ]; then
 		REBOOT=1;
 		echo "ipt_LOG" >> /etc/modules.d/30-opennet-firmware
 	fi
