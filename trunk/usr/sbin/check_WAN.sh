@@ -1,21 +1,9 @@
 #!/bin/sh
 # check if WAN-device is available and there is a default-route trough it. If so, activate policy-routing. If not, deactivate it.
+. /usr/sbin/helper_functions.sh
 
 DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
-
-# if some of the needed variables still available, then you can give them as parameters
-get_NETPRE() {
-	dev=$(nvram get $1"_ifname")
-	dev_ipaddr=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
-	dev_netmask=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
-	
-	if [ -n "$dev_ipaddr" ]; then
-		erg="$(ipcalc $dev_ipaddr $dev_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
-		if [ "$erg" != "0.0.0.0/-8" ]; then echo $erg; fi
-	fi
-}
-
 
 # $1 enthält entweder 'add' oder 'del'
 wan_policyroute() {
@@ -27,16 +15,16 @@ wan_policyroute() {
 		
 		LANNET_PRE=$(get_NETPRE lan)
 		WIFINET_PRE=$(get_NETPRE wifi)
-		TAPADDR_NET="$(ifconfig tap0 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4" " $8; exit}')"
-		[ -n "$TAPADDR_NET" ] && TAPNET_PRE="$(ipcalc $TAPADDR_NET | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
-		
+		TAPNET_PRE=$(get_NETPRE_dev tap0)
+		# if TAP not available set rule to the predefined value to enable routing from Usergateways.
+		[ -z "$TAPNET_PRE" ] && TAPNET_PRE="10.2.0.0/16"
+
 		ip route flush table 4 2>/dev/null
 		
-		[ -n "$TAPNET_PRE" ] && ip route add throw $TAPNET_PRE table 4
+		ip route add throw $TAPNET_PRE table 4
 		[ -n "$LANNET_PRE" ] && ip route add throw $LANNET_PRE table 4
 		[ -n "$WIFINET_PRE" ] && ip route add throw $WIFINET_PRE table 4
 		ip route add throw $WANNET_PRE table 4
-		#~ ip route add throw 10.1.0.1 table 4
 		ip route add default via $wan_default_route dev $WANDEV table 4
 	else
 		$DEBUG && logger -t check_WAN "entferne policy-routing für WAN per table 4"
@@ -49,11 +37,9 @@ wan_policyroute() {
 WANDEV=$(nvram get wan_ifname)
 if [ -z "$WANDEV" ]; then return; fi
 
-# if WANDEV is part of WIFIDEV (WANOLSR), return immediately
-WANBRD=$(ip addr show primary $WANDEV | awk '$1 == "inet" && $3 == "brd" { print $4; exit }')
-WIFIDEV=$(nvram get wifi_ifname)
-WIFIBRD=$(ip addr show primary $WIFIDEV | awk '$1 == "inet" && $3 == "brd" { print $4; exit }')
-if [ "$WIFIBRD" = "$WANBRD" ]; then return; fi
+
+# if olsrd is running on WAN return immediately
+if [ -n "$(grep $WANDEV /var/etc/olsrd.conf)" ]; then return; fi
 
 # if interface have died recently, remove temporarily stored wan_default_route
 if [ -z "$(ip addr | grep $WANDEV)" ]; then
@@ -62,8 +48,47 @@ fi
 
 # add/update rules to exclude WAN-traffic from user and usergateway-tunnel traffic
 WANNET_PRE=$(get_NETPRE wan)
-old_wannet_pre=$(cat tmp/wan_net_pre 2>/dev/null)
+old_wannet_pre=$(cat /tmp/wan_net_pre 2>/dev/null)
 if [ "$WANNET_PRE" != "$old_wannet_pre" ]; then
+	# check if wan_ipaddr was set by dhcp and is part of any restricted networks
+	wan_proto="$(nvram get wan_proto)"
+	if [ "$wan_proto" = "dhcp" ] || "$wan_proto" = "pppoe" ]; then
+		rm -f /tmp/wan_error; rm -f /tmp/wan_warning;
+		wan_ipaddr=$(ifconfig $(nvram get wan_ifname) 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
+		wan_netmask=$(ifconfig $(nvram get wan_ifname) 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
+		
+		same_NET_addr_mask() {
+			dev1_net="$(ipcalc $1 $2 | grep NETWORK=)"
+			dev1_net2="$(ipcalc $1 $4 | grep NETWORK=)"
+			dev2_net="$(ipcalc $3 $4 | grep NETWORK=)"
+			dev2_net1="$(ipcalc $3 $2 | grep NETWORK=)"
+			
+			[ "$dev1_net" = "$dev2_net1" ] && echo $dev1_net
+			[ "$dev2_net" = "$dev1_net2" ] && echo $dev2_net
+		}
+		
+		check_net() {
+			if [ -n "$(same_NET_addr_mask $wan_ipaddr $wan_netmask $1 $2)" ]; then
+				echo "Das WAN-device hat per DHCP (automatischer Adressvergabe) eine Adresse ($wan_ipaddr/$wan_netmask) erhalten, die in einem im Opennet für andere Zwecke reservierten Bereich ($1/$2) liegt."
+			fi
+		}
+		
+		err=$(check_net 192.168.0.0 255.255.0.0)
+		[ -z "$err" ] && err=$(check_net 10.2.0.0 255.255.0.0)
+		[ -z "$err" ] && err=$(check_net 10.1.0.0 255.255.0.0)
+		[ -z "$err" ] && warn=$(check_net 10.0.0.0 255.0.0.0)
+		
+		if [ -n "$err" ]; then
+			nvram set wan_proto=disabled
+			nvram commit
+			ifdown wan
+			echo "<b>FEHLER:</b> "$err" Das WAN-device wurde daraufhin deaktiviert." >/tmp/wan_error
+			return;
+		elif [ -n "$warn" ]; then
+			echo "<b>ACHTUNG:</b> "$warn" Dieser Bereich wird allerdings im Moment (Jan. 07) noch nicht genutzt, dennoch kann dies in Zukunft Probleme verursachen." >/tmp/wan_warning
+		fi
+	fi
+
 	ip route del throw $old_wannet_pre table 3 2>/dev/null
 	ip route add throw $WANNET_PRE table 3
 	ip route del throw $old_wannet_pre table 4 2>/dev/null

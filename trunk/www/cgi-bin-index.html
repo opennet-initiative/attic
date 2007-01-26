@@ -113,8 +113,19 @@ cat<<EOF
 </div>
 EOF
 	fi
+	if [ -e /tmp/wan_error ]; then
 cat<<EOF
-
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD colspan="2" class="error">$(cat /tmp/wan_error)
+	</TD>
+	</TR>
+	</TBODY>
+	</TABLE>
+EOF
+	fi
+cat<<EOF
 <H1>Hallo!</H1>
 
 <P>Dies ist ein Opennet-WLAN-Access-Point, auf dem <b>OpenWRT $(nvram get on_fw_version)</b> mit <b>Opennet-Firmware Paket Version $(nvram get on_fw_pkgversion) "umber hulk"</b>

@@ -17,6 +17,33 @@ if [ -z "$QUERY_STRING" ]; then
 #Speedups
 wan_proto="$(nvram get wan_proto)"
 
+	if [ -e /tmp/wan_error ]; then
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD colspan="2" class="error">$(cat /tmp/wan_error)
+	</TD>
+	</TR>
+	</TBODY>
+	</TABLE>
+	<br><br>
+EOF
+	fi
+	if [ -e /tmp/wan_warning ]; then
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD colspan="2" class="warning">$(cat /tmp/wan_warning)
+	</TD>
+	</TR>
+	</TBODY>
+	</TABLE>
+	<br><br>
+EOF
+	fi
+
 cat<<EOF
 <FORM ACTION="wan.html" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">

@@ -7,6 +7,16 @@ INPUT.radio {
   margin-bottom: 2px;
 }
 
+.warning {
+	background-color: #ffba61;
+	padding: 3px;
+}
+
+.error {
+	background-color: #ff3131;
+	padding: 3px;
+}
+
 TABLE {
 		border-collapse: collapse;
 }

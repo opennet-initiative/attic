@@ -424,6 +424,22 @@ Rauschen: $(wl -i $WLDEV noise|awk 'sub("noise is","") {print $1}') dBm
 </TD>
 </TR>
 EOF
+if [ -e /tmp/wan_error ]; then
+cat<<EOF
+<TR>
+<TD colspan="2" class="error">$(cat /tmp/wan_error)
+</TD>
+</TR>
+EOF
+fi
+if [ -e /tmp/wan_warning ]; then
+cat<<EOF
+<TR>
+<TD colspan="2" class="warning">$(cat /tmp/wan_warning)
+</TD>
+</TR>
+EOF
+fi
 if [ -n "$(grep $(nvram get wan_ifname) /var/etc/olsrd.conf)" ]; then
 cat<<EOF
 <TR>
