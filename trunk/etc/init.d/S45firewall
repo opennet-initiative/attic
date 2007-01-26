@@ -13,16 +13,14 @@
 
 test -n "$FAILSAFE" && exit
 . /etc/functions.sh
+. /usr/sbin/helper_functions.sh
 
 DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
 set_masq() {
-	on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
-	if [ -n "$on_wifidhcp_ipaddr" ]; then
-		DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}');
-	fi
+	DHCPWIFINET_PRE=$(get_NETPRE on_wifidhcp)
 
 	# Mask packets from LAN to WIFI
 	if [ -z "$LANOLSR" ]; then
@@ -33,7 +31,7 @@ set_masq() {
 	fi
 	
 	# if WIFI(LANOLSR/WANOLSR)-access from DHCP-WIFI is required, enable following lines
-	if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$(nvram get on_wifidhcp_access_opennet)" ]; then
+	if [ -n "$DHCPWIFINET_PRE" ] && [ -n "$(nvram get on_wifidhcp_access_opennet)" ]; then
 		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $DHCPWIFINET_PRE -j MASQUERADE
 		if [ -n "$WANDEV" ] && [ -n "$WANOLSR" ] && [ -z "$LANOLSR" ]; then
 			iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
@@ -46,7 +44,7 @@ set_masq() {
 	if [ -n "$WANDEV" ] && [ -z "$WANOLSR" ]; then
 		# Mask packets to WAN
 		iptables -t nat -A POSTROUTING -o $WANDEV -s $LANNET/$LANPRE -j MASQUERADE
-		[ -n "$on_wifidhcp_ipaddr" ] && iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
+		[ -n "$DHCPWIFINET_PRE" ] && iptables -t nat -A POSTROUTING -o $WANDEV -s $DHCPWIFINET_PRE -j MASQUERADE
 	fi
 }
 

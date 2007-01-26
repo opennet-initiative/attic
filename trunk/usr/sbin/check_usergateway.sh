@@ -4,6 +4,7 @@
 # if there are user-vpn-connections to the central gateway trough the usergateway-tunnel,
 # they will be routed around to prevent tunnel-in-tunnel traffic.
 # fianlly decrement the internet_sharing-blocking-counter every minute.
+. /usr/sbin/helper_functions.sh
 
 DEBUG="false"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
@@ -11,18 +12,6 @@ if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 test -d /tmp/lock || mkdir -p /tmp/lock
 if [ -e /tmp/lock/check_usergateway.sh ];then exit; fi
 echo "running" >/tmp/lock/check_usergateway.sh
-
-# helper function
-get_NETPRE() {
-	dev=$(nvram get $1"_ifname")
-	dev_ipaddr=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
-	dev_netmask=$(ifconfig $dev 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
-	
-	if [ -n "$dev_ipaddr" ]; then
-		erg="$(ipcalc $dev_ipaddr $dev_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
-		if [ "$erg" != "0.0.0.0/-8" ]; then echo $erg; fi
-	fi
-}
 
 ugw_wan_route () {
 	if [ "$1" = "add" ]; then
@@ -45,7 +34,7 @@ ugw_update_snat () {
 	WIFINET_PRE=$(get_NETPRE wifi)
 	
 	# remove old rule
-	RULENUM=$(iptables -L POSTROUTING -t nat --line-numbers -n | awk ' $5 == "$WIFINET_PRE" && /dpt:1600/ {print $1; exit}')
+	RULENUM=$(iptables -L POSTROUTING -t nat --line-numbers -n | awk 'BEGIN{FS=" +|:"} $5 == "'$WIFINET_PRE'" && /dpt:1600/ {print $1; exit}')
 	[ -n "$RULENUM" ] && iptables -D POSTROUTING $RULENUM -t nat
 	
 	iptables -t nat -A POSTROUTING -o $(nvram get wan_ifname) -s $WIFINET_PRE -d $on_ugw_ip -p udp --dport 1600 -j SNAT --to-source $wanaddr

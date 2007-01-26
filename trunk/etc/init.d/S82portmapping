@@ -1,5 +1,6 @@
 #!/bin/sh
 ## this is currently an extremly opennet-specific solution.
+. /usr/sbin/helper_functions.sh
 
 test -n "$FAILSAFE" && exit
 
@@ -127,14 +128,9 @@ unmap_FORWARD() {
 # get network parameter (formerly done in netparam)
 VPNDEV=tun+
 
-on_wifi_ipaddr=$(nvram get on_wifi_ipaddr)
-if [ -n "$on_wifi_ipaddr" ]; then WIFINET_PRE=$(ipcalc $on_wifi_ipaddr $(nvram get on_wifi_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
-
-on_wifidhcp_ipaddr=$(nvram get on_wifidhcp_ipaddr)
-if [ -n "$on_wifidhcp_ipaddr" ]; then DHCPWIFINET_PRE=$(ipcalc $on_wifidhcp_ipaddr $(nvram get on_wifidhcp_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
-	
-lan_ipaddr=$(nvram get lan_ipaddr)
-if [ -n "$lan_ipaddr" ]; then LANNET_PRE=$(ipcalc $lan_ipaddr $(nvram get lan_netmask) | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}'); fi
+WIFINET_PRE=$(get_NETPRE wifi)
+DHCPWIFINET_PRE=$(get_NETPRE on_wifidhcp)
+LANNET_PRE=$(get_NETPRE lan)
 
 WIFIDEV=$(nvram get wifi_ifname)
 DHCPWIFIDEV=$(nvram get on_wifidhcp_ifname)
