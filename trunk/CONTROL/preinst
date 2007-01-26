@@ -4,7 +4,7 @@
 
 # upgrade olsrd if the version is too old (like the one provided in RC5-ONX)
 _version=$(nvram get on_fw_version)
-if [ -z "${_version##*RC5*}" ] && [ "$(md5sum /usr/sbin/olsrd | cut -d" " -f1)" != "06689a4613551928ffcd2dbbfcb8a5b0" ]; then
+if [ -z "${_version##*RC5*}" ] && [ -e /usr/sbin/olsrd ] && [ "$(md5sum /usr/sbin/olsrd | cut -d" " -f1)" != "06689a4613551928ffcd2dbbfcb8a5b0" ]; then
 	echo "############################################################################"
 	echo "# Der installierte olsrd ist veraltet. Starte automatisches update..."
 	if [ -L /usr/lib/ipkg/info/olsrd.list ]; then
