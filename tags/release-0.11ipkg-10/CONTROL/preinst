@@ -1,0 +1,63 @@
+#!/bin/sh
+# dont execute script if not running on an Router (while using PackageBuilding-system)
+[ -z "$(nvram show 2>/dev/null)" ] && echo -e "\nopennet-firmware*.ipk preinstall skipped" && exit
+
+# upgrade olsrd if the version is too old (like the one provided in RC5-ONX)
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC5*}" ] && [ -e /usr/sbin/olsrd ] && [ "$(md5sum /usr/sbin/olsrd | cut -d" " -f1)" != "06689a4613551928ffcd2dbbfcb8a5b0" ]; then
+	echo "############################################################################"
+	echo "# Der installierte olsrd ist veraltet. Starte automatisches update..."
+	if [ -L /usr/lib/ipkg/info/olsrd.list ]; then
+		cp -f /rom/usr/lib/ipkg/info/olsrd.list /usr/lib/ipkg/info/olsrd.list
+	fi
+	if [ ! -f /tmp/olsrd_0.4.10-1_mipsel.ipk ]; then
+		ipkg install -force-reinstall olsrd
+	else
+		ipkg install /tmp/olsrd_0.4.10-1_mipsel.ipk
+	fi
+	if [ $? != 0 ]; then
+		echo "# Abbruch: Aktualisierung von olsrd fehlgeschlagen."
+		echo "############################################################################"
+		exit 1
+	fi
+	echo "# olsrd wurde erfolgreich aktualisiert"
+	echo "############################################################################"
+fi
+
+echo "  removing files to replace"
+
+rm -f /bin/login
+
+rm -f /etc/functions.sh
+
+rm -f /etc/init.d/S40network
+rm -f /etc/init.d/S35firewall # new place of firewall-config in rc6
+rm -f /etc/init.d/S45firewall
+rm -f /etc/init.d/S50telnet
+rm -f /etc/init.d/S50httpd
+rm -f /etc/init.d/S50dropbear
+rm -f /etc/init.d/S50dnsmasq
+rm -f /etc/init.d/S60cron
+rm -f /etc/init.d/S60olsrd
+
+rm -f /etc/olsrd.conf
+
+rm -f /etc/ssl/openssl.cnf
+
+rm -f /www/index.html
+
+rm -f /etc/ppp/ip-up
+rm -f /etc/ppp/ip-down
+
+# remove former firewall file to provide clearer structure
+rm -f /etc/firewall.user
+
+_version=$(nvram get on_fw_version)
+if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
+# restoring Webinterface (be)for firmware-update/upgrade
+mv -f /www/cgi-bin/webif/$upgrade_bak /www/cgi-bin/webif/$upgrade 2>/dev/null
+mv -f /www/cgi-bin/webif/.categories_bak /www/cgi-bin/webif/.categories 2>/dev/null
+
+echo "  removing files to replace - done"

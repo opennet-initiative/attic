@@ -1,0 +1,170 @@
+#!/bin/sh
+
+export DATE="5.9.2005"
+export TITLE="Verwaltung: LAN"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<script type="text/javascript">document.getElementById('idx50').className="idx selected";</script>
+
+<H1>Verwaltung: LAN</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+lan_proto="$(nvram get lan_proto)"
+
+cat<<EOF
+<FORM ACTION="lan.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TBODY>
+<tr><td></td></tr>
+<TR><TD><B>Adressdaten des AccessPoints</B></TD></TR>
+<TR
+TITLE="Bestimmt die Betriebsart der 4 Ethernet-Anschlüsse. Falls noch nicht konfiguriert, wird die Vorgabe 'Statisch' verwendet.">
+<TD>LAN-Protokoll:</TD>
+<TD><SELECT NAME="lan_proto" ONCHANGE="this.form.lan_ipaddr.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.lan_netmask.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_start.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_num.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));this.form.dhcp_lease.disabled=(0!=this.value.indexOf('static')&&0!=this.value.indexOf('noconfig'));">
+<OPTION
+VALUE='dhcp' $(test "$lan_proto" = "dhcp" && echo "selected=selected")>DHCP</OPTION>
+<OPTION
+VALUE='static' $(test "$lan_proto" = "static" && echo "selected=selected")>Statisch</OPTION>
+<OPTION
+VALUE='disabled' $(test "$lan_proto" = "disabled" && echo "selected=selected")>Ausschalten</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="Dies ist die IP-Adresse der vier Ethernet-Anschlüsse.">
+<TD>LAN-IP:</TD>
+<TD><INPUT NAME="lan_ipaddr" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_ipaddr)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Die Netzmaske bestimmt, welche IP-Adressen direkt erreicht werden können.">
+<TD>LAN-Netzmaske:</TD>
+<TD><INPUT NAME="lan_netmask" SIZE="32" TYPE="TEXT" VALUE="$(nvram get lan_netmask)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Konfiguriert statische Routen im Format 'ip:netmask:gatewayip:metric:interface'. Beispiel: '10.1.2.0:255.255.255.0:0.0.0.0:1:vlan1'. Trenne mehrere Einträge mit Leerzeichen.">
+<TD>Statische Routen:</TD>
+<TD><INPUT NAME="static_route" SIZE="32" TYPE="TEXT" VALUE="$(nvram get static_route)"></TD>
+</TR>
+<tr><td></td></tr>
+<TR><TD><B>Weitere Einstellungen</B></TD></TR>
+<TR
+TITLE="Schaltet die IP-Adressumsetzung (NAT/Masquerading) zwischen dem internen LAN und dem Drahtlos-Netzwerk aus. Für spezielle Anwendungen kann mit dieser Option das interne LAN mit dem Drahtlos-Netzwerk direkt kommunizieren.">
+<TD>NAT ausschalten:</TD>
+<TD><INPUT NAME="ff_nonat" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get ff_nonat)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Schaltet den Firewall aus. Regeln für NAT (Übersetzung des internen LAN-Datenverkehrs auf die IP-Adresse im Drahtlos-Netzwerk) bleiben in Kraft.">
+<TD>Firewall ausschalten:</TD>
+<TD><INPUT NAME="fw_disable" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get fw_disable)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+
+<TR>
+<TD COLSPAN="2">
+EOF
+
+wifi_ipaddr=$(nvram get wifi_ipaddr)
+wifi_netmask=$(nvram get wifi_netmask)
+lan_ipaddr=$(nvram get lan_ipaddr)
+if [ "$(ipcalc $lan_ipaddr $wifi_netmask|grep "NETWORK"|cut -d'=' -f2)" = "$(ipcalc $wifi_ipaddr $wifi_netmask|grep "NETWORK"|cut -d'=' -f2)" ]; then
+
+cat<<EOF
+<B>Hinweis</B>: Die Firewall-Funktion zwischen WLAN
+und LAN ist nicht aktiv, weil die LAN-IP-Adresse ($lan_ipaddr) im
+Bereich des WLAN-Netzwerkes ($wifi_ipaddr/$wifi_netmask) liegt.
+EOF
+
+fi
+
+cat<<EOF
+</TD>
+</TR>
+<tr><td></td></tr>
+<TR><TD><B>DHCP-Server auf dem AcessPoint</B></TD></TR>
+<TR
+TITLE="Startwert für die per DHCP zugewiesenen IP-Adressen.">
+<TD>DHCP-Start-IP:</TD>
+<TD>
+EOF
+eval $(/usr/bin/netparam)
+echo $LANNET|cut -d'.' -f1-3
+cat<<EOF
+.
+<INPUT NAME="dhcp_start" SIZE="6" TYPE="TEXT" VALUE="$(nvram get dhcp_start)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+
+<TR
+TITLE="Anzahl der vom DHCP-Server verwalteten IP-Adressen. Die Summe aus Startwert und Anzahl sollte kleiner als 255 sein.">
+<TD>DHCP-Benutzeranzahl:</TD>
+<TD><INPUT NAME="dhcp_num" SIZE="6" TYPE="TEXT" VALUE="$(nvram get dhcp_num)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)>(DHCP aus mit &quot;0&quot;)</TD>
+</TR>
+<TR
+TITLE="Zeit (in Sekunden) nach der eine vergebene IP-Adresse neu vergeben werden kann. Für die Vorgabe von 12 Stunden (43200) das Eingabefeld leer oder auf 0 lassen.">
+<TD>DHCP-Lease-Dauer:</TD>
+<TD><INPUT NAME="dhcp_lease" SIZE="6" TYPE="TEXT" VALUE="$(nvram get dhcp_lease)"$(if [ "$lan_proto" != "noconfig" ] && [ "$lan_proto" != "static" ];then echo ' disabled="disabled"';fi)>Sekunden</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"> </TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_lan" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<P><B>ACHTUNG:</B> Wird bei 'LAN_Protokoll' 'DHCP' ausgewählt, sucht der AccessPoint im LAN nach einem anderen DHCP-Server und versucht eine Adresse zu bekommen. Dies ist oft nicht gewollt. Um auf dem AccessPoint eine DHCP-Server zu betreiben, muss diesem eine statische IP (z.B. 172.16.0.1) zugewiesen werden und im unteren Teil  die maximale Zahl der DHCP-Benutzer größer 0 gesetzt werden.
+
+</P>
+EOF
+
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$post_lan" ]; then
+for V in lan_proto lan_ipaddr lan_netmask static_route ff_nonat fw_disable dhcp_start dhcp_num dhcp_lease; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+if checkbridge; then
+DIRTY=1
+fi
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+Die Einstellungen sind erst beim n&auml;chsten <A HREF="reset.html">Neustart</A>
+aktiv.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${0%/*}/cgi-bin-post.sh
