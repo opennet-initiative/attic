@@ -20,6 +20,17 @@ endswith() { local str="$1"; local substr="$2";
 
 $logit "  updating nvram variables to opennet defaults.."
 
+# configure lan interface if not yet set, or if fresh install (ssid not set for opennet) and LAN-IP starts with 192.168
+lanip=$(nvram get lan_ipaddr)
+ssid=$(nvram get wl0_ssid)
+if [ -z "$lanip" ] || ( ( [ -z "$ssid" ] || [ $(endswith "$ssid" "opennet-initiative.de") = 0 ] ) && [ $(startswith "$lanip" "192.168") = 1 ] ); then
+	nvram set lan_ipaddr=172.16.0.1
+	nvram set lan_netmask=255.255.255.0
+	nvram set lan_proto=static
+	$logit "  - changed lan interface => ip 172.16.0.1, mask 255.255.255.0"
+fi
+
+
 if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 	# german channel setup
 	nvram set wl0_country_code=DE
@@ -61,15 +72,6 @@ if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 	# misc wifi params
 	nvram set wl0_frag=512
 	nvram set wl0_rts=250
-fi
-
-# configure lan interface (if not down yet like 172.16.0.x or 192.168.2.x)
-lanip=$(nvram get lan_ipaddr)
-if [ -z "$lanip" ] || (( [ $(startswith "$lanip" "172.16.0") = 0 ] && [ $(startswith "$lanip" "192.168.2.0") = 0 ] )); then
-	nvram set lan_ipaddr=172.16.0.1
-	nvram set lan_netmask=255.255.255.0
-	nvram set lan_proto=static
-	$logit "  - changed lan interface => ip 172.16.0.1, mask 255.255.255.0"
 fi
 
 # remove preset gateway (now handled by olsrd)
