@@ -16,7 +16,20 @@ fi
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
 lan_proto="$(nvram get lan_proto)"
-
+/usr/sbin/check_LAN.sh
+	if [ -e /tmp/lan_warning ]; then
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD colspan="2" class="warning">$(cat /tmp/lan_warning)
+	</TD>
+	</TR>
+	</TBODY>
+	</TABLE>
+	<br><br>
+EOF
+	fi
 cat<<EOF
 <FORM ACTION="lan.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">

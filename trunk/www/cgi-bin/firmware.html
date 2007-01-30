@@ -15,6 +15,21 @@ cat<<EOF
 
 EOF
 
+/usr/sbin/check_LAN.sh
+	if [ -e /tmp/lan_warning ]; then
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD colspan="2" class="warning">$(cat /tmp/lan_warning)
+	</TD>
+	</TR>
+	</TBODY>
+	</TABLE>
+	<br><br>
+EOF
+	fi
+
 if [ "$REQUEST_METHOD" = "POST" ]; then
 	read QUERY_STRING
 fi

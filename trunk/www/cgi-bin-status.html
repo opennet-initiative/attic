@@ -440,6 +440,15 @@ cat<<EOF
 </TR>
 EOF
 fi
+/usr/sbin/check_LAN.sh
+if [ -e /tmp/lan_warning ]; then
+cat<<EOF
+<TR>
+<TD colspan="2" class="warning">$(cat /tmp/lan_warning)
+</TD>
+</TR>
+EOF
+fi
 if [ -n "$(grep $(nvram get wan_ifname) /var/etc/olsrd.conf)" ]; then
 cat<<EOF
 <TR>
