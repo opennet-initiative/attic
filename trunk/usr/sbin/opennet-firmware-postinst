@@ -307,6 +307,12 @@ awk '{ 	if ( /linksys bug/ && /lan/ && !/#~/ ) {
 mv -f /tmp/S05nvram /etc/init.d/
 chmod +x /etc/init.d/S05nvram 
 
+if [ -e "/bin/ipcalc.sh" ]; then
+	# post rc6-versions replaced ipcalc with ipcalc.sh, so create a symbolic link.
+	ln -s /bin/ipcalc.sh /bin/ipcalc
+	$logit "  - added link from ipcalc.sh to ipcalc"
+fi
+
 ### end bugfixes/adaptions (overall relevance) 
 ###############################################################################
 ###############################################################################
