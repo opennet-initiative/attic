@@ -1,0 +1,26 @@
+# initial configuration file for olsrd
+# parsed by /usr/sbin/parse_olsrd_conf and
+# used by /etc/init.d/S53olsrd 
+# should contain two sections, [main] and [device]
+
+[main]
+IpVersion               4
+AllowNoInt              yes
+Pollrate                0.1
+TcRedundancy            2
+MprCoverage             7
+LinkQualityFishEye      1
+LinkQualityWinSize      100
+LinkQualityDijkstraLimit 0 9.0
+LinkQualityLevel        2
+UseHysteresis           no
+
+[device]
+HelloInterval           6.0
+HelloValidityTime       108.0
+TcInterval              4.0
+TcValidityTime          324.0
+MidInterval             18.0
+MidValidityTime         324.0
+HnaInterval             18.0
+HnaValidityTime         108.0

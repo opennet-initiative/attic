@@ -1,0 +1,81 @@
+#!/usr/bin/awk -f
+
+# Will run every minute (at 00:00, 00:01, ...)
+
+BEGIN {
+	# i like shell scripting better: check if gateway is recent
+	system("/usr/sbin/cron.minutely_ongateway")
+	
+	# check if WAN has a working default route and activate policy-routing
+	system("/usr/sbin/check_WAN.sh")
+	
+	# check if usergateway can still be reached via WANDEV
+	system("/usr/sbin/check_usergateway.sh")
+	
+	# update dns entries
+	system("/usr/sbin/auto_dns.sh")
+		
+	# Get counters of wifi for check
+	while(getline<"/proc/net/wireless") {
+		if (/^$/) break
+		if (sub(":", "")) wdev = $1
+	}
+	
+	if ("" == wdev) {
+		# Wifi dead?
+		if ( system("test -f /tmp/wifi_dead") ) {
+			# wait for another minute to see if it is really down
+			# remember the state
+			system("logger -t cron.minutely no wifidev in /proc/net/wireless, restarting wifi in one minute")
+			system("touch /tmp/wifi_dead")
+		}
+		else {
+			# Wifi dead for more than one minute? Try restart
+			system("logger -t cron.minutely no wifidev in /proc/net/wireless, restarting wifi now")
+			system("rm -f /tmp/wifi_dead")
+			system("ifdown wifi; wifi down; killall -9 wifi >/dev/null; sleep 10; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)")
+		}
+		exit; # continue tests next minute
+	}
+	system("rm -f /tmp/wifi_dead")
+        	
+	while(getline<"/proc/net/dev") {
+		if (/^$/) break
+		if (sub(wdev":", "")) {
+			wstat=$0
+			break
+		}
+	}
+	getline ostat<"/var/run/status."wdev
+	if (0 == ERRNO) close("/var/run/status."wdev)
+	print wstat>"/var/run/status."wdev
+	while("iwconfig "wdev|getline) {
+		if (/^$/) break
+		if (sub("Mode:", "")) mode=$1
+		#if (sub("Channel:", "")) chan=$2
+	}
+	
+	### channel testing deaktivated, not sure if this is useful in our network
+#	while("/usr/sbin/wl channel"|getline) {
+#		if (sub("current mac channel", "")) {
+#			chan=$1;
+#			break
+#		}
+#	}
+#	"nvram get wl0_channel"|getline wl0c
+
+	srand()
+	if (("pidof -s olsrd"|getline && "" == $0) || ( system("test ! -f /tmp/restart_olsrd") )) {
+		system("logger -t cron.minutely restarting olsrd")
+		system("rm -rf /tmp/restart_olsrd")
+		system("/etc/init.d/S*olsrd stop")
+		system("/usr/sbin/olsrd-clearroutes")
+		system("/etc/init.d/S*olsrd start")
+	}
+#	else if (("" != ostat && ostat == wstat) || ("Ad-Hoc" == mode && chan != wl0c)) {
+	else if ("" != ostat && ostat == wstat) {
+		# Wifi dead? Try restart
+		system("logger -t cron.minutely restarting wifi="wdev)
+		system("ifdown wifi; wifi down; killall -9 wifi >/dev/null; sleep 10; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)")
+	}
+}
