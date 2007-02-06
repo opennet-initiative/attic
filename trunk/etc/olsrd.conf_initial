@@ -4,7 +4,6 @@
 # should contain two sections, [main] and [device]
 
 [main]
-LinkQualityFishEye      1
 IpVersion               4
 AllowNoInt              yes
 Pollrate                0.1
