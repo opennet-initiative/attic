@@ -93,11 +93,15 @@ set_wifi_lan_fw() {
 	# Accept all OLSR broadcasts, even to 255.255.255.255
 	iptables -A INPUT -i $WIFIDEV -s ! $LANNET/$LANPRE -p udp --sport 698 --dport 698 -j ACCEPT
 	test -n "$WIFIADR" && iptables -A INPUT -i $LANDEV -s $LANNET/$LANPRE -d $WIFIADR -j ACCEPT
+	# this is problematic if WAN gets the address after firewall-initialisation
+	test -n "$WANADR" && iptables -A INPUT -i $LANDEV -s $LANNET/$LANPRE -d $WANADR -j ACCEPT
 	$DEBUG && iptables -A INPUT -j LOG --log-prefix "IN:"
 	iptables -A INPUT -j DROP
 
 	iptables -A OUTPUT -j ipfilter
 	test -n "$WIFIADR" && iptables -A OUTPUT -o $LANDEV -s $WIFIADR -d $LANNET/$LANPRE -j ACCEPT
+	# this is problematic if WAN gets the address after firewall-initialisation
+	test -n "$WANADR" && iptables -A OUTPUT -o $LANDEV -s $WANADR -d $LANNET/$LANPRE -j ACCEPT
 	$DEBUG && iptables -A OUTPUT -j LOG --log-prefix "OUT:"
 	iptables -A OUTPUT -j DROP
 
