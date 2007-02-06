@@ -5,5 +5,5 @@ Section: net
 Depends: opennet-kmod-brcm-wl, opennet-kmod-wlcompat, opennet-wificonf, wl, openvpn, openssl-util, libgcc, olsrd, ntpclient, ip, olsrd-mod-httpinfo
 Priority: normal
 Description: opennet tools and webinterface (to build opennet-firmware on top of plain openwrt)
-Version: 0.11ipkg-10
+Version: 0.11ipkg-11
 Architecture: mipsel
