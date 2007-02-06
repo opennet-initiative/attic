@@ -1,5 +1,5 @@
 #!/bin/sh
-# if called from /etc/init.d/S15opennet-init, directly after an installation of RC6ON*, behave a little different
+# if called from /etc/init.d/S15opennet-init, directly after an installation of Whiterussian-ON*, behave a little different
 if [ "$1" = "firstboot" ]; then
 	logit="logger -t S15opennet-init"
 else

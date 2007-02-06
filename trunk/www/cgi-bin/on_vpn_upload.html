@@ -1,6 +1,6 @@
 #!/bin/sh
 _version=$(nvram get on_fw_version)
-if [ -z "${_version##*RC6*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+if [ -n "${_version##*RC5*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
 else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
 fi
 
