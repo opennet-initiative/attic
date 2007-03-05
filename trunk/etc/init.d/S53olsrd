@@ -27,7 +27,7 @@ set_wireless()
 		OLSRDEVLIST="$OLSRDEVLIST $WANDEV"
 	fi
 	
-	OLSRDEVLIST="$OLSRDEVLIST tap0"
+	OLSRDEVLIST="$OLSRDEVLIST tap0 tap1"
 	
 	test -n "$(nvram get ff_txant)" && wl -i $WIFIDEV txant $(nvram get ff_txant)
 	test -n "$(nvram get ff_txpwr)" && wl -i $WIFIDEV txpwr $(nvram get ff_txpwr)
