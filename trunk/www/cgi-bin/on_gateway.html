@@ -72,7 +72,7 @@ fi
 gwauto=$(nvram get on_gwauto)
 
 cat<<EOF
-In diesem Bereich können die IP-Adressen der von euch gewünschten OpenVPN-Gateways konfiguriert werden.<br />
+In diesem Bereich können die IP-Adressen der von Dir gewünschten OpenVPN-Gateways konfiguriert werden.<br />
 <!-- show the following area only, if user likes more information -->
 <a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
 <div id="description">
@@ -95,7 +95,7 @@ Unter 'OpenVPN-Test' wird angegeben, ob testweise eine OpenVPN Verbindung zum en
 <br />
 <H2>Gateway-Liste</H2>
 EOF
-	if [ -e /tmp/openvpn_ugw_msg.txt ]; then
+	if [ -n "$(ls /tmp/opennet_ugw* 2>/dev/null)" ]; then
 		echo "<p><b>HINWEIS:</b> User-Gateway-Tunnel ist aktiv. Eine Verbindung zu den Opennet-Gateways über diesen Tunnel ist nicht möglich. Für alle Gateways, die aktuell nur (bzw. am besten) über den User-Gateway-Tunnel erreichbar sind, schlägt der OpenVPN-Test daher fehl.</p>"
 	fi
 cat<<EOF

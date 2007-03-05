@@ -133,35 +133,44 @@ TITLE="Informationen zu User-Gateway-OpenVPN und nötigen Dateien">
 <TBODY>
 EOF
 if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
-	if [ -n "$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap"')" ]; then
-		echo "<tr><td>Internet freigegeben<br>(zentraler Gateway eingebunden)</td>"
+	zentr_gw="$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap" {print $1}')"
+	if [ $(echo $zentr_gw | wc -w) = 1 ]; then ZGW="zentraler Gateway";
+	else ZGW="zentrale Gateways";
+	fi
+	if [ -n "$zentr_gw" ]; then
+		echo "<tr><td>Internet freigegeben<br>($ZGW $zentr_gw eingebunden)</td>"
 		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
 	else
-		echo "<tr><td>Internet nicht freigegeben<br>(zentraler Gateway nicht eingebunden)</td>"
+		echo "<tr><td>Internet nicht freigegeben<br>(kein zentraler Gateway eingebunden)</td>"
 		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
 	fi
-	if [ -f  /tmp/openvpn_ugw_msg.txt ];then
-		echo "<tr><td>-- User-Gateway-Tunnel aktiv</td>"
-		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
-	else
-		if [ -f  /var/run/openvpn.opennet_ugw.pid ];then
-			echo "<tr><td>-- User-Gateway-Tunnel startend</td>"
-			echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
+	for i in 1 2; do
+		target="$(cat /tmp/opennet_ugw$i* 2>/dev/null)"
+		if [ -n "$target" ];then
+			echo "<tr><td>-- Tunnel zu $target aktiv</td>"
+			echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td><td /></tr>"
 		else
-			echo "<tr><td>-- User-Gateway-Tunnel nicht aktiv</td>"
-			echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
-		fi	
-	fi
+			if [ -f  /var/run/openvpn.opennet_ugw$i.pid ];then
+				echo "<tr><td>-- User-Gateway-Tunnel $i startend</td>"
+				echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
+			else
+				echo "<tr><td>-- User-Gateway-Tunnel $i nicht aktiv</td>"
+				echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td><td /></tr>"
+			fi	
+		fi
+	done
 	echo "<tr><td colspan="3"><hr></td></tr>"
 fi
-if [ -f  "/tmp/ugw_reachable" ];then
+if [ -n "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 	echo "<tr><td>Internet-Freigabe möglich </td>"
 	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td>"
 	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
 	echo "<tr><td>-- WAN-Anschluss ok.</td>"
 	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
-	echo "<tr><td>-- Zentraler Gateway über WAN erreichbar</td>"
-	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+	for gw in $(ls /tmp/ugw_reachable* | awk '{gsub("/tmp/ugw_reachable_",""); print}'); do	
+		echo "<tr><td>-- "$gw" über WAN erreichbar</td>"
+		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+	done
 else
 	echo "<tr><td>Internet-Freigabe nicht möglich </td>"
 	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
@@ -169,12 +178,12 @@ else
 	if [ -n "$(ip route show table 4 | awk '$1 == "default"')" ]; then
 		echo "<tr><td>-- WAN-Anschluss ok</td>"
 		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
-		echo "<tr><td>-- zentraler Gateway über WAN nicht erreichbar</td>"
+		echo "<tr><td>-- kein zentraler Gateway über WAN erreichbar</td>"
 		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
 	else
 		echo "<tr><td>-- WAN-Anschluss nicht ok</td>"
 		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
-		echo "<tr><td>-- (zentraler Gateway über WAN nicht erreichbar)</td>"
+		echo "<tr><td>-- (kein zentraler Gateway über WAN erreichbar)</td>"
 		echo "<td></td></tr>"
 	fi
 fi
@@ -248,7 +257,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Verwaltung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 cat<<EOF
 <a id="switch4" href="#" onclick="document.getElementById('vpn_upload_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -267,7 +276,7 @@ TITLE="Wähle den Schlüssel (*.key) oder das Zertifikat (*.crt) zum hochladen aus
 </TR></TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch4').style.display='inline';
@@ -279,7 +288,7 @@ cat<<EOF
 
 <H2>User-Gateway-Tunnel Schlüssel-Erstellung</H2>
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 cat<<EOF
 <a id="switch5" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
@@ -321,7 +330,7 @@ TITLE="Geheimer Schlüssel und Anfrage zur Zertifizierung wird generiert">
 
 
 EOF
-	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ ! -e  /tmp/ugw_reachable ]; then
+	if ( [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] ) || [ -z "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 cat<<EOF
 <script type="text/javascript">
 	document.getElementById('switch5').style.display='inline';

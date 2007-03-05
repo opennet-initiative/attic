@@ -147,12 +147,14 @@ if [ -z "$(nvram show 2>/dev/null | grep on_autodns)" ]; then
 	$logit "  - changed dns server detection => auto-search mode"
 fi
 
-# set user-gateway default (need more work later!)
-on_ugw=$(nvram get on_ugw)
-if [ -z "$on_ugw" ]; then
-	nvram set on_ugw="nagare.on-i.de"
-	$logit "  - changed user-gateway => nagare.on-i.de"
+# set user-gateways default
+on_ugws=$(nvram get on_ugws)
+if [ -z "$on_ugws" ]; then
+	nvram set on_ugws="nagare.on-i.de erina.on-i.de"
+	$logit "  - changed user-gateways => nagare.on-i.de erina.on-i.de"
 fi
+
+
 
 # always set boot_wait
 nvram set boot_wait=on
@@ -273,6 +275,9 @@ nvram unset on_wifi_access
 nvram unset on_sharedsl
 nvram unset on_sharedsl_blocked
 nvram unset on_wifiaccess_route_override
+
+# obsolete variables since release-0.11-12
+nvram unset on_ugw
 
 # portforwarding variables changed and unified in 0.11ipkg-10, transfer former variables
 if [ -n "$(nvram show 2>/dev/null | grep on_map)" ]; then

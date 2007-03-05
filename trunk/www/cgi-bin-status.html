@@ -175,6 +175,7 @@ wget -O - http://127.0.0.1:8080/all|awk '
 gsub("border=0", "border=1 cellspacing=0 cellpadding=0")
 gsub("BORDER=0", "BORDER=1")
 gsub("<select", "<select name=none")
+gsub(":8080/all", "/cgi-bin-status.html")
 print
 }'
 
@@ -484,7 +485,7 @@ else if (prnt) {
 sub("<""table[^>]+>", "<""table frame=void border=0 cellspacing=0 cellpadding=1 width=\"100%\">")
 sub("<tr><t.>[^>]+</t.>", "<tr>")
 sub("<th>remote IP", "<th>IP")
-sub("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", "<a href=\"http://&/cgi-bin-status.html\">&</a>")
+sub(":8080/all", "/cgi-bin-status.html")
 print
 }
 }'
@@ -518,20 +519,23 @@ cat<<EOF
 </TR>
 
 EOF
-if [ -f /tmp/ugw_reachable ];then
+if [ -n "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
 cat<<EOF
 <TR>
 <TD>Internet:</TD>
 <TD>
 EOF
-
-if [ -f  /tmp/openvpn_ugw_msg.txt ];then
+if [ -n "$(ls /tmp/opennet_ugw* 2>/dev/null)" ]; then
 	echo "Freigabe aktiv / "
-	if [ -n "$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap"')" ]; then
-		echo "zentraler Gateway ($(nvram get on_ugw)) eingebunden"
+	zentr_gw="$(route -n | awk '$1 ~ "^192.168.0." && $5 == "1" && $8 ~ "^tap" {print $1}')"
+	if [ $(echo $zentr_gw | wc -w) = 1 ]; then ZGW="zentraler Gateway";
+	else ZGW="zentrale Gateways";
+	fi
+	if [ -n "$zentr_gw" ]; then
+		echo "$ZGW ($zentr_gw) eingebunden"
 		echo "<img src=\"images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\">"
 	else
-		echo "zentraler Gateway ($(nvram get on_ugw)) nicht eingebunden"
+		echo "kein zentraler Gateway eingebunden"
 		echo "<img src=\"images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\">"
 	fi
 else

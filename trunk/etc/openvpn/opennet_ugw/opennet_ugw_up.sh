@@ -1,6 +1,5 @@
 #!/bin/sh
 eval $(/usr/bin/netparam)
-
 DEBUG="false"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 
@@ -9,7 +8,9 @@ iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $i
 
 # exclude tunnel packets from policy rules
 TAPNET_PRE="$(ipcalc $ifconfig_local $ifconfig_netmask | awk 'BEGIN{FS="="} { if ($1=="NETWORK") net=$2; if ($1="PREFIX") pre=$2;} END{print net"/"pre}')"
-ip route add throw $TAPNET_PRE table 3
-ip route add throw $TAPNET_PRE table 4
+ip route add throw $TAPNET_PRE table 3 2>/dev/null
+ip route add throw $TAPNET_PRE table 4 2>/dev/null
 
-echo "ugw-tunnel active" >/tmp/openvpn_ugw_msg.txt	# a short message for the web frontend
+filename=${config#/etc/openvpn/}
+filename=/tmp/${filename%.conf}_$dev.txt
+echo $remote_1 > $filename	# a short message for the web frontend
