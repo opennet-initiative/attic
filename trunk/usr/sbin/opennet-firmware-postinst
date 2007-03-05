@@ -183,6 +183,20 @@ if [ -z "$(grep lcp-echo-failure /etc/ppp/options)" ]; then
 	$logit "  - changed ppp-options => lcp-echo-failure 5"
 fi
 
+# change tcp-settings, vgl.: http://article.gmane.org/gmane.org.freifunk.wlanware/3987
+if [ -z "$(grep net.ipv4.tcp_frto /etc/sysctl.conf)" ]; then
+	# copy file, to support pre rc6-versions
+	if [ -L /etc/sysctl.conf ]; then cp -f /rom/etc/sysctl.conf /etc/sysctl.conf; fi
+	echo "net.ipv4.tcp_frto=1" >>/etc/sysctl.conf;
+	$logit "  - changed sysctl.conf => net.ipv4.tcp_frto=1"
+fi
+if [ -z "$(grep net.ipv4.tcp_congestion_control /etc/sysctl.conf)" ]; then
+	# copy file, to support pre rc6-versions
+	if [ -L /etc/sysctl.conf ]; then cp -f /rom/etc/sysctl.conf /etc/sysctl.conf; fi
+	echo "net.ipv4.tcp_congestion_control=westwood" >>/etc/sysctl.conf;
+	$logit "  - changed sysctl.conf => net.ipv4.tcp_congestion_control=westwood"
+fi
+
 # set firmware-version to nvram variables
 _version=$( grep "(" /etc/banner )
 _version="${_version%% ---*}"
