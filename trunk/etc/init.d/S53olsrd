@@ -135,6 +135,7 @@ case $1 in
 	stop)
 		echo "Stopping olsrd..."
 		killall olsrd>/dev/null 2>&1
+		olsrd-clearroutes
 	;;
 	restart)
 		$0 stop

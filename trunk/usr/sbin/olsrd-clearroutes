@@ -1,22 +1,8 @@
-#!/usr/bin/awk -f
+#!/bin/sh
 
-# Comments and questions to: sven-ola@gmx.de
-
-BEGIN {
-  DEBUG = 0;
-  while("route -n"|getline) {
-    if (/^[0-9]/) {
-      if (0 < $5) {
-        net = "";
-        if ($3 != "255.255.255.255") {
-          cmd = "route del -net "$1" netmask "$3" gw "$2" metric "$5" dev "$8;
-        }
-        else {
-          cmd = "route del "$1" gw "$2" metric "$5" dev "$8;
-        }
-        if (DEBUG) print cmd;
-        system(cmd);
-      }
-    }
-  }
+eval $(ip route ls|sed -ne'
+/ metric [0-9]\+ *$/{
+s/.*/ip route del &;/
+p
 }
+')
