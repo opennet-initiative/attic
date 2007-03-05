@@ -52,9 +52,9 @@ old_wannet_pre=$(cat /tmp/wan_net_pre 2>/dev/null)
 if [ "$WANNET_PRE" != "$old_wannet_pre" ]; then
 	# check if wan_ipaddr was set by dhcp and is part of any restricted networks
 	wan_proto="$(nvram get wan_proto)"
+	wan_ipaddr=$(ifconfig $(nvram get wan_ifname) 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
 	if [ "$wan_proto" = "dhcp" ] || "$wan_proto" = "pppoe" ]; then
 		rm -f /tmp/wan_error; rm -f /tmp/wan_warning;
-		wan_ipaddr=$(ifconfig $(nvram get wan_ifname) 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
 		wan_netmask=$(ifconfig $(nvram get wan_ifname) 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $8; exit}')
 		
 		same_NET_addr_mask() {
@@ -89,6 +89,29 @@ if [ "$WANNET_PRE" != "$old_wannet_pre" ]; then
 		fi
 	fi
 
+	WIFIDEV=$(nvram get wifi_ifname)
+	WIFINET_PRE=$(get_NETPRE wifi)
+	wifi_ipaddr=$(ifconfig $WIFIDEV 2>/dev/null| awk 'BEGIN{FS=" +|:"} $2 == "inet" {print $4; exit}')
+
+	# remove old firewall rules
+	get_rulenum_1() {
+		iptables -L FORWARD --line-numbers -n -v | awk '$7 == "'"$WANDEV"'" && $8 == "'"$WIFIDEV"'" && $12 == "state NEW" {print $1; exit}'
+	}
+	while $(iptables -D OUTPUT $(get_rulenum_1) 2>/dev/null); do : ; done
+	get_rulenum_2() {
+		iptables -t nat -L POSTROUTING --line-numbers -n -v | awk '$4 == "SNAT" && $8 == "'"$WIFIDEV"'" {print $1; exit}'
+	}
+	while $(iptables -D OUTPUT $(get_rulenum_2) 2>/dev/null); do : ; done
+	
+	# check if WAN-IP-address is part of private IP-ranges. If so, allow access to Opennet.
+	if [ "$(ipcalc $wan_ipaddr 255.240.0.0 | grep NETWORK=)" = "NETWORK=172.16.0.0" ] ||
+	   [ "$(ipcalc $wan_ipaddr 255.0.0.0 | grep NETWORK=)" = "NETWORK=10.0.0.0" ]; then
+		$DEBUG && logger -t check_WAN "WAN network is a local network"
+		iptables -I FORWARD 2 -i $WANDEV -o $WIFIDEV -s $WANNET_PRE -d $WIFINET_PRE -m state --state NEW -j ACCEPT
+		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $WANNET_PRE -d $WIFINET_PRE -j SNAT --to-source $wifi_ipaddr
+		$DEBUG && logger -t check_WAN "opened firewall for WAN-Opennet access"
+	fi
+
 	ip route del throw $old_wannet_pre table 3 2>/dev/null
 	ip route add throw $WANNET_PRE table 3
 	ip route del throw $old_wannet_pre table 4 2>/dev/null
@@ -105,7 +128,7 @@ if [ -n "$wan_default_route" ]; then
 	ip route del default via $wan_default_route
 	$DEBUG && logger -t check_WAN "removed default-route trough WAN from default routing table"
 else
-	wan_default_route=$(cat /tmp/wan_default_route)
+	wan_default_route=$(cat /tmp/wan_default_route 2>/dev/null)
 fi
 
 table_4_default_route=$(ip route show table 4 | awk '$1 == "default" {print $3}')
