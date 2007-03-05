@@ -92,13 +92,15 @@ check_gw()
 if [ "$(nvram get on_gwauto)" = "on" ]; then
 	
 	on_gwaddrs=
+	ip_odd=$(($(nvram get wifi_ipaddr | cut -d'.' -f4) % 2))
 	for gw in $(
 		route -n \
 		| awk '
 			BEGIN { max = -1; }
 #			$1 == "192.168.0.250" && $5 >= 2 { $5 -= 2; }	# hack (because of bridge AP36-AP27)
 			$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
-				a[$5] = a[$5] " " $1;
+				if ("'$ip_odd'" == "0") a[$5] = a[$5] " " $1;
+				else a[$5] = $1 " " a[$5];
 				if ($5 > max)
 					max = $5;
 			}
