@@ -19,6 +19,16 @@ DEBUG="false"	# Dump dropped packets to klog, show with "dmesg -c"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
+
+set_conn_limit() {
+	# add a limit on the number of new connections per second
+	# see: https://dev.openwrt.org/changeset/6229
+	iptables -t nat -N NEW
+	iptables -t nat -I PREROUTING 1 -m state --state NEW -j NEW
+	iptables -t nat -A NEW -m limit --limit 50 --limit-burst 100 -j RETURN
+	iptables -t nat -A NEW -j DROP
+}
+
 set_masq() {
 	DHCPWIFINET_PRE=$(get_NETPRE on_wifidhcp)
 
@@ -178,6 +188,7 @@ case $1 in
 			fi
 		fi
 		set_masq
+		set_conn_limit
 		test -e /etc/local.fw && . /etc/local.fw start
 	;;
 	stop)
