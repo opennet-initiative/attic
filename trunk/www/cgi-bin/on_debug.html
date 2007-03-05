@@ -37,18 +37,18 @@ if [ -n "$post_on_debug" ]; then
 		echo "ipt_LOG" >> /etc/modules.d/30-opennet-firmware
 	fi
 	
-	if [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw.conf)" != "0" ] && [ "$on_fw_ugwlog" = "on" ]; then
-		cp /etc/openvpn/opennet_ugw.conf /tmp/opennet_ugw.conf_bak
-		awk '$1 !~ "verb"' /tmp/opennet_ugw.conf_bak >/etc/openvpn/opennet_ugw.conf
-		rm /tmp/opennet_ugw.conf_bak
-		echo "verb 0" >>/etc/openvpn/opennet_ugw.conf
+	if [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" != "0" ] && [ "$on_fw_ugwlog" = "on" ]; then
+		cp /etc/openvpn/opennet_ugw1.conf /tmp/opennet_ugw1.conf_bak
+		awk '$1 !~ "verb"' /tmp/opennet_ugw1.conf_bak >/etc/openvpn/opennet_ugw1.conf
+		rm /tmp/opennet_ugw1.conf_bak
+		echo "verb 0" >>/etc/openvpn/opennet_ugw1.conf
 		/etc/init.d/S80openvpn restart opennet_ugw
 		DIRTY=1
-	elif [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw.conf)" = "0" ] && [ "$on_fw_ugwlog" != "on" ]; then
-		cp /etc/openvpn/opennet_ugw.conf /tmp/opennet_ugw.conf_bak
-		awk '$1 !~ "verb"' /tmp/opennet_ugw.conf_bak >/etc/openvpn/opennet_ugw.conf
-		rm /tmp/opennet_ugw.conf_bak
-		echo "verb 3" >>/etc/openvpn/opennet_ugw.conf
+	elif [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" = "0" ] && [ "$on_fw_ugwlog" != "on" ]; then
+		cp /etc/openvpn/opennet_ugw1.conf /tmp/opennet_ugw1.conf_bak
+		awk '$1 !~ "verb"' /tmp/opennet_ugw1.conf_bak >/etc/openvpn/opennet_ugw1.conf
+		rm /tmp/opennet_ugw1.conf_bak
+		echo "verb 3" >>/etc/openvpn/opennet_ugw1.conf
 		/etc/init.d/S80openvpn restart opennet_ugw
 		DIRTY=1
 	fi
@@ -103,8 +103,8 @@ EOF
 cat<<EOF
 <TR><TD colspan="3"></TD></TR>
 	<TR><TD>
-	<INPUT CLASS="checkbox" NAME="on_fw_ugwlog" TYPE="checkbox" $(test  "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw.conf)" = "0" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")></TD>
-	<TD colspan="2">unterdrücke Fehlerausgabe des usergateway-tunnels (erfordert Neustart des Tunnels)
+	<INPUT CLASS="checkbox" NAME="on_fw_ugwlog" TYPE="checkbox" $(test  "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" = "0" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")></TD>
+	<TD colspan="2">unterdrücke Fehlerausgabe der Usergateway-Tunnel (erfordert Neustart der Tunnel)
 	</TD></TR>
 <TR><TD colspan="3"><HR /></TD></TR>
 <TR>
