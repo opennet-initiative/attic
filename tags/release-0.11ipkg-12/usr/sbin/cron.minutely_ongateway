@@ -1,0 +1,199 @@
+#!/bin/sh
+
+#################################################################################
+# Gateway-List is stored in nvram variable gw_addrs
+# every entry has three parts, separated by ':'
+# addr:status:age
+#
+# addr		ip address of the gateway
+# status	y - test succesful, gateway seems to work
+#               n - couldnt establish connection yet
+# age		age of last test
+#
+# example gw_addrs="192.168.0.254:y:12 192.168.0.249:n:3"
+#################################################################################
+
+# If interrupted, remove pid-file and set a mark in log
+USER_INTERRUPT=13
+trap 'rm -f /var/run/cron.minutely_ongateway.pid; logger -t cron.minutely_ongateway was killed by another instance; exit $USER_INTERRUPT' TERM INT
+
+# check if other instance is running, if yes, kill other instance
+if [ -f /var/run/cron.minutely_ongateway.pid ]; then kill $(cat /var/run/cron.minutely_ongateway.pid); fi
+
+# register that process is running
+# wait till other process is finished
+while [ -f /var/run/cron.minutely_ongateway.pid ];do sleep 1; done;
+pidof cron.minutely_ongateway >/var/run/cron.minutely_ongateway.pid
+
+
+
+#################################################################################
+maxage=20   # after how many times i should recheck the gateway
+testcount=5 # how often it will be tried to establish a connection till gateway
+            # is decalred as not to work
+
+old_gwaddrs=$(nvram get on_gwaddrs)
+
+#################################################################################
+# try to establish openvpn tunnel
+# return a string, if it works (else return nothing)
+# parameter is ip-address to test in $1
+test_vpngateway()
+{
+	# if there is no cert, no chance (and sense) to check the target gateways
+	if ! [ -e /etc/openvpn/opennet_user/on_aps.crt ]; then return; fi
+	
+	# never try to connect to blacklisted Gateways
+	if [ -n "$(nvram get on_gwblackaddrs | awk "/$on_gwaddr/"'{print}')" ]; then
+			return;
+	fi
+
+	# if gateway could only be reached over a local tunnel, dont use it.
+	if [ -n "$(route -n | awk '$1 == "'$1'" && $8 ~ "^tap|^tun" { print $8; exit }')" ]; then return; fi
+	
+	# check if it is possible to open tunnel to the gateway (10 sec. maximum)
+	# test-parameters; '--dev null' will be prefaced
+	openvpn_test_parameters="--client --ns-cert-type server --remote $1 1600 --ca /etc/openvpn/opennet_user/opennet-ca.crt --cert /etc/openvpn/opennet_user/on_aps.crt --key /etc/openvpn/opennet_user/on_aps.key --inactive 10 --verb 3 --nice 3"
+	
+	# if 'Initial packet' is recieved, stop waiting and accept connection
+	openvpn --dev null $openvpn_test_parameters | \
+	awk '
+		/Initial packet/ {
+			print; 
+			system("kill 2>/dev/null $(ps|grep \"openvpn --dev null\" |grep -v grep|cut -b 0-5)")
+		}'
+}
+
+#################################################################################
+# report if gateway is accepted as working or not
+# if age of last test is too old, recheck connnection
+# returns status:age
+# parameter is ip-address to test in $1
+check_gw()
+{
+	# check if we had this gateway once before
+	worked=$(echo $old_gwaddrs | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$1'" {print $2}')
+	age=$(echo $old_gwaddrs | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$1'" {print $3}')
+	if [ -z "$age" ]; then age=$maxage; fi
+	
+	# if work-state couldnt check 5 times after maxage, declare state as not working
+	if [ $age -ge $((maxage+5)) ]; then worked="n"; age=0; fi
+	
+	if [ $((age++)) -ge $maxage ] && [ -n "$(test_vpngateway $1)" ]; then
+			age=0
+			worked="y"
+	fi
+	
+	echo $worked:$age
+}
+
+#################################################################################
+# if on_auto is enabled then load all gateways and sort them
+if [ "$(nvram get on_gwauto)" = "on" ]; then
+	
+	on_gwaddrs=
+	ip_odd=$(($(nvram get wifi_ipaddr | cut -d'.' -f4) % 2))
+	for gw in $(
+		route -n \
+		| awk '
+			BEGIN { max = -1; }
+#			$1 == "192.168.0.250" && $5 >= 2 { $5 -= 2; }	# hack (because of bridge AP36-AP27)
+			$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
+				if ("'$ip_odd'" == "0") a[$5] = a[$5] " " $1;
+				else a[$5] = $1 " " a[$5];
+				if ($5 > max)
+					max = $5;
+			}
+			END {
+				for (i = 0; i <= max; i++)
+					ret = ret " " a[i];
+				print ret;
+			}'); do
+		
+		# search information about status and age in old entrys
+		worked=$(echo $old_gwaddrs | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$gw'" {print $2}')
+		age=$(echo $old_gwaddrs | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$gw'" {print $3}')
+			
+		on_gwaddrs="$on_gwaddrs $gw:$worked:$age"
+		#echo $on_gwaddrs
+	done
+	on_gwaddrs=$(echo $on_gwaddrs)
+	nvram set on_gwaddrs="$on_gwaddrs"
+	
+	# update stored values too
+	old_gwaddrs="$on_gwaddrs"
+	
+fi
+
+#################################################################################
+# exit script if values should only be refreshed
+if [ "$1" = "refresh" ]; then
+	# remove registration
+	rm -f /var/run/cron.minutely_ongateway.pid
+	exit;
+fi
+
+#################################################################################
+# if on_gw is not reachable (no route goes there) or on_gw is not the first gateway 
+# which is reachable then select another gateway (but only if this happens 5 times in a row)
+
+on_gwcount=$(nvram get on_gwcount)
+blacklist=$(nvram get on_gwblackaddrs)
+found_first_gw=
+
+on_gw=$(nvram get on_gw)
+on_gwaddrs=
+for on_gwaddr in $old_gwaddrs; do
+	
+	on_gwaddr=$(echo $on_gwaddr | cut -d":" -f1) # use only the address
+	
+	# check if gateway is known to work, else continue in loop
+	# this has to happen before blacklist-check, to increase age of all Gateways
+	check_result=$(check_gw $on_gwaddr)
+	on_gwaddrs="$on_gwaddrs $on_gwaddr:$check_result"
+	if [ "$(echo $check_result | cut -d":" -f1)" != "y" ]; then continue; fi
+
+	# check for blacklisted Gateways, if found then continue in loop
+	if [ -n "$(echo $blacklist | awk "/$on_gwaddr/"'{print}')" ]; then
+			continue;
+	fi
+	
+	# if first gateway is not found yet, continue searching for it
+	if [ -z "$found_first_gw" ] && [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
+		if [ "$on_gwaddr" != "$on_gw" ]; then
+			if [ -z "$on_gw" ] || [ $on_gwcount -gt 5 ]; then
+				logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
+		
+				# set gateway information
+				nvram set on_gw=$on_gwaddr
+		
+				/etc/init.d/S80openvpn restart opennet_user
+				on_gwcount=0
+
+			else
+				on_gwcount=$(($on_gwcount+1))
+			fi
+		else
+			# stop vpn-tunnel if its not working cause route goes trough ugw-tunnel
+			# this might be a problem on usergateways, before the ugw-tunnel is working the user-vpn-gateway is reachable, so might be started
+			# if than all gateways best reached via the ugw-tunnel, the user-tunnel runs forever complaining about not working.
+			if [ -n "$(ip route show to $on_gw |  awk '$5 ~ "^tap"')" ] \
+				&& [ -n "$(echo "$old_gwaddrs" | awk 'BEGIN {RS=" ";FS=":"} $1 ==  "'$on_gw'" && $2 == "n"')" ]; then
+					logger -t cron.minutely_ongateway "stopping nonworking gateway"
+					nvram unset on_gw
+					/etc/init.d/S80openvpn stop opennet_user
+			fi
+						
+			on_gwcount=0
+		fi
+		nvram set on_gwcount=$on_gwcount
+		found_first_gw=$on_gwaddr
+	fi
+done
+
+# store updated values
+on_gwaddrs=$(echo $on_gwaddrs)
+nvram set on_gwaddrs="$on_gwaddrs"
+
+# remove registration
+rm -f /var/run/cron.minutely_ongateway.pid

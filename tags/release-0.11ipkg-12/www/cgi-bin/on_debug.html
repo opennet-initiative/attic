@@ -1,0 +1,118 @@
+#!/bin/sh
+
+export DATE="18.1.2007"
+export TITLE="Verwaltung: Debug"
+. ${0%/*}/cgi-bin-pre.sh
+
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+if [ -n "$post_on_debug" ]; then
+	DIRTY=
+	REBOOT=
+	for V in on_fw_debug; do
+		eval "C=\$$V"
+		C=$(unescape $C)
+		if [ "$C" = "on" ]; then
+			if [ "$(nvram get $V)" != "true" ]; then
+				nvram set $V="true"; DIRTY=1
+			fi
+		else
+			if [ -n "$(nvram get $V)" ]; then
+				nvram unset $V; DIRTY=1
+			fi
+		fi
+	done
+	if [ -n "$DIRTY" ]; then nvram commit>/dev/null 2>&1; fi
+		
+	if [ -e /usr/lib/iptables/libipt_LOG.so ] && [ -n "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" != "on" ]; then
+		REBOOT=1;
+		cp /etc/modules.d/30-opennet-firmware /tmp/30-opennet-firmware_bak
+		awk '$1 !~ "ipt_LOG"' /tmp/30-opennet-firmware_bak > /etc/modules.d/30-opennet-firmware
+		rm /tmp/30-opennet-firmware_bak
+	elif [ -e /usr/lib/iptables/libipt_LOG.so ] && [ -z "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" ] && [ "$on_fw_logfw" = "on" ]; then
+		REBOOT=1;
+		echo "ipt_LOG" >> /etc/modules.d/30-opennet-firmware
+	fi
+	
+	if [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" != "0" ] && [ "$on_fw_ugwlog" = "on" ]; then
+		cp /etc/openvpn/opennet_ugw1.conf /tmp/opennet_ugw1.conf_bak
+		awk '$1 !~ "verb"' /tmp/opennet_ugw1.conf_bak >/etc/openvpn/opennet_ugw1.conf
+		rm /tmp/opennet_ugw1.conf_bak
+		echo "verb 0" >>/etc/openvpn/opennet_ugw1.conf
+		/etc/init.d/S80openvpn restart opennet_ugw
+		DIRTY=1
+	elif [ "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" = "0" ] && [ "$on_fw_ugwlog" != "on" ]; then
+		cp /etc/openvpn/opennet_ugw1.conf /tmp/opennet_ugw1.conf_bak
+		awk '$1 !~ "verb"' /tmp/opennet_ugw1.conf_bak >/etc/openvpn/opennet_ugw1.conf
+		rm /tmp/opennet_ugw1.conf_bak
+		echo "verb 3" >>/etc/openvpn/opennet_ugw1.conf
+		/etc/init.d/S80openvpn restart opennet_ugw
+		DIRTY=1
+	fi
+	
+	if [ -n "$DIRTY" ] && [ -z "$REBOOT" ]; then
+		msg="Die ge&auml;nderten Einstellungen wurden &uuml;bernommen. Die Einstellungen sind sofort aktiv."
+	elif [ -n "$REBOOT" ]; then
+		msg="Die ge&auml;nderten Einstellungen wurden &uuml;bernommen. Die Veränderung des Firewall-Loggings wird erst nach einem <a href=\"reset.html\">Neustart</a> aktiv."
+	fi
+	if [ -n "$DIRTY" ] || [ -n "$REBOOT" ]; then
+		echo "<TABLE BORDER="0" CLASS="note"><TBODY><TR><TD>$msg</TD></TR></TBODY></TABLE>"
+	fi	
+fi
+cat<<EOF
+
+<script type="text/javascript">document.getElementById('idx40').className="idx selected";</script>
+
+	<H1>Verwaltung: Hinweismeldungen zur Fehlersuche</H1>
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr...</a>
+<div id="description">
+Einige Programmteile der Opennet-Firmware sind mit Hinweismeldungen versehen, die eine Fehlersuche erleichtern. Im Normalbetrieb machen viele dieser Hinweise keinen Sinn, daher besteht hier die Möglichkeit, die entsprechenden Meldungen an- bzw. abzuschalten.</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ************************************************************ -->
+EOF
+	if [ ! -e /usr/lib/iptables/libipt_LOG.so ]; then
+cat<<EOF
+<br /><br /><b>HINWEIS: </b> Wenn Du willst, dass durch die Firewall gedroppte Pakete geloggt werden, musst Du das <a href="webif/ipkg.sh?action=install&amp;pkg=iptables-mod-extra">Paket iptables-mod-extra installieren</a> (link startet Installation). Ist dieses nicht verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Anschliessend muss der AccessPoint neu gestartet werden.<br />
+<br />
+EOF
+	fi
+cat<<EOF
+	<FORM NAME="debug" ACTION="on_debug.html" CLASS="form" METHOD="POST">
+	<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+	<TBODY>
+	<TR><TD>
+	<INPUT CLASS="checkbox" NAME="on_fw_debug" TYPE="checkbox" $(test "$(nvram get on_fw_debug)" = "true" && echo "CHECKED='CHECKED'" && echo "VALUE='on'") ONCHANGE="on_fw_logfw.disabled=(0==this.checked)"></TD>
+	<TD colspan="2">debug-Meldungen aktivieren
+	</TD></TR>
+EOF
+	if [ -e /usr/lib/iptables/libipt_LOG.so ]; then
+cat<<EOF
+	<TR><TD></TD><TD>
+	<INPUT CLASS="checkbox" NAME="on_fw_logfw" TYPE="checkbox" $(test -n "$(grep ipt_LOG /etc/modules.d/30-opennet-firmware)" && echo "CHECKED='CHECKED'" && echo "VALUE='on'") $(if [ "$(nvram get on_fw_debug)" != "true" ];then echo ' disabled="disabled"';fi)></TD>
+	<TD>durch die Firewall verworfene Pakete loggen (Änderung erfordert Neustart des APs)
+	</TD></TR>
+EOF
+	fi
+cat<<EOF
+<TR><TD colspan="3"></TD></TR>
+	<TR><TD>
+	<INPUT CLASS="checkbox" NAME="on_fw_ugwlog" TYPE="checkbox" $(test  "$(awk '$1 == "verb" {print $2}' /etc/openvpn/opennet_ugw1.conf)" = "0" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")></TD>
+	<TD colspan="2">unterdrücke Fehlerausgabe der Usergateway-Tunnel (erfordert Neustart der Tunnel)
+	</TD></TR>
+<TR><TD colspan="3"><HR /></TD></TR>
+<TR>
+<TD> </TD><TD colspan="2"><INPUT NAME="post_on_debug" TITLE="debugging aktualisieren" TYPE="SUBMIT" VALUE="Einträge übernehmen / aktualisieren"></TD>
+</TR>
+	</TBODY>
+	</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+	</FORM>
+EOF
+
+. ${0%/*}/cgi-bin-post.sh

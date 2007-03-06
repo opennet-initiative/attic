@@ -1,0 +1,274 @@
+#!/bin/sh
+
+export DATE="16.2.2006"
+export TITLE="Verwaltung: Opennet"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<script type="text/javascript">document.getElementById('idx14').className="idx selected";</script>
+
+<H1>Verwaltung: Sendeleistung</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+
+if [ -n "$QUERY_STRING" ]; then eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}'); fi
+if [ -z "$QUERY_STRING" ] || [ -n "$refresh" ]; then
+
+on_ant_dbi=$(nvram get on_ant_dbi)
+
+if [ ! -f /tmp/adapt_txpwr_running.log ]; then
+cat<<EOF
+Auf dieser Seite kann die Sendeleistung (oder besser Speiseleistung) des AccessPoints angepasst werden.
+<br /><b>Achtung:</b> Einen zu hohe Sendeleistung kann zur Zerstörung eures AccessPoints und zur Beeinträchtigung der Gesundheit von euch bzw. anderen führen. Als Maximalwert sind gesetzlich 100mW = 20dBm festgelegt.<br />
+
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr...</a>
+<div id="description">
+Die maximale Sendeleistung setzt sich zusammen aus der (hier einstellbaren) Speiseleistung des AccessPoints sowie der Verstärkung der Antenne. Je größer die Verstärkung der Antenne, desto geringer die notwendige und auch erlaubte Sendeleistung, die eingespeist werden muss. (Bei einer Rappl-Omni mit 8dB beträgt die maximal erlaubte einzuspeisende Sendeleistung etwa 19mW).<br />
+Eine hohe Sendeleistung ist nicht unbedingt die Vorraussetzung für eine gute Verbindung, wichtig ist, dass ihr den nächsten AccessPoint auf dem Weg zu eurem Ziel (dem Internet?) gut erreicht. (Natürlich ist auch wichtig, dass andere AccessPoints euch gut erreichen, wenn sie euren AccessPoint auf ihrem Weg zum Ziel benötigen).<br />
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ************************************************************ -->
+
+
+<H2>Sendeleistung</H2>
+<FORM ACTION="on_txpwr.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Informationen zur aktuellen Sendeleistung und Errichbarkeit">
+<TBODY>
+<TR
+TITLE="Einstellung der Sendeleistung">
+<TD>Antennen-Gewinn:<br />
+<SELECT NAME="on_ant_dbi" ONCHANGE="if ((this.options[this.selectedIndex].value == '1') && (this.form.ff_txpwr.value > 84)) {alert('Achtung: Verringere Sendeleistung auf Maximalwert 84mW'); this.form.ff_txpwr.value=84;} else if ((this.options[this.selectedIndex].value == '8') && (this.form.ff_txpwr.value > 19)) {alert('Achtung: Verringere Sendeleistung auf Maximalwert 19mW'); this.form.ff_txpwr.value=19;} else if (this.options[this.selectedIndex].value == '0') {alert('Achtung: Bitte beachte die gültigen Grenzwerte!')};">
+<OPTION VALUE='1' $(test "$on_ant_dbi" = "1" && echo "selected=selected")>1dBi (bspw. AccessPoint-Antenne)</OPTION>
+<OPTION VALUE='8' $(test "$on_ant_dbi" = "8" && echo "selected=selected")>8dBi (bspw. Rappl-Omni)</OPTION>
+<OPTION VALUE='0' $(test "$on_ant_dbi" = "0" && echo "selected=selected")>unbekannt (Vorsicht)</OPTION>
+</SELECT>
+</TD>
+<TD> Sende-Leistung<br />
+<INPUT NAME="ff_txpwr" SIZE="4" TYPE="TEXT" VALUE="$(nvram get ff_txpwr)" ONCHANGE="if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '1') && (this.value > 84)) {alert('Achtung: Maximalwert für Sendeleistung 84mW'); this.form.ff_txpwr.value=84;} else if ((this.form.on_ant_dbi.options[this.form.on_ant_dbi.selectedIndex].value == '8') && (this.form.ff_txpwr.value > 19)) {alert('Achtung: Maximalwert für Sendeleistung 19mW'); this.form.ff_txpwr.value=19;};">mW
+</TD>
+</TR>
+<TR>
+		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="Sendeleistung nach jedem Neustart einmal optmieren" NAME="on_autoadapttxpwr" TYPE="checkbox" $(test "$(nvram get on_autoadapttxpwr)" = "on" && echo "CHECKED='CHECKED'" && echo "VALUE='on'")>einmalige automatische Anpassung nach jedem Neustart</TD>
+</TR>
+
+<TR>
+<TD></TD><TD><INPUT NAME="post_txpwr" TITLE="Die Einstellungen übernehmen. Diese werden sofort wirksam." TYPE="SUBMIT" VALUE="Einstellungen übernehmen"></TD>
+</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+if [ "$(nvram get on_autoadapttxpwr )" = "on" ]; then
+	if ( ! [ -f /tmp/adapt_txpwr.log ] || [ -f /tmp/adapt_txpwr.failed ] ) && ! [ -f /tmp/adapt_txpwr_running.log ]; then
+		echo "<b>Hinweis:</b> Auf diesem Access-Point wurde die Sendeleistung nach dem letzten Neustart noch nicht (erfolgreich) automatisch angepasst. Die Automatische Anpassung der Sendeleistung wird nach jedem Neustart einmal - auf diesem AP $((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17)) Minuten nach der vollen Stunde - durchgeführt. Der oben angegebene Wert der Sendeleistung wird dabei als Maximalwert angenommen und möglicherweise verringert. Du kannst die Anpassung der Sendeleistung auch jetzt sofort manuell starten."
+	fi
+fi
+cat<<EOF
+<br />
+EOF
+fi
+cat<<EOF
+<H2>automatische Anpassung der Sendeleistung</H2>
+<b>Achtung:</b> Die automatische Anpassung der Sendeleistung dauert einige Minuten. Sie muss nicht in jedem Fall zu einem optimalen Ergebnis führen. Es kann durchaus sinnvoll sein, selbst einen Mittelwert nach einer mehrfachen Ausführung zu wählen.
+
+<FORM ACTION="on_txpwr.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Automatische Anpassung der Sendeleistung">
+<TBODY>
+EOF
+if [ -f /tmp/adapt_txpwr_running.log ]; then
+cat<<EOF
+	<TR>	
+		<TD colspan="2">
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>
+			Automatische Anpassung der Sendeleistung läuft, bitte etwas Geduld
+		</TD>
+		</TR></TBODY>
+		</TABLE>
+		</TD>
+	</TR>
+	<TR>
+		<TD><INPUT NAME="kill_adapt_txpwr" TITLE="Anpassung abbrechen" TYPE="SUBMIT" VALUE="Automatische Anpassung abbrechen"></TD>
+		<TD><INPUT NAME="refresh" TITLE="Seite aktualisieren" TYPE="SUBMIT" VALUE="Anzeige aktualisieren"></TD>
+	</TR>
+EOF
+else
+cat<<EOF
+	<TR>
+		<TD><INPUT NAME="adapt_txpwr" TITLE="Sendeleistung automatisch anpassen" TYPE="SUBMIT" VALUE="Sendeleistung automatisch optimieren"></TD>
+	</TR>
+	<TR>
+		<TD colspan="2"><hr /></TD>
+	</TR>
+	<TR>
+		<TD><INPUT CLASS="checkbox" TITLE="zeige veränderbare Parameter" NAME="on_showparameters" TYPE="checkbox" ONCHANGE="if (this.checked) {document.getElementById('parameters').style.display='inline'} else {document.getElementById('parameters').style.display='none';};">zeige Parameter</TD>
+	
+	</TR>
+EOF
+	if [ -f /tmp/adapt_txpwr.log ]; then
+cat<<EOF
+	<TR>
+		<TD colspan="2"><INPUT CLASS="checkbox" TITLE="zeige die Ausgabe des letzten erfolgreichen Durchlaufs" NAME="on_showresults" TYPE="checkbox" ONCHANGE="if (this.checked) {document.getElementById('adapt_log').style.display='inline'} else {document.getElementById('adapt_log').style.display='none'};">zeige Ergebnisse des letzten Durchlaufs</TD>
+	</TR>
+EOF
+	fi
+fi
+cat<<EOF
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+
+
+EOF
+if [ ! -f /tmp/adapt_txpwr_running.log ]; then
+cat<<EOF
+<TABLE id="parameters" CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Automatische Anpassung der Sendeleistung">
+<TBODY>
+	<TR>
+		<TD COLSPAN="2">
+		<TABLE>
+		<TR TITLE="Ändert die maximal zu testende Sende-Leistung. Der Vorgabewert ist 19mW.">
+			<TD>maximale Test-Sendeleistung:</TD>
+			<TD><INPUT NAME="on_txpwrtstpwr" SIZE="5" TYPE="TEXT" VALUE="19" ONCHANGE="if (($on_ant_dbi == '1') && (this.value > 84)) {alert('Achtung: Maximalwert für Sendeleistung 84mW'); this.value=84;} else if (($on_ant_dbi == '8') && (this.value > 19)) {alert('Achtung: Maximalwert für Sendeleistung 19mW'); this.value=19;};">mW</TD>
+		</TR>
+		<TR TITLE="Anzahl der Pakete, die gesendet werden um anschliessend zu beurteilen, wie gut die Verbindung ist. Der Vorgabewert ist 100.">
+			<TD>Anzahl der Testpakete zur Beurteilung einer Verbindung:</TD>
+			<TD><INPUT NAME="on_txpwrtstpkg" SIZE="5" TYPE="TEXT" VALUE="100">Pakete</TD>
+		</TR>
+		<TR TITLE="Anzahl der Pakete, die verloren gehen dürfen. Es ist nicht sinnvoll, diesen Wert auf 0 zu verringern">
+			<TD>Anteil der Pakete, die davon maximal verloren gehen dürfen:</TD>
+			<TD><INPUT NAME="on_txpwrtstlost" SIZE="5" TYPE="TEXT" VALUE="5">Prozent</TD>
+		</TR>
+		<TR>
+			<TD><INPUT CLASS="checkbox" NAME="on_txpwrtstspeed" TYPE="checkbox">führe Testdownload durch (nur zur Information)
+			</TD>
+		</TR>
+		</TABLE>
+		</TD>
+	</TR>
+	
+	
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+<script type="text/javascript">document.getElementById('parameters').style.display='none';</script>
+EOF
+fi
+cat<<EOF
+</FORM>
+
+
+<TABLE id="adapt_log" CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form" TITLE="Log der letzten bzw. laufenden Ausführung der Anpassung">
+<TBODY>
+	<TR>
+		<TD>
+		<textarea name="log" cols="80" rows="30" readonly>
+EOF
+		if [ -f /tmp/adapt_txpwr_running.log ]; then
+			cat /tmp/adapt_txpwr_running.log
+		else
+			cat /tmp/adapt_txpwr.log
+		fi
+cat<<EOF
+		</textarea>
+		</TD>
+	</TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+
+EOF
+if [ ! -f /tmp/adapt_txpwr_running.log ]; then
+cat<<EOF
+	<script type="text/javascript">document.getElementById('adapt_log').style.display='none';</script>
+EOF
+fi
+
+else
+#eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+if [ -n "$post_txpwr" ]; then
+	DIRTY=
+	for V in on_ant_dbi ff_txpwr on_autoadapttxpwr; do
+		eval "C=\$$V"
+		C=$(unescape $C)
+		
+		if [ "$V" = "ff_txpwr" ]; then wl txpwr $ff_txpwr; fi
+		if [ "$C" != "$(nvram get $V)" ]; then
+			DIRTY=1
+			nvram set $V="$C"
+		fi
+	done
+	if [ -n "$DIRTY" ]; then
+		nvram commit>/dev/null 2>&1
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.</TD>
+		</TR></TBODY>
+		</TABLE>
+EOF
+	else
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Es wurden keine Einstellungen ge&auml;ndert.</TD>
+		</TR></TBODY>
+		</TABLE>
+EOF
+	fi
+elif [ -n "$adapt_txpwr" ]; then
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Optimierung der Sendeleistung gestartet. Auf der <a href="on_txpwr.html">Einstellungsseite</a> kann der aktuelle Fortschritt beurteilt werden.</TD>
+	</TR></TBODY>
+	</TABLE>
+	<pre>
+EOF
+	param=
+	if [ -n "$on_txpwrtstpwr" ]; then param="-p $on_txpwrtstpwr"; fi
+	if [ -n "$on_txpwrtstpkg" ]; then param="$param -c $on_txpwrtstpkg"; fi
+	if [ -n "$on_txpwrtstlost" ]; then param="$param -l $on_txpwrtstlost"; fi
+	if [ "$on_txpwrtstspeed" = "on" ]; then param="$param -d"; fi
+	adapt_txpower.sh $param >/tmp/adapt_txpwr_running.log
+	if [ $? != 0 ]; then
+		echo "failed" > /tmp/adapt_txpwr.failed
+	else
+		rm -rf /tmp/adapt_txpwr.failed
+	fi
+	mv /tmp/adapt_txpwr_running.log /tmp/adapt_txpwr.log
+cat<<EOF
+	</pre>
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>
+		Optimierung beendet.
+	</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+elif [ -n "$kill_adapt_txpwr" ]; then
+	kill 2>/dev/null $(ps|grep adapt_txpower.sh|grep -v grep|cut -b 0-5)
+	rm -f /tmp/adapt_txpwr_running.log
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Optimierung der Sendeleistung abgebrochen.</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+fi
+fi
+. ${0%/*}/cgi-bin-post.sh

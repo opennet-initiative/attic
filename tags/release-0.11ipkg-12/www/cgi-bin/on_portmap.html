@@ -1,0 +1,188 @@
+#!/bin/sh
+
+export DATE="2.9.2005"
+export TITLE="Verwaltung: Portmapping"
+. ${0%/*}/cgi-bin-pre.sh
+
+	show_portmap () {
+	# $1 contains the field description, here one of: vpn wifi dhcpwifi wan
+	# $2 contains additional strings for sport INPUT field
+	# $3 contains additional strings for daddr INPUT field
+	# $4 is like $2 for new mappings
+	# $5 is like S3 for new mappings
+		echo "<FORM NAME=\"MAINFORM_ON\" ACTION=\"on_portmap.html\" CLASS=\"form\" METHOD=\"POST\">"
+		echo "<TABLE CLASS=\"shadow0\" CELLPADDING=\"0\" CELLSPACING=\"0\"><TR><TD><TABLE CLASS=\"shadow1\" CELLPADDING=\"0\" CELLSPACING=\"0\"><TR><TD><TABLE CLASS=\"shadow2\" CELLPADDING=\"0\" CELLSPACING=\"0\"><TR><TD><TABLE BORDER=\"0\" CLASS=\"form\">"
+		echo "<TBODY>"
+		echo "<TR><TD><B>Port</B></TD><TD><B>IP-Adresse</B>[:Port]</TD></TR>"
+		number=1
+		# $(eval echo "\$on_"$source"_count") 
+		for on_mapping in $( nvram get "on_"$1"map"); do
+			on_port=$(echo $on_mapping | cut -d'>' -f1)
+			local_lan_addr=$(echo $on_mapping | cut -d'>' -f2)
+			echo "<TR>"
+			echo "<td><INPUT NAME=\"on_$1_sport$number\" SIZE=\"20\" TYPE=\"TEXT\" VALUE=\"$on_port\" $2></td>"
+			echo "<td><INPUT NAME=\"on_$1_daddr$number\" SIZE=\"20\" TYPE=\"TEXT\" VALUE=\"$local_lan_addr\" $3></td>"
+			echo "<td>"
+			echo "</TR>"
+			number=$(($number+1))
+		done
+		echo "<TR><TD></TD></TR><TR>"
+		echo "<td colspan=\"3\">Mapping hinzufügen:</td>"
+		echo "</TR>"
+		echo "<TR>"
+		echo "<td><INPUT NAME=\"on_$1_sport$number\" SIZE=\"20\" TYPE=\"TEXT\" $4></td>
+		<td><INPUT NAME=\"on_$1_daddr$number\" SIZE=\"20\" TYPE=\"TEXT\" $5></td>"
+		echo "<td></td>"
+		echo "</TR>"
+		echo "<TR><TD colspan="2"><HR /></TD></TR>"
+		echo "<TR>"
+		echo "<TD colspan=\"2\"><INPUT type=\"hidden\" NAME=\"on_$1_count\" VALUE=\"$number\"><INPUT NAME=\"post_$1_portmap\" TITLE=\"Port-Forwarding für Internet-Ports (Opennet-VPN) aktualisieren\" TYPE=\"SUBMIT\" VALUE=\"Einträge übernehmen / aktualisieren\"></TD>"
+		echo "</TR>"
+		echo "</TBODY>"
+		echo "</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>"
+		echo "</FORM>"
+	}
+
+cat<<EOF
+
+<script type="text/javascript">document.getElementById('idx13').className="idx selected";</script>
+
+<H1>Verwaltung: Portmapping</H1>
+EOF
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+cat<<EOF
+	<p>Als Ziel der Weiterleitungen muss eine IP-Adresse im lokalen Netzwerk (im Opennet üblicherweise 172.16.0.0/12) angegeben werden. Zusätzlich kann ein Zielport, dann direkt dahinter durch einen Doppelpunkt getrennt angegeben werden.</p>
+
+<!-- ******************************************************************** -->
+<H2>Weiterleitung aus dem Internet über den OpenVPN-Tunnel</H2>
+<!-- show the following area only, if user likes more information -->
+<a id="switch" href="#" onclick="document.getElementById('description').style.display='inline';this.style.display='none';" style="display:none;">mehr Informationen.</a>
+<div id="description">
+	<p>Die folgenden Ports werden aus dem Internet durch einen aktivem OpenVPN-Tunnel an Rechner im lokalen Netzwerk weitergeleitet. Damit Du aus dem Internet auf den Rechner zugreifen kannst, musst du den Namen, der deinem aktiven Gateway
+EOF
+	on_gw=$(nvram get on_gw)
+	echo -n "($on_gw"
+	case $on_gw in
+		192.168.0.254)
+		echo -n " = opennet.dnsalias.org"
+		;;
+		192.168.0.250)
+		#echo -n " = unbekannt"
+		;;
+		*)
+		;;
+	esac
+	echo -n ")"
+cat<<EOF
+ zugeordnet ist, kennen. Weitere Informationen findest Du im <a href=" http://wiki.opennet-initiative.de/index.php/Opennet_Nodes#Gateways">Opennet Wiki</a>. Bei einem Wechsel des Gateways (beispielsweise bei einer Störung) ändert sich auch der Name, unter dem der/die Rechner aus dem Internet erreichbar ist/sind.</p>
+</div>
+<script type="text/javascript">
+	document.getElementById('switch').style.display='inline';
+	document.getElementById('description').style.display='none';
+</script>
+<!-- ************************************************************ -->
+EOF
+	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
+	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4); fi
+	base_addr=$((10000+10*($base_addr-1)))
+cat<<EOF
+	<p>Basierend auf dem Zertifikat bzw. der Adresse Deines AccessPoints wurde ermittelt, dass die <b>Ports von $base_addr bis $((base_addr+9))</b> an Deinen AccessPoint weitergeleitet werden. In den meisten Fällen macht nur eine Weiterleitung dieser Ports Sinn.</p>
+EOF
+	warning="Achtung: Der eingegebene Port wird vermutlich nicht vom Gateway an Deinen AccessPoint weitergeleitet.\n\nDie durch den VPN-Tunnel von einem Gateway an Deinen AccessPoint weitergleiteten Ports sind abhängig von Deiner AccessPoint-IP-Adresse bzw. Deinem VPN-Zertfikat.\nBasierend auf dem Zertifikat bzw. der Adresse Deines AccessPoints wurde ermittelt, dass die Ports von $base_addr bis $((base_addr+9)) an Deinen AccessPoint weitergeleitet werden."
+
+	sport_check="ONCHANGE=\"if ((this.value !='' && (this.value < $base_addr) || (this.value > eval($base_addr+9)))) {this.style.color='red'; alert('$warning');} else {this.style.color=''};\""
+	
+	show_portmap vpn "$sport_check" "" "$sport_check"
+cat<<EOF	
+
+<!-- ******************************************************************** -->
+EOF
+
+cat<<EOF
+	<H2>Weiterleitung aus dem Opennet</H2>
+	<p>Die folgenden Ports werden aus dem Opennet (WLAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus nicht (direkt) erreichbar.</p>
+EOF
+	show_portmap wifi
+cat<<EOF
+<!-- ******************************************************************** -->
+	<H2>Weiterleitung aus dem DHCP-Funknetz</H2>
+	<!-- show the following area only, if wan is activated (has an ip address) -->
+	<a id="switch2" href="#" onclick="document.getElementById('description2').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
+	<div id="description2">
+	<p>Die folgenden Ports werden aus dem WLAN von Rechnern ohne olsr mit einer Adresse im lokalen Wireless DHCP-Bereich an Rechner im lokalen Netzwerk weitergeleitet.</p>
+EOF
+	show_portmap dhcpwifi
+cat<<EOF
+	</div>
+EOF
+	if [ -z "$(lsmod | grep ipt_mac)" ]; then
+cat<<EOF
+<script type="text/javascript">
+	document.getElementById('switch2').style.display='inline';
+	document.getElementById('description2').style.display='none';
+</script>
+EOF
+	fi
+cat<<EOF
+<!-- ******************************************************************** -->
+	<H2>Weiterleitung aus dem Internet (WAN-Anschluss)</H2>
+	<!-- show the following area only, if wan is activated (has an ip address) -->
+	<a id="switch3" href="#" onclick="document.getElementById('description3').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
+	<div id="description3">
+	<p>Die folgenden Ports werden aus dem Internet (WAN) an Rechner im lokalen Netzwerk weitergeleitet. Sie sind vom Internet aus direkt erreichbar.</p>
+EOF
+	show_portmap wan
+cat<<EOF
+	</div>
+EOF
+	if [ -z "$(ip addr show primary $(nvram get wan_ifname) | awk '$1 == "inet" { print $2 }')" ]; then
+cat<<EOF
+<script type="text/javascript">
+	document.getElementById('switch3').style.display='inline';
+	document.getElementById('description3').style.display='none';
+</script>
+<!-- ******************************************************************** -->	
+EOF
+	fi
+else
+	eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+	
+	for source in vpn wifi dhcpwifi wan; do
+		if [ -n "$(eval echo "\$post_"$source"_portmap")" ]; then
+			number=1
+			portmap_newlist=
+			# refresh all stored values
+			echo
+			while( [ $number -le  $(eval echo "\$on_"$source"_count") ] ); do
+				sourceport=$(unescape $(eval echo "\$on_"$source"_sport"$number))
+				destaddr=$(unescape $(eval echo "\$on_"$source"_daddr"$number))
+				if [ -n "$sourceport" ] && [ -n "$destaddr" ]; then
+					portmap_newlist="$portmap_newlist $sourceport>$destaddr"
+				fi;
+				number=$(($number+1))
+			done;
+			
+			portmap_newlist=$(echo $portmap_newlist)
+			nvram set $(echo "on_"$source"map")="$portmap_newlist"
+		fi
+	done
+
+	nvram commit>/dev/null 2>&1
+	echo -n "<PRE>"
+	/etc/init.d/S82portmapping restart
+	echo "</PRE>"
+cat<<EOF
+	<TABLE BORDER="0" CLASS="note">
+	<TBODY>
+	<TR>
+	<TD>Die ge&auml;nderten Einstellungen wurden &uuml;bernommen.
+	Portmapping wurde aktualisiert</TD>
+	</TR></TBODY>
+	</TABLE>
+EOF
+fi
+
+. ${0%/*}/cgi-bin-post.sh
