@@ -190,11 +190,11 @@ if [ -z "$(grep net.ipv4.tcp_frto /etc/sysctl.conf)" ]; then
 	echo "net.ipv4.tcp_frto=1" >>/etc/sysctl.conf;
 	$logit "  - changed sysctl.conf => net.ipv4.tcp_frto=1"
 fi
-if [ -z "$(grep net.ipv4.tcp_congestion_control /etc/sysctl.conf)" ]; then
+if [ -z "$(grep net.ipv4.tcp_westwood /etc/sysctl.conf)" ]; then
 	# copy file, to support pre rc6-versions
 	if [ -L /etc/sysctl.conf ]; then cp -f /rom/etc/sysctl.conf /etc/sysctl.conf; fi
-	echo "net.ipv4.tcp_congestion_control=westwood" >>/etc/sysctl.conf;
-	$logit "  - changed sysctl.conf => net.ipv4.tcp_congestion_control=westwood"
+	echo "net.ipv4.tcp_westwood=1" >>/etc/sysctl.conf;
+	$logit "  - changed sysctl.conf => net.ipv4.tcp_westwood=1"
 fi
 
 # set firmware-version to nvram variables
@@ -266,6 +266,9 @@ fi
 # pre release 0.11ipkg-10 delivered /debian-binary - and shouldnt
 rm -rf /debian-binary
 
+# 0.9-on4-release kept dnsmasq-init.file intact. should be removed
+rm -f /etc/init.d/S60dnsmasq
+
 ### end bugfixes/adaptions (not relevant for complete release) 
 ###############################################################################
 ###############################################################################
@@ -326,7 +329,7 @@ awk '{ 	if ( /linksys bug/ && /lan/ && !/#~/ ) {
 mv -f /tmp/S05nvram /etc/init.d/
 chmod +x /etc/init.d/S05nvram 
 
-if [ -e "/bin/ipcalc.sh" ]; then
+if [ -e "/bin/ipcalc.sh" ] && ! [ -e "/bin/ipcalc" ]; then
 	# post rc6-versions replaced ipcalc with ipcalc.sh, so create a symbolic link.
 	ln -s /bin/ipcalc.sh /bin/ipcalc
 	$logit "  - added link from ipcalc.sh to ipcalc"
