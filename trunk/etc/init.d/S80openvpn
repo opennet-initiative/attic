@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 test -n "$FAILSAFE" && exit
 
@@ -46,7 +46,13 @@ start_vpn () {
 	"opennet_ugw1"|"opennet_ugw2")
                 on_ugw="$(nvram get on_ugws | cut -d" " -f${NAME##opennet_ugw})"
                 on_ugw_ip=$(nslookup $on_ugw 2>/dev/null | tail -n 1 | awk '{ print $2 }')
-                if [ -z "$WANDEV" ]; then
+                
+		olsrd_version="$(ipkg list_installed olsrd | awk 'BEGIN {FS=" - "} /olsrd/ { print $2}')"
+		olsrd_minversion="0.4pre0.5-2007030400-1"
+		ipkg compare_versions "$olsrd_version" ">=" "$olsrd_minversion" >/dev/null 2>/dev/null;
+		olsrd_ok=$?
+
+		if [ -z "$WANDEV" ]; then
                         echo -n " (WAN device not available - usergateway not available) FAILED->"
                 elif [ "$(nvram get on_share_internet)" != "on" ]; then
                         echo -n " (opennet_usergateway not activated) FAILED->"
@@ -54,7 +60,9 @@ start_vpn () {
                         echo -n " (usergateway not defined yet) FAILED->"
                 elif [ -z "$on_ugw_ip" ]; then
                         echo -n " (can't get IP of usergateway $on_ugw) FAILED->"
-                else
+                elif [ $olsrd_ok = 0 ]; then
+			echo -n " (olsrd to old for ugw) FAILED->"
+		else
                         # forbid usergateway-tunnel to use other than WAN device
                         del_fw_rules
                         add_fw_rules $on_ugw_ip
