@@ -58,16 +58,11 @@ write_config()
 	unset IFS
 
 	/usr/sbin/parse_olsrd_conf main >/var/etc/olsrd.conf
-
-	if [ "$(nvram get ff_dyngw)" != "0" ]; then
-		cat>>/var/etc/olsrd.conf<<EOM
-LoadPlugin "olsrd_dyn_gw_plain.so.0.3"
-{
-}
-EOM
-	fi
-
-	if [ "$(nvram get ff_httpinfo)" != "0" ]; then
+	
+	# only load httpinfo if it is the same version as olsrd, else olsrd might brake
+	olsrd_version="$(ipkg list_installed olsrd | awk 'BEGIN {FS=" - "} /olsrd/ { print $2}')"
+	httpinfo_version="$(ipkg list_installed olsrd-mod-httpinfo | awk 'BEGIN {FS=" - "} /olsrd/ { print $2}')"
+	if [ "$(nvram get ff_httpinfo)" != "0" ] && [ "$olsrd_version" = "$httpinfo_version" ]; then
 		HTTPINFO_PARA=
 		if [ -z "$LANOLSR" ] && [ -n "$LANADR" ]; then
 			# Allow httpinfo on LAN
@@ -119,6 +114,13 @@ EOM
 EOM
 	done
 }
+
+# see if there was an olsrd-update - remove some files than.
+if [ -e /etc/init.d/S60olsrd ]; then
+	rm -f /etc/init.d/S60olsrd
+	rm -f /etc/olsrd.conf
+	ln -s /var/etc/olsrd.conf /etc/olsrd.conf
+fi
 
 case $1 in
 	start)
