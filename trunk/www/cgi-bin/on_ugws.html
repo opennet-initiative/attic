@@ -26,7 +26,14 @@ openssl_provinceName="Mecklenburg-Vorpommern"
 openssl_localityName="Rostock"
 openssl_organizationalUnitName="user gateways"
 
-if [ ! -f  /etc/openvpn/opennet_ugw/on_ugws.key ] || [ ! -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+
+olsrd_version="$(ipkg list_installed olsrd | awk 'BEGIN {FS=" - "} /olsrd/ { print $2}')"
+httpinfo_version="$(ipkg list_installed olsrd-mod-httpinfo | awk 'BEGIN {FS=" - "} /olsrd/ { print $2}')"
+olsrd_minversion="0.4pre0.5-2007030400-1"
+ipkg compare_versions "$olsrd_version" ">=" "$olsrd_minversion" >/dev/null 2>/dev/null;
+olsrd_ok=$?
+
+if [ ! -f  /etc/openvpn/opennet_ugw/on_ugws.key ] || [ ! -f /etc/openvpn/opennet_ugw/on_ugws.crt ] || [ "$olsrd_ok" = 0 ]; then
 	nvram unset on_share_internet
 fi
 
@@ -111,6 +118,8 @@ cat<<EOF
 <br />
 EOF
 fi
+
+
 cat<<EOF
 
 <!-- show the following area only, if user likes more information -->
@@ -159,37 +168,39 @@ if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw
 			fi	
 		fi
 	done
-	echo "<tr><td colspan="3"><hr></td></tr>"
+	echo "<tr><td colspan=\"3\"><hr></td></tr>"
 fi
-if [ -n "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
+if [ -n "$(ls /tmp/ugw_reachable* 2>/dev/null)" ] && [ $olsrd_ok = 1 ]; then
 	echo "<tr><td>Internet-Freigabe möglich </td>"
 	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td>"
-	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
-	echo "<tr><td>-- WAN-Anschluss ok.</td>"
-	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
-	for gw in $(ls /tmp/ugw_reachable* | awk '{gsub("/tmp/ugw_reachable_",""); print}'); do	
-		echo "<tr><td>-- "$gw" über WAN erreichbar</td>"
-		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
-	done
 else
 	echo "<tr><td>Internet-Freigabe nicht möglich </td>"
 	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td>"
-	echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
-	if [ -n "$(ip route show table 4 | awk '$1 == "default"')" ]; then
-		echo "<tr><td>-- WAN-Anschluss ok</td>"
-		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
-		echo "<tr><td>-- kein zentraler Gateway über WAN erreichbar</td>"
-		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
-	else
-		echo "<tr><td>-- WAN-Anschluss nicht ok</td>"
-		echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
-		echo "<tr><td>-- (kein zentraler Gateway über WAN erreichbar)</td>"
-		echo "<td></td></tr>"
-	fi
 fi
-	echo "<tr><td colspan=\"3\"><hr></td></tr>"
+echo "<TD rowspan=\"3\"><INPUT NAME=\"ugw_check\" TITLE=\"check\" TYPE=\"SUBMIT\" VALUE=\"prüfen\"></TD></tr>"
+if [ -n "$(ip route show table 4 | awk '$1 == "default"')" ]; then
+	echo "<tr><td>-- WAN-Anschluss ok</td>"
+	echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+else
+	echo "<tr><td>-- WAN-Anschluss nicht ok</td>"
+	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
+fi
+if [ -n "$(ls /tmp/ugw_reachable* 2>/dev/null)" ]; then
+	for gw in $(ls /tmp/ugw_reachable* | awk '{gsub("/tmp/ugw_reachable_",""); print}'); do	
+		echo "<tr><td>-- "$gw" über WAN erreichbar</td>"
+		echo "<td><img src=\"../images/yes.gif\" alt=\"yes\" style=\"vertical-align:middle;\"></td></tr>"
+	done	
+else
+	echo "<tr><td>-- kein zentraler Gateway über WAN erreichbar</td>"
+	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"
+fi
+if [ $olsrd_ok = 0 ]; then
+	echo "<tr><td>-- olsrd-Version ist veraltet</td>"
+	echo "<td><img src=\"../images/no.gif\" alt=\"no\" style=\"vertical-align:middle;\"></td></tr>"	
+fi
 
-if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ]; then
+if [ -f  /etc/openvpn/opennet_ugw/on_ugws.key ] && [ -f /etc/openvpn/opennet_ugw/on_ugws.crt ] && [ $olsrd_ok = 1 ]; then
+	echo "<tr><td colspan=\"3\"><hr></td></tr>"
 	if [ "$on_share_internet" = "on" ];then
 cat<<EOF
 		<tr>
@@ -211,6 +222,19 @@ fi
 cat<<EOF
 </TBODY>
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+if [ $olsrd_ok = 0 ]; then
+cat<<EOF
+Die zur Zeit installierte olsrd-Version ($olsrd_version) ist zu alt, um Deinen AccessPoint als Usergateway zu betreiben. <a href="webif/ipkg.sh?action=install&amp;pkg=olsrd">Aktualisiere Deinen olsrd</a> (link startet Installation). Ist kein neuerer olsrd verfügbar, musst Du vorher die <a href="webif/ipkg.sh?action=update">Liste der verfügbaren Pakete aktualisieren</a>. Nach der Installation muss auch das Paket olsrd-mod-httpinfo aktualisiert werden.<br />
+EOF
+elif [ "$olsrd_version" != "$httpinfo_version" ]; then
+cat<<EOF
+Du hast vermutlich soeben Deinen olsrd aktualisiert, nun musst Du noch das <a href="webif/ipkg.sh?action=install&amp;pkg=olsrd-mod-httpinfo">httpinfo-Plugin aktualisieren</a> (link startet Installation).<br />
+EOF
+elif [ "$(md5sum /proc/$(pidof -s olsrd)/exe | cut -d" " -f1)" != "$(md5sum /usr/sbin/olsrd | cut -d" " -f1)" ]; then
+	echo "restart" >/tmp/restart_olsrd
+fi
+cat<<EOF
 <br /><br />
 <FORM ACTION="on_ugws.html" CLASS="form" METHOD="POST">
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
