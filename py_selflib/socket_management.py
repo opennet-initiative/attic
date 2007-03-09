@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Copyright 2004,2005,2006 Sebastian Hagen
+#Copyright 2004,2005,2006,2007 Sebastian Hagen
 # This file is part of py_selflib.
 
 # py_selflib is free software; you can redistribute it and/or modify
@@ -42,12 +42,8 @@ except ImportError:
    print 'Unable to import termios. Termios style io control will be disabled.'
    termios = None
    
-import init_misc
 from process_reload import picklablesocket as socket_object
 
-defaults = {}
-
-init_misc.set_defaults(defaults=defaults, global_scope=globals())
 logger = logging.getLogger('socket_management')
 
 class fd_wrap:
