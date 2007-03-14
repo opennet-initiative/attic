@@ -21,12 +21,13 @@ if [ -z "$(lsmod | grep ipt_LOG)" ]; then DEBUG="false"; fi
 
 
 set_conn_limit() {
+
 	# add a limit on the number of new connections per second
 	# see: https://dev.openwrt.org/changeset/6229
 	iptables -t nat -N NEW
 	iptables -t nat -I PREROUTING 1 -m state --state NEW -j NEW
-	iptables -t nat -A NEW -m limit --limit 50 --limit-burst 100 -j RETURN
-	iptables -t nat -A NEW -j DROP
+	iptables -t nat -A NEW -m limit --limit 50 --limit-burst 100 -j RETURN 2>/dev/null
+	if [ "$?" = "0" ]; then iptables -t nat -A NEW -j DROP; fi
 }
 
 set_masq() {
