@@ -27,8 +27,8 @@ if [ -n "$add_gw" ]; then
 			addr=$(eval echo \$on_gw$number)
 			if [ -n "$addr" ]; then			
 				# search information about status and age in old entrys
-				worked=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $2}')
-				age=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $3}')
+				worked=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $2; exit}')
+				age=$(echo $on_gwaddrs_old | awk 'BEGIN {RS=" ";FS=":"}$1 == "'$addr'" {print $3; exit}')
 				
 				# store values
 				on_gwaddrs_new="$on_gwaddrs_new $addr:$worked:$age"
@@ -130,7 +130,7 @@ cat<<EOF
 	<td id="route$number"> 
 EOF
 	blacklisted="$(nvram get on_gwblackaddrs | awk "/$on_gw_addr/"'{print}')"
-	reachable="$(route -n | cut -d" " -f1 | grep $on_gw_addr)"
+	reachable="$(route -n | grep ^$on_gw_addr[' '])"
  
 	#---------------------------------------------------------------------------------------------------------
 	if  [  -n "$reachable" ]; then
