@@ -453,7 +453,7 @@ fi
 if [ -n "$(grep $(nvram get wan_ifname) /var/etc/olsrd.conf)" ]; then
 cat<<EOF
 <TR>
-<TD colspan="2"><b>ACHTUNG:</b> WAN ist mit IP $(ip addr show primary $(nvram get wan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }') Teil des Opennet. OLSR auf WAN aktiviert.
+<TD colspan="2" class="warning"><b>ACHTUNG:</b> WAN ist mit IP $(ip addr show primary $(nvram get wan_ifname) | awk 'BEGIN{FS=" +|/"} $2 == "inet" { print $3 }') Teil des Opennet. OLSR auf WAN aktiviert.
 </TD>
 </TR>
 EOF
