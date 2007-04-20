@@ -107,8 +107,9 @@ if [ "$WANNET_PRE" != "$old_wannet_pre" ]; then
 	if [ "$(ipcalc $wan_ipaddr 255.240.0.0 | grep NETWORK=)" = "NETWORK=172.16.0.0" ] ||
 	   [ "$(ipcalc $wan_ipaddr 255.0.0.0 | grep NETWORK=)" = "NETWORK=10.0.0.0" ]; then
 		$DEBUG && logger -t check_WAN "WAN network is a local network"
-		iptables -I FORWARD 2 -i $WANDEV -o $WIFIDEV -s $WANNET_PRE -d $WIFINET_PRE -m state --state NEW -j ACCEPT
+		iptables -I FORWARD 2 -i $WANDEV -s $WANNET_PRE -d $WIFINET_PRE -m state --state NEW -j ACCEPT
 		iptables -t nat -A POSTROUTING -o $WIFIDEV -s $WANNET_PRE -d $WIFINET_PRE -j SNAT --to-source $wifi_ipaddr
+		iptables -t nat -A POSTROUTING -o tap+ -s $WANNET_PRE -d $WIFINET_PRE -j SNAT --to-source $wifi_ipaddr
 		$DEBUG && logger -t check_WAN "opened firewall for WAN-Opennet access"
 	fi
 
