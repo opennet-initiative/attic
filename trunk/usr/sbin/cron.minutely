@@ -20,7 +20,7 @@ wdev=$(l=$(grep : /proc/net/wireless);l=${l%:*};echo ${l##* })
 test -n "$wdev" || exit
 
 test -f /var/run/wifi.pid || wifi wdog
-wstat=$(grep $wdev: /proc/net/dev|if read l;then set ${l#*:};echo $1;fi)
+wstat=$(awk '$1 ~ "'"$wdev"'" {print $9}' /proc/net/dev)
 ostat=$(cat /var/run/status.$wdev 2>&-)
 echo $wstat>/var/run/status.$wdev
 eval $(/usr/sbin/wl -i $wdev status|sed -e"s/^Supported //;s/: \+\([^	]*\)/='\1';/g")
@@ -40,4 +40,7 @@ elif [ "" != "$ostat" ] && [ "$ostat" = "$wstat" ] || [ "Ad Hoc" = "$Mode" ] && 
 	wifi up
 	wl txpwr $(nvram get ff_txpwr)
 	#~ ifdown wifi; wifi down; killall -9 wifi >/dev/null; sleep 10; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)
+	logger -t cron.minutely "restarting olsrd" # it's never wrong to restart olsrd ;)
+	rm -rf /tmp/restart_olsrd
+	/etc/init.d/*olsrd restart
 fi
