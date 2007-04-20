@@ -36,6 +36,8 @@ map_port_to_ip() {
                 intrldport=$(echo $2 | cut -d':' -f2)	# if we have a destination with port change, use the given port as internal (after NAT) dport
         fi
 	INPUTDEV="$3"
+	rulenum="$(iptables -L FORWARD --line-numbers -n -v | awk '$8 == "'"$WANDEV"'" && $13 == "TCPMSS" {print $1+1; exit}')"
+	
 	dnat() {
 		for packet in udp tcp; do
 			iptables -t nat -A PREROUTING -p $packet -i $INPUTDEV -s $source --dport $1 -j DNAT --to-destination $2; echo -n "+"
@@ -44,7 +46,7 @@ map_port_to_ip() {
 	
 	forward() {
 		for packet in udp tcp; do
-			iptables -I FORWARD 2 -i $INPUTDEV -o $LANDEV -s $source -d $LANNET_PRE $macfilter -m state --state NEW -p $packet --dport $intrldport -j ACCEPT; echo -n "+"
+			iptables -I FORWARD $rulenum -i $INPUTDEV -o $LANDEV -s $source -d $LANNET_PRE $macfilter -m state --state NEW -p $packet --dport $intrldport -j ACCEPT; echo -n "+"
 		done
 	}
 

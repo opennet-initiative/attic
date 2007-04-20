@@ -120,6 +120,10 @@ set_wifi_lan_fw() {
 		# Repair braindead websites
 		iptables -A FORWARD -o $WIFIDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 	fi
+	if [ -n "$WANMTU" ] && [ 1500 -gt $WANMTU ]; then
+		# Repair braindead websites
+		iptables -A FORWARD -o $WANDEV -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+	fi
 	iptables -A FORWARD -j ipfilter
 	iptables -A FORWARD -i $WIFIDEV -o $WIFIDEV -j ACCEPT
 	test -n "$WIFIADR" && iptables -A FORWARD -i $WIFIDEV -d 255.255.255.255 -p udp --sport 68 --dport 67 -j ACCEPT
