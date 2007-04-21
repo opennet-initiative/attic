@@ -11,7 +11,7 @@ mac_access() {
         mac_addrs=$(nvram get on_wifidhcp_macaddrs)
 	if [ $1 = "create" ]; then
 		ACT_INSERT="I";
-		rulenum="$(iptables -L FORWARD --line-numbers -n -v | awk '$8 == "'"$WANDEV"'" && $13 == "TCPMSS" {print $1+1; exit}')"
+		rulenum="$(iptables -L FORWARD --line-numbers -n -v | awk '$8 ~ "^ppp" && $13 == "TCPMSS" {print $1+1; exit}')"
 	else
 		ACT_INSERT="D"; rulenum=""
 	fi
