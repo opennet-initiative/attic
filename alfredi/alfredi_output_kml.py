@@ -104,7 +104,7 @@ class KMLFileWriter(LQColorMap):
    def markup_generate(self):
       color_set = set()
       ne_tags = [x.markup_generate(color_set) for x in (self.nodetags + self.edgetags)]
-      color_style_tags = ['<Style id="col%s"><LabelStyle><color>%s</color></LabelStyle></Style>\n' % (cs, cs) for cs in color_set]
+      color_style_tags = ['<Style id="col%s"><LineStyle><color>%s</color></LineStyle></Style>\n' % (cs, cs) for cs in color_set]
       return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://earth.google.com/kml/2.1">\n<Document>\n' + \
              ''.join(color_style_tags) + ''.join(ne_tags) + '</Document>\n</kml>\n'
 
