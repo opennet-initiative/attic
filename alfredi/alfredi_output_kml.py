@@ -154,7 +154,7 @@ class KMLFileWriter:
       clq = KMLLQ(lq, self.hsv_map_constant, self.color_mask)
       
       if (self.element_new()):
-         self.nodetags.append(KMLPlacemarkNode(coord=coord, lq=clq, name=text, description='IP: %s\nLQ: %f' % (node_ip, lq)))
+         self.nodetags.append(KMLPlacemarkNode(coord=coord, lq=clq, name=text, description='IP: %s\nLQ: %s' % (node_ip, lq)))
 
    def edge_draw(self, coord1, coord2, lq, node1_ip, node2_ip):
       clq = KMLLQ(lq, self.hsv_map_constant, self.color_mask)
