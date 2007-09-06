@@ -82,7 +82,7 @@ graph_calls = (
 #)
 
 output_unit_kml = (
-   KMLFileWriter(elementlimit=None),
+   KMLFileWriter(elementlimit=None, icon_url_base='http://titan.www.opennet-initiative.de/topology/olsr/map_icons/'),
    (
       (('output/alfredi_output.kml',),{}),
    )
