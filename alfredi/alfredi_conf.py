@@ -64,14 +64,14 @@ graph_calls = (
       (
          (('alfredi_output_big.png',), {}),
       )
-   ),
-   (  'image_1414x1024_transparent.png',
-      (54.093235630379752, 12.104001046365916),
-      (54.070965179746835, 12.125914110275689),
-      (
-         (('alfredi_output_1414x1024_transparent.png',),{}),
-      )
    )
+   #(  'image_1414x1024_transparent.png',
+   #   (54.093235630379752, 12.104001046365916),
+   #   (54.070965179746835, 12.125914110275689),
+   #   (
+   #      (('alfredi_output_1414x1024_transparent.png',),{}),
+   #   )
+   #)
 )
 
 #output_unit_shp = (
