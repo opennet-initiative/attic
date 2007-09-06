@@ -17,6 +17,7 @@ from coordinate_structures import PointByCoordinates
 from alfredi_graphing import MapManipulator
 #from alfredi_output_shapefile import ShapefileWriter
 from alfredi_output_kml import KMLFileWriter
+from alfredi_output_csv import CSVFileWriter
 
 _log_config = logging.getLogger('config')
 
@@ -24,7 +25,7 @@ def localdummy(): pass
 os.chdir(os.path.split(inspect.getfile(localdummy))[0])
 del(localdummy)
 
-border_gateways = (ip_make('192.168.0.254'),)
+border_gateways = tuple([ip_make(x) for x in ('192.168.0.254', '192.168.0.247', '192.168.0.251', '192.168.0.244')])
 hsv_map_constant = 240
 
 graph_calls = (
@@ -40,29 +41,29 @@ graph_calls = (
       (54.09465, 12.09432),
       (54.06960, 12.14260),
       (
-         (('alfredi_output.png',), {}),
-         (('alfredi_output.jpg',), {}),
+         (('output/alfredi_output.png',), {}),
+         (('output/alfredi_output.jpg',), {}),
       )
    ),
    (   'image006.jpg',
       (54.093235630379752, 12.104001046365916),
       (54.070965179746835, 12.125914110275689),
       (
-         (('alfredi_output_6.jpg',), {}),
+         (('output/alfredi_output_6.jpg',), {}),
       )
    ),
    (   'image007.png',
       (54.1025061796, 12.0876606931),
       (54.0625653304, 12.1562126764),
       (
-         (('alfredi_output_7.jpg',), {}),
+         (('output/alfredi_output_7.jpg',), {}),
       )
    ),
    (  'image005.gif',
       (54.09308, 12.10549),
       (54.08078, 12.12221),
       (
-         (('alfredi_output_big.png',), {}),
+         (('output/alfredi_output_big.png',), {}),
       )
    )
    #(  'image_1414x1024_transparent.png',
@@ -88,10 +89,16 @@ output_unit_kml = (
    )
 )
 
+output_unit_csv = (
+   CSVFileWriter(),
+   (
+      (('output/alfredi_output.csv',),{}),
+   )
+)
+
 def output_units_generate():
-   retval = [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
+   retval = [output_unit_kml, output_unit_csv] + [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
    #retval.append(output_unit_shp)
-   retval.append(output_unit_kml)
    return retval
 
 url_node_list = 'http://wiki.opennet-initiative.de/index.php/Opennet_Nodes'
