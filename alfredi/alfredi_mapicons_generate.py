@@ -26,7 +26,7 @@ from ImageDraw import Draw
 def image_build(color):
    img = Image.new('RGBA',(32,32),(0,0,0,1))
    d = Draw(img)
-   d.ellipse((0,0,31,32), fill=color)
+   d.ellipse((8,16,23,32), fill=color)
    return img
 
 
