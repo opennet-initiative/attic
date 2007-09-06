@@ -179,7 +179,7 @@ class KMLFileWriter:
             icon_style = '<IconStyle><Icon><href>%s%s.png</href></Icon></IconStyle>' % (self.icon_url_base, huestring)
          
          cs = clq.colorstring_get()
-         color_style_tags.append('<Style id="col%s">%s<LineStyle><color>%s</color><width>0.25</width></LineStyle></Style>\n' % (icon_style, cs, cs))
+         color_style_tags.append('<Style id="col%s">%s<LineStyle><color>%s</color><width>0.25</width></LineStyle></Style>\n' % (cs, icon_style, cs))
       
       return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://earth.google.com/kml/2.1">\n<Document>\n' + \
              ''.join(color_style_tags) + ''.join(ne_tags) + '</Document>\n</kml>\n'
