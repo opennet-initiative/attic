@@ -25,7 +25,7 @@ def localdummy(): pass
 os.chdir(os.path.split(inspect.getfile(localdummy))[0])
 del(localdummy)
 
-border_gateways = tuple([ip_make(x) for x in ('192.168.0.254', '192.168.0.247', '192.168.0.251', '192.168.0.244')])
+border_gateways = tuple([ip_make(x) for x in ('192.168.0.254', '192.168.0.244', '10.2.0.251', '10.2.0.247')])
 hsv_map_constant = 240
 
 graph_calls = (
