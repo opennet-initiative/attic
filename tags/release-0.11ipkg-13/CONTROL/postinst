@@ -1,0 +1,13 @@
+#!/bin/sh
+# dont execute script if not running on an Router (while using PackageBuilding-system)
+[ -z "$(nvram show 2>/dev/null)" ] && echo "opennet-firmware*.ipk postinstall skipped" && exit
+
+/usr/sbin/opennet-firmware-postinst
+
+echo "  ..done."
+
+echo "  ################################################### "
+echo "  #         please reboot after installation        # "
+echo "  #      bitte AP nach Installation neu starten     # "
+echo "  #  (warte bis Meldung 'Successfully terminated')  # "
+echo "  ################################################### "

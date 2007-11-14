@@ -1,0 +1,79 @@
+#!/bin/sh
+_version=$(nvram get on_fw_version)
+if [ -n "${_version##*RC5*}" ]; then upgrade="system-upgrade.sh"; upgrade_bak=$upgrade"_bak"
+else upgrade="upgrade.sh"; upgrade_bak=$upgrade"_bak";
+fi
+
+export DATE="5.9.2005"
+export TITLE="Verwaltung: Firmware (entferne geheimen Schlüssel)"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: Firmware (entferne geheimen Schlüssel)</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+diese Seite sollte nicht direkt aufgerufen werden
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Ladevorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+	if [ $(md5sum "$ffout" | awk '{ print $1 }') = $(md5sum /etc/openvpn/opennet_user/on_aps.key | awk '{ print $1 }') ]; then
+		rm -f $ffout
+		rm -f /etc/openvpn/opennet_user/on_aps.key
+		# reaktiviere Webfrontend zum Firmware-Update
+		if ! [ -f /etc/openvpn/opennet_ugw/on_ugws.key ]; then
+			mv -f /www/cgi-bin/webif/$upgrade_bak /www/cgi-bin/webif/$upgrade 2>/dev/null
+		fi
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>Geheimer Schlüssel auf dem Accesspoint gelöscht.</TD>
+		</TR></TBODY>
+		</TABLE>
+EOF
+		if [ -f /etc/openvpn/opennet_user/on_aps.crt ]; then
+		echo "<P>Bitte nicht vergessen, auch das Zertifikat zu sichern.</P>"
+		fi
+	else
+cat<<EOF
+		<TABLE BORDER="0" CLASS="note">
+		<TBODY>
+		<TR>
+		<TD>hochgeladene Datei stimmt nicht mit dem Schlüssel überein.</TD>
+		</TR></TBODY>
+		</TABLE>
+		<P>Geheimer Schlüssel nicht gelöscht.</P>
+		<P>Lade den Schlüssel zuerst unter <a href="on_vpn.html">VPN Config</a> herunter.</P>
+EOF
+	fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Vorgang wurde nicht ausgef&uuml;hrt.</P>
+EOF
+
+fi
+
+. ${0%/*}/cgi-bin-post.sh

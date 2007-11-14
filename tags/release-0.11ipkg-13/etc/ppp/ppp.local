@@ -1,0 +1,36 @@
+#!/bin/sh
+# prepared to be a hotplug-script in the future
+# the recent problem is that hotplug-scripts are not called with full env variables set
+
+PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+case "$ACTION" in
+        ifup)
+		logger "running ppp.local script ifup ppp"
+
+		# set dns
+		if [ "$(nvram get on_pppoe_keepdns)" != "on" ]; then
+			nvram set lan_dns_store="$(nvram get lan_dns)"
+			nvram set lan_dns="$DNS1 $DNS2"
+			
+			mv /tmp/resolv.conf /tmp/resolv.conf_ppp 2>/dev/null
+			
+			echo "nameserver $DNS1" >/tmp/resolv.conf
+			echo "nameserver $DNS2" >>/tmp/resolv.conf
+			chmod a+r /tmp/resolv.conf
+		fi
+                ;;
+        ifdown)
+                logger "running ppp.local script ifdown ppp"
+		
+		# reset dns
+		if [ -e /tmp/resolv.conf_ppp ]; then
+			mv /tmp/resolv.conf_ppp /tmp/resolv.conf 2>/dev/null
+			chmod a+r /tmp/resolv.conf
+			
+			nvram set lan_dns="$(nvram get lan_dns_store)"
+			nvram unset lan_dns_store
+		fi
+		;;
+esac

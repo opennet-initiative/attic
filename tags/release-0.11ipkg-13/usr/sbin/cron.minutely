@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# Will run every minute (at 00:00, 00:01, ...)
+
+# check if gateway is recent
+/usr/sbin/cron.minutely_ongateway
+
+# check if WAN has a working default route and activate policy-routing
+/usr/sbin/check_WAN.sh
+
+# check if usergateway can still be reached via WANDEV
+/usr/sbin/check_usergateway.sh
+
+# update dns entries
+/usr/sbin/auto_dns.sh
+
+# copied and adapted from freifunk-firmware (package freifunk-olsrd_0.4.10_mipsel.ipk)
+
+wdev=$(l=$(grep : /proc/net/wireless);l=${l%:*};echo ${l##* })
+test -n "$wdev" || exit
+
+test -f /var/run/wifi.pid || wifi wdog
+wstat=$(grep $wdev: /proc/net/dev|if read l;then set ${l#*:};echo $1;fi)
+ostat=$(cat /var/run/status.$wdev 2>&-)
+echo $wstat>/var/run/status.$wdev
+eval $(/usr/sbin/wl -i $wdev status|sed -e"s/^Supported //;s/: \+\([^	]*\)/='\1';/g")
+rand=$(dd if=/dev/urandom bs=2 count=1 2>&-|hexdump|if read line;then echo 0x${line#* };fi)
+ff_bssid=$(nvram get ff_bssid|sed -e "y/abcdef/ABCDEF/")
+BSSID=$(echo $BSSID|sed -e "y/abcdef/ABCDEF/")
+ff_ping=$(nvram get ff_ping)
+
+if [ 1 -eq $(( $rand % 1234 )) ] || [ -z "$(pidof -s olsrd)" ] || [ -f /tmp/restart_olsrd ];then
+	# Restart approx every day or by request
+	logger -t cron.minutely "restarting olsrd"
+	rm -rf /tmp/restart_olsrd
+	/etc/init.d/*olsrd restart
+elif [ "" != "$ostat" ] && [ "$ostat" = "$wstat" ] || [ "Ad Hoc" = "$Mode" ] && [ "$Channel" != "$(nvram get wl0_channel)" ] || [ "Ad Hoc" = "$Mode" ] && [ -n "$ff_bssid" ] && [ "$BSSID" != "$ff_bssid" ];then
+	# Wifi dead or configuration wrong? Try restart
+	logger -t cron.minutely "restarting wifi"
+	wifi up
+	wl txpwr $(nvram get ff_txpwr)
+	#~ ifdown wifi; wifi down; killall -9 wifi >/dev/null; sleep 10; ifup wifi; wifi up; wl txpwr $(nvram get ff_txpwr)
+fi
