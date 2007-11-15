@@ -211,14 +211,14 @@ cat<<EOF
 </tr>
 </table>
 <table width="100%" border=1 cellspacing=0 cellpadding=0>
-<tr><th colspan=3>tap0</th></tr>
+<tr><th colspan=3>tap1</th></tr>
 <tr>
 EOF
-	if [ -n "$(batmand -c | grep tap0)" ]; then
+	if [ -n "$(batmand -c | grep tap1)" ]; then
 cat<<EOF
-<td>IP: $(ifconfig tap0|awk 'sub("inet addr:","") {print $1}')</td>
-<td>MASK: $(ifconfig tap0|awk 'sub("Mask:","") {print $4}')</td>
-<td>BCAST: $(ifconfig tap0|awk 'sub("Bcast:","") {print $3}')</td>
+<td>IP: $(ifconfig tap1|awk 'sub("inet addr:","") {print $1}')</td>
+<td>MASK: $(ifconfig tap1|awk 'sub("Mask:","") {print $4}')</td>
+<td>BCAST: $(ifconfig tap1|awk 'sub("Bcast:","") {print $3}')</td>
 EOF
 	else
 cat<<EOF
@@ -242,6 +242,7 @@ cat<<EOF
 </table>
 
 <h2>Gateway-Table</h2>
+(sollte leer sein, Opennet-Gateways werden nicht über B.A.T.M.A.N. ausgewählt)
 <table width="100%" border=1 cellspacing=0 cellpadding=0>
 <TR>
 <TD><pre>
