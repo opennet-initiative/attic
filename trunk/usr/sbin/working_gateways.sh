@@ -14,7 +14,10 @@ while [ "$gw_addrs" = "" ]; do
 	if [ -z "$accept_nonworking" ]; then
 		on_gwaddrs=$(nvram get on_gwaddrs)
 	else
-		on_gwaddrs=$(route -n | awk 'BEGIN {ORS=" "} $1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {print $1}')
+		ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+		# usual gateways are 192.168.0.X, reachable over batman they have 192.168.43.X
+		on_gwaddrs=$(ip route show table all type unicast \
+			| awk '$1 ~ "^'"$ip_classB"'\\.(0|43)\\.[1-9][0-9]*$" { print $1 }')
 		gw_addrs="$(nvram get on_gw)";
 	fi;
 	

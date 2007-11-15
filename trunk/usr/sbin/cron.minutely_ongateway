@@ -65,7 +65,7 @@ test_vpngateway()
 	fi
 
 	# if gateway could only be reached over a local tunnel, dont use it.
-	if [ -n "$(route -n | awk '$1 == "'$1'" && $8 ~ "^tap|^tun" { print $8; exit }')" ]; then return; fi
+	if [ -n "$(ip route show table all to $1 |  awk '$3 ~ "^tap|^tun"')" ]; then return; fi
 	
 	# check if it is possible to open tunnel to the gateway (10 sec. maximum)
 	# test-parameters; '--dev null' will be prefaced
@@ -111,21 +111,23 @@ if [ "$(nvram get on_gwauto)" = "on" ]; then
 	
 	on_gwaddrs=
 	ip_odd=$(($(nvram get wifi_ipaddr | cut -d'.' -f4) % 2))
+	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+	# usual gateways are 192.168.0.X, reachable over batman they have 192.168.43.X
 	for gw in $(
-		route -n \
+		ip route show table all type unicast \
 		| awk '
 			BEGIN { max = -1; }
-#			$1 == "192.168.0.250" && $5 >= 2 { $5 -= 2; }	# hack (because of bridge AP36-AP27)
-			$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
-				if ("'$ip_odd'" == "0") a[$5] = a[$5] " " $1;
-				else a[$5] = $1 " " a[$5];
-				if ($5 > max)
-					max = $5;
+			$1 ~ "^'"$ip_classB"'\\.(0|43)\\.[1-9][0-9]*$" {
+			if ($0 ~ "metric") metric=$NF; else metric=10;
+				if ("'$ip_odd'" == "0") a[metric] = a[metric] " " $1;
+				else a[metric] = $1 " " a[metric];
+				if (metric > max)
+					max = metric;
 			}
 			END {
 				for (i = 0; i <= max; i++)
 					ret = ret " " a[i];
-				print ret;
+				print ret" ";
 			}'); do
 		
 		# search information about status and age in old entrys
@@ -177,7 +179,7 @@ for on_gwaddr in $old_gwaddrs; do
 	fi
 	
 	# if first gateway is not found yet, continue searching for it
-	if [ -z "$found_first_gw" ] && [ "$(route -n | cut -d" " -f1 | grep $on_gwaddr)" = "$on_gwaddr" ]; then
+	if [ -z "$found_first_gw" ] && [ -n "$(ip route show table all to $on_gwaddr)" ]; then
 		if [ "$on_gwaddr" != "$on_gw" ]; then
 			if [ -z "$on_gw" ] || [ $on_gwcount -gt 5 ]; then
 				logger -t cron.minutely_ongateway "found a better gateway, changing to $on_gwaddr"
@@ -195,7 +197,7 @@ for on_gwaddr in $old_gwaddrs; do
 			# stop vpn-tunnel if its not working cause route goes trough ugw-tunnel
 			# this might be a problem on usergateways, before the ugw-tunnel is working the user-vpn-gateway is reachable, so might be started
 			# if than all gateways best reached via the ugw-tunnel, the user-tunnel runs forever complaining about not working.
-			if [ -n "$(ip route show to $on_gw |  awk '$5 ~ "^tap"')" ] \
+			if [ -n "$(ip route show table all to $on_gw |  awk '$3 ~ "^tap"')" ] \
 				&& [ -n "$(echo "$old_gwaddrs" | awk 'BEGIN {RS=" ";FS=":"} $1 ==  "'$on_gw'" && $2 == "n"')" ]; then
 					logger -t cron.minutely_ongateway "stopping nonworking gateway"
 					nvram unset on_gw

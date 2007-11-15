@@ -14,19 +14,24 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 	fi
 
 	lan_dns=$(nvram get $DNS_VAR)
-	new_dns=$(route -n | sort \
-	| awk '
-	BEGIN { max = -1; }
-	$1 ~ "^192\\.168\\.0\\.[0-9]+$" && $1 != "192.168.0.0" {
-		a[$5] = a[$5] "\n " $1;
-		if ($5 > max)
-			max = $5;
-	}
-	END {
-		for (i = 0; i <= max; i++)
-			ret = ret " " a[i];
-		print ret;
-	}')
+	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+	# usual gateways are 192.168.0.X, reachable over batman they have 192.168.43.X
+	new_dns=$(
+		ip route show table all type unicast \
+		| awk '
+			BEGIN { max = -1; }
+			$1 ~ "^'"$ip_classB"'\\.(0|43)\\.[1-9][0-9]*$" {
+			if ($0 ~ "metric") metric=$NF; else metric=10;
+				if ("'$ip_odd'" == "0") a[metric] = a[metric] " " $1;
+				else a[metric] = $1 " " a[metric];
+				if (metric > max)
+					max = metric;
+			}
+			END {
+				for (i = 0; i <= max; i++)
+					ret = ret " " a[i];
+				print ret" ";
+			}')
 	
 	new_dns="$(echo $new_dns)"
 	

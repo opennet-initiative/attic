@@ -46,7 +46,7 @@ if [ -n "$add_gw" ]; then
 		/usr/sbin/cron.minutely_ongateway refresh
 	fi
 elif [ -n "$del_gw_test" ]; then
-	nvram set on_gwaddrs="$(nvram get on_gwaddrs | awk 'BEGIN {RS=":| "; ORS=":: "} $1 ~ "^192.168.0"')"
+	nvram set on_gwaddrs="$(nvram get on_gwaddrs | awk 'BEGIN {RS=":| "; ORS=":: "} $1 ~ "'"^$(nvram get wifi_ipaddr | cut -d'.' -f1,2)"'"')"
 elif [ -n "$add_blackgw" ]; then
 	number=1
 	on_gwblackaddrs_new=
@@ -130,7 +130,7 @@ cat<<EOF
 	<td id="route$number"> 
 EOF
 	blacklisted="$(nvram get on_gwblackaddrs | awk "/$on_gw_addr/"'{print}')"
-	reachable="$(route -n | grep ^$on_gw_addr[' '])"
+	reachable="$(ip route show table all to $on_gw_addr)"
  
 	#---------------------------------------------------------------------------------------------------------
 	if  [  -n "$reachable" ]; then
@@ -224,7 +224,7 @@ cat<<EOF
 	<td><INPUT NAME="on_gwblack$number" SIZE="20" TYPE="TEXT" VALUE="$on_gwblackaddr"></td>
 	<td> 
 EOF
-	if  [ "$(route -n | cut -d" " -f1 | grep $on_gwblackaddr)" = "$on_gwblackaddr" ]; then
+	if  [ -n "$(ip route show table all to $on_gwblackaddr)" ]; then
 		echo "<img src=\"../images/yes.gif\" alt=\"yes\">"
 	else	
 		echo "<img src=\"../images/no.gif\" alt=\"no\">"
