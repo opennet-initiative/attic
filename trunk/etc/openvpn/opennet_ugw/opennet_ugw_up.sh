@@ -3,7 +3,9 @@ eval $(/usr/bin/netparam)
 DEBUG="false"
 if [ -n "$(nvram get on_fw_debug)" ]; then DEBUG=$(nvram get on_fw_debug); fi
 
-iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $ifconfig_local
+[ -z "$(grep $(nvram get lan_ifname) /var/etc/olsrd.conf)" ] &&
+	iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $ifconfig_local
+	
 [ -n "$DHCPWIFIPRE" ] && iptables -t nat -A POSTROUTING -o $dev -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $ifconfig_local
 
 # exclude tunnel packets from policy rules
