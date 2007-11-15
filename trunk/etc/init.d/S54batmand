@@ -6,8 +6,9 @@ test -n "$FAILSAFE" && exit
 
 case $1 in
 	start)
-		if [ ! -x /usr/sbin/batmand ]; then echo "batmand not installed"; exit; fi;
 		echo "Starting batmand..."
+		if [ ! -x /usr/sbin/batmand ]; then echo "batmand not installed"; exit; fi;
+		if [ "$(nvram get on_batman)" != "true" ]; then echo "batmand not activated"; exit; fi;
 		BATMANDEVS=$(nvram get on_bat_ifname)
 		ifconfig tap0 >/dev/null 2>/dev/null
 		if [ $? = 0 ]; then BATMANDEVS=$BATMANDEVS" tap0"; fi
