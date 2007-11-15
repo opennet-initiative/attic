@@ -127,7 +127,7 @@ document.onkeypress = help;
 EOF
 
 WLDEV=$(nvram get wl0_ifname)
-BATDEV=$(nvram get on_bat_ifname)
+BATDEV=$(nvram get wifi_ifname):1
 BATMAN="$(ps | grep batmand | grep -v grep)"
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
@@ -181,53 +181,28 @@ cat<<EOF
 <TR>
 <TD>$(batmand -c -b -d1 | awk '{sub("^.*\\[",""); sub("].*$",""); print; exit}')
 </TD></TR>
+<TR>
+<TD>commandline: $(batmand -c)
+</TD></TR>
 </table>
 
 <h2>Interfaces</h2>
+EOF
+	for iface in $(batmand -c | awk '{gsub("-"," "); print}'); do
+		if [ -n "$(ifconfig $iface 2>/dev/null)" ]; then
+cat<<EOF
 <table width="100%" border=1 cellspacing=0 cellpadding=0>
-<tr><th colspan=3>$(nvram get on_bat_ifname)</th></tr>
+<tr><th colspan=3>$iface</th></tr>
 <tr>
-<td>IP: $(ifconfig $BATDEV|awk 'sub("inet addr:","") {print $1}')</td>
-<td>MASK: $(ifconfig $BATDEV|awk 'sub("Mask:","") {print $4}')</td>
-<td>BCAST: $(ifconfig $BATDEV|awk 'sub("Bcast:","") {print $3}')</td>
+<td>IP: $(ifconfig $iface|awk 'sub("inet addr:","") {print $1}')</td>
+<td>MASK: $(ifconfig $iface|awk 'sub("Mask:","") {print $4}')</td>
+<td>BCAST: $(ifconfig $iface|awk 'sub("Bcast:","") {print $3}')</td>
 </tr>
 </table>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<tr><th colspan=3>tap0</th></tr>
-<tr>
 EOF
-	if [ -n "$(batmand -c | grep tap0)" ]; then
+		fi;
+	done;
 cat<<EOF
-<td>IP: $(ifconfig tap0|awk 'sub("inet addr:","") {print $1}')</td>
-<td>MASK: $(ifconfig tap0|awk 'sub("Mask:","") {print $4}')</td>
-<td>BCAST: $(ifconfig tap0|awk 'sub("Bcast:","") {print $3}')</td>
-EOF
-	else
-cat<<EOF
-<td colspan=3>Status: down or unused by batmand</td>
-EOF
-	fi
-cat<<EOF
-</tr>
-</table>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<tr><th colspan=3>tap1</th></tr>
-<tr>
-EOF
-	if [ -n "$(batmand -c | grep tap1)" ]; then
-cat<<EOF
-<td>IP: $(ifconfig tap1|awk 'sub("inet addr:","") {print $1}')</td>
-<td>MASK: $(ifconfig tap1|awk 'sub("Mask:","") {print $4}')</td>
-<td>BCAST: $(ifconfig tap1|awk 'sub("Bcast:","") {print $3}')</td>
-EOF
-	else
-cat<<EOF
-<td colspan=3>Status: down or unused by batmand</td>
-EOF
-	fi
-cat<<EOF
-</tr>
-</table>
 
 <h2>Originator-Table</h2>
 <table width="100%" border=1 cellspacing=0 cellpadding=0>

@@ -3,22 +3,39 @@
 test -n "$FAILSAFE" && exit
 
 . /etc/functions.sh
+BIN=/usr/sbin/batmand*
+
+BATMANDEVS_USE=""
 
 case $1 in
 	start)
 		echo "Starting batmand..."
-		if [ ! -x /usr/sbin/batmand ]; then echo "batmand not installed"; exit; fi;
+		if [ ! -x $BIN ]; then echo "batmand not installed"; exit; fi;
 		if [ "$(nvram get on_batman)" != "true" ]; then echo "batmand not activated"; exit; fi;
-		BATMANDEVS=$(nvram get on_bat_ifname)
-		ifconfig tap0 >/dev/null 2>/dev/null
-		if [ $? = 0 ]; then BATMANDEVS=$BATMANDEVS" tap0"; fi
-		ifconfig tap1 >/dev/null 2>/dev/null
-		if [ $? = 0 ]; then BATMANDEVS=$BATMANDEVS" tap1"; fi
-		batmand $BATMANDEVS
+		if [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" != "1" ]; then
+			echo "WIFI-ip not in X.X.1.X network, aborting."; exit; fi;
+		
+		# generate B:A:T:M:A:N: address from main wifi address			
+		ip_classB=$(nvram get wifi_ipaddr | cut -d'.' -f1,2)
+		ip=$ip_classB".42.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
+		brd=$ip_classB".43.255"
+		msk=255.255.254.0
+		
+		for iface in $(awk '/Interface/ && $2 !~ "tap" {gsub("\"","");print $2}' /tmp/etc/olsrd.conf); do
+			ifconfig $iface:1 $ip netmask $msk broadcast $brd
+			BATMANDEVS_USE=$BATMANDEVS_USE" "$iface:1
+		done
+		for iface in $(awk '/Interface/ && $2 ~ "tap" {gsub("\"","");print $2}' /tmp/etc/olsrd.conf); do
+			if [ -n "$(ifconfig $iface 2>/dev/null)" ]; then BATMANDEVS_USE=$BATMANDEVS_USE" "$iface; fi
+		done
+		$BIN $BATMANDEVS_USE
 	;;
 	stop)
 		echo "Stopping batmand if running..."
 		killall batmand >/dev/null 2>&1
+		for iface in $(awk '/Interface/ && $2 !~ "tap" {gsub("\"","");print $2}' /tmp/etc/olsrd.conf); do
+			ifconfig $iface:1 down
+		done
 	;;
 	restart)
 		$0 stop

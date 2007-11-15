@@ -26,14 +26,6 @@ case "$1" in
 	nvram unset on_wifidhcp_proto
     fi
     
-    if [ "$(nvram get wifi_ipaddr | cut -d'.' -f3)" = "1" ]; then
-	nvram set on_bat_ifname="$(nvram get wifi_ifname):1"
-	nvram set on_bat_ipaddr=$ip_classB".42.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
-	nvram set on_bat_netmask="255.255.254.0"
-	nvram set on_bat_proto=static
-	ifup on_bat
-    fi
-    
     # bring up wan as the latest device to have all other device-parameters for calling ip-up
     ifup wan
     
