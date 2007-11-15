@@ -68,10 +68,6 @@ if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 		nvram set ff_bssid="02:ca:ff:ee:ba:be"
 		$logit "  - changed bssid => 02:ca:ff:ee:ba:be"
 	fi
-
-	# misc wifi params
-	nvram set wl0_frag=512
-	nvram set wl0_rts=250
 fi
 
 # remove preset gateway (now handled by olsrd)
@@ -107,6 +103,18 @@ nvram set lan_ifnames="$ifnames"
 nvram set dhcp_start=100
 nvram set dhcp_num=50
 $logit "  - set default: dhcp => activated"
+
+# set RTS for WIFI to zero
+if [ "$(nvram get wl0_rts)" != "" ]; then
+	$logit "  - set default: WIFI => RTS deactivated"
+	nvram unset wl0_rts
+fi
+
+# set FRAG to 512
+if [ "$(nvram get wl0_frag)" != "512" ]; then
+	$logit "  - set default: WIFI => FRAG 512"
+	nvram set wl0_frag=512
+fi
 
 # activate automatic olsrd configuration
 if [ -z "$(nvram show 2>/dev/null | grep on_remoteconf)" ]; then
