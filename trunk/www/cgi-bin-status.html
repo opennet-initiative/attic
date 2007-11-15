@@ -352,8 +352,8 @@ cat<<EOF
 EOF
 wget -O - http://127.0.0.1:8080/all|awk '
 /<h2>/, /<\/div>/ {
-gsub("border=0", "border=1 cellspacing=0 cellpadding=0")
-gsub("BORDER=0", "BORDER=1")
+gsub("border=\"?0\"?", "border=1 cellspacing=0 cellpadding=0")
+gsub("BORDER=\"?0\"?", "BORDER=1")
 gsub("<select", "<select name=none")
 gsub(":8080/all", "/cgi-bin-status.html")
 print
