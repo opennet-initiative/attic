@@ -17,12 +17,17 @@ case $1 in
 		
 		# generate B:A:T:M:A:N: address from main wifi address			
 		ip_classB=$(nvram get wifi_ipaddr | cut -d'.' -f1,2)
-		ip=$ip_classB".42.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
+		base_addr=40
+		#~ ip=$ip_classB".40.$(nvram get wifi_ipaddr | cut -d'.' -f4)"
 		brd=$ip_classB".43.255"
-		msk=255.255.254.0
+		msk=255.255.252.0
 		
 		for iface in $(awk '/Interface/ && $2 !~ "tap" {gsub("\"","");print $2}' /tmp/etc/olsrd.conf); do
-			ifconfig $iface:1 $ip netmask $msk broadcast $brd
+			if [ base_addr = 43 ]; then
+				echo "WARNING: batmand startscript only supports up to three batmand-devices (excluding tap)"
+				break;
+			fi
+			ifconfig $iface:1 $ip_classB"."$((base_addr++))".$(nvram get wifi_ipaddr | cut -d'.' -f4)" netmask $msk broadcast $brd
 			BATMANDEVS_USE=$BATMANDEVS_USE" "$iface:1
 		done
 		for iface in $(awk '/Interface/ && $2 ~ "tap" {gsub("\"","");print $2}' /tmp/etc/olsrd.conf); do
@@ -39,6 +44,7 @@ case $1 in
 	;;
 	restart)
 		$0 stop
+		sleep 1
 		$0 start
 	;;
 	*)
