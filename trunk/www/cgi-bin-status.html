@@ -701,11 +701,11 @@ cat<<EOF
 </TR>
 EOF
 batmand -c -b -d 1 | awk 'BEGIN{FS="\\)? +\\(?";tq=0} {
+		!/WARNING/
 		if (tq==0) {sub("#/",""); tq=$3;
 		}
-		if ($1 == $3) printf("<TD><a href=\"http://%s/cgi-bin-status.html\">%s</a></TD><TD>%.2f</TD>",$1,$1,$2/tq);}'
+		if ($1 == $3) printf("<TR><TD><a href=\"http://%s/cgi-bin-status.html\">%s</a></TD><TD>%.2f</TD></TR>",$1,$1,$2/tq);}'
 cat<<EOF
-</TR>
 </table>
 </TD>
 </TR>
