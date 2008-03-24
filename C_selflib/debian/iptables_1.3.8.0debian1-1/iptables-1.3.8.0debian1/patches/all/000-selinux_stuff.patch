@@ -1,0 +1,38 @@
+--- old/iptables_profectio/Makefile	2006-10-22 22:48:15.000000000 -0400
++++ new/iptables_profectio/Makefile	2006-10-22 22:47:43.000000000 -0400
+@@ -33,7 +33,7 @@
+ 
+ # Enable linking to libselinux via enviornment 'DO_SELINUX=1'
+ ifndef DO_SELINUX
+-DO_SELINUX=0
++DO_SELINUX=1
+ endif
+ 
+ COPT_FLAGS:=-O2
+--- old/iptables_profectio/Makefile	2007-07-22 19:36:42.422492000 -0400
++++ new/iptables_profectio/Makefile	2007-07-22 19:58:45.000000000 -0400
+@@ -104,18 +104,18 @@
+ STATIC6_LIBS =
+ LDFLAGS      = -rdynamic
+ LDLIBS       = -ldl
+-ifeq ($(DO_SELINUX), 1)
+-LDLIBS       += -lselinux
+-endif
++#ifeq ($(DO_SELINUX), 1)
++#LDLIBS       += -lselinux
++#endif
+ else
+ DEPFILES = $(EXT_OBJS:%.o=%.d)
+ STATIC_LIBS  = extensions/libext.a
+ STATIC6_LIBS = extensions/libext6.a
+ LDFLAGS      = -static
+ LDLIBS	     =
+-ifeq ($(DO_SELINUX), 1)
+-LDLIBS       += -lselinux
+-endif
++#ifeq ($(DO_SELINUX), 1)
++#LDLIBS       += -lselinux
++#endif
+ endif
+ 
+ .PHONY: default

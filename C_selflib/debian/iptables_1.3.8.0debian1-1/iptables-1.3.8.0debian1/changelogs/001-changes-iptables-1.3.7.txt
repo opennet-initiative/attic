@@ -1,0 +1,46 @@
+Bugs fixed since 1.3.6:
+
+- Fix compilation error with linux 2.6.19
+  [ Patrick McHardy ]
+
+- Fix LOG target segfault with --log-prefix ""
+  [ Mike Frysinger, Bugzilla #516 ]
+
+- Fix conflicting getsockopt optname values for IP6T_SO_GET_REVISION_{MATCH,TARGET}
+  [ Yasuyuki KOZAKAI ]
+
+- Fix -E (rename) in iptables/ip6tables
+  [ Krzysztof Piotr Oledzki ]
+
+- Fix /etc/network usage
+  [ Pablo Neira ]
+
+- Fix iptables-save not printing -s/-d ! 0/0
+  [ Patrick McHardy ]
+
+- Fix ip6tables-save unnecessarily printing -s/-d options for zero prefix length
+  [ Daniel De Graaf ]
+
+New features since 1.3.6:
+
+- Add revision support for ip6tables
+  [ R?mi Denis-Courmont ]
+
+- Add port range support for ip6tables multiport match
+  [ R?mi Denis-Courmont ]
+
+- Add sctp match extension for ip6tables
+  [ Patrick McHardy ]
+
+- Add iptables-xml tool
+  [ Amin Azez ]
+
+- Add hashlimit support for ip6tables (needs kernel > 2.6.19)
+  [ Patrick McHardy ]
+
+- Use /lib/modules/$(shell uname -r)/build instead of /usr/src/linux to look for kernel source
+  [ Patrick McHardy ]
+
+- Add NFLOG target extension for iptables/ip6tables (needs kernel > 2.6.19)
+  [ Patrick McHardy ]
+
