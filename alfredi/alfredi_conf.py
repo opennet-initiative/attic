@@ -10,7 +10,7 @@ import inspect
 
 import Image
 
-from address_structures import ip_make
+from gonium.ip_address import ip_address_build
 from alfredi_coordinate_acquiration_on001 import OnWikiNodeListParser
 from alfredi_link_acquiration_on001 import links_from_csv, links_symmetrize
 from coordinate_structures import PointByCoordinates
@@ -18,6 +18,7 @@ from alfredi_graphing import MapManipulator
 #from alfredi_output_shapefile import ShapefileWriter
 from alfredi_output_kml import KMLFileWriter
 from alfredi_output_csv import CSVFileWriter
+from alfredi_output_om1 import OM1FileWriter
 
 _log_config = logging.getLogger('config')
 
@@ -25,7 +26,7 @@ def localdummy(): pass
 os.chdir(os.path.split(inspect.getfile(localdummy))[0])
 del(localdummy)
 
-border_gateways = tuple([ip_make(x) for x in ('192.168.0.254', '192.168.0.244', '10.2.0.251', '10.2.0.247')])
+border_gateways = tuple([ip_address_build(x) for x in ('192.168.0.254', '192.168.0.244', '10.2.0.251', '10.2.0.247')])
 hsv_map_constant = 240
 
 graph_calls = (
@@ -96,8 +97,15 @@ output_unit_csv = (
    )
 )
 
+output_unit_om1 = (
+   OM1FileWriter('http://www.opennet-initiative.de/marker/%(name)s/%(color)s.png'),
+   (
+      (('output/alfredi_output_om1n.tsv','output/alfredi_output_om1e.tsv'),{}),
+   )
+)
+
 def output_units_generate():
-   retval = [output_unit_kml, output_unit_csv] + [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
+   retval = [output_unit_kml, output_unit_csv, output_unit_om1] + [(MapManipulator(Image.open(source_filename).convert('RGBA'), PointByCoordinates(*coordpair1), PointByCoordinates(*coordpair2)), output_calls) for (source_filename, coordpair1, coordpair2, output_calls) in graph_calls]
    #retval.append(output_unit_shp)
    return retval
 

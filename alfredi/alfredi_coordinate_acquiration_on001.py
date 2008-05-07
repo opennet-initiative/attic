@@ -21,7 +21,7 @@ import string
 import urllib2
 
 from coordinate_structures import PointByCoordinates
-from address_structures import ip_make
+from gonium.ip_address import ip_address_build
 
 _log = logging.getLogger('acaon')
 # build a string containing all ascii-chars except base-ten digits
@@ -29,7 +29,7 @@ digits = [ord(c) for c in string.digits]
 stripmask = ''.join([chr(i) for i in range(256) if not (i in digits)])
 del(digits)
 
-ip_base = int(ip_make('192.168.1.0'))
+ip_base = int(ip_address_build('192.168.1.0'))
 
 class OnWikiNodeListParser(HTMLParser.HTMLParser):
    row_start = False
@@ -85,7 +85,7 @@ class OnWikiNodeListParser(HTMLParser.HTMLParser):
                         _log.log(35, 'Failed to instantiate PointByCoordinates; called it as PointByCoordinates(%r, %r). Discarding row. Error was:' % (latitude, longitude), exc_info=True)
                      else:
                         #Nothing went horribly wrong, so we save this result.
-                        node_ip = ip_make(station_number + ip_base)
+                        node_ip = ip_address_build(station_number + ip_base)
                         _log.log(20, 'Adding new station: (%s, %s)' % (node_ip, point))
                         self.results[node_ip] = point
          self.cell_caching = False

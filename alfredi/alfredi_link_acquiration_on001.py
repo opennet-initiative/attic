@@ -18,7 +18,7 @@
 from sets import ImmutableSet as frozenset
 import logging
 
-from address_structures import ip_make
+from gonium.ip_address import ip_address_build
 
 _log = logging.getLogger('link_acquiration')
 
@@ -27,7 +27,7 @@ def links_from_csv(infile):
    for line in infile:
       try:
          (src_node_string, dst_node_string, lq_string) = line.split(',')
-         (src_node, dst_node) = [ip_make(string) for string in (src_node_string, dst_node_string)]
+         (src_node, dst_node) = [ip_address_build(string) for string in (src_node_string, dst_node_string)]
          lq_float = float(lq_string)
       except ValueError:
          _log.log(35, 'Unable to process line %r. Discarding it. Error:' % (line,), exc_info=True)

@@ -25,7 +25,6 @@ import pprint
 import Image
 
 import pid_filing
-import address_structures
 
 _log = logging.getLogger()
 _log.setLevel(logging.DEBUG)
@@ -85,7 +84,7 @@ for node_id in node_coords.keys():
       lq = None
    for (output_unit, output_calls) in output_units:
       try:
-         output_unit.node_draw(node_coords[node_id], text=str(node_id.__tuple__()[-1]), lq=lq, node_ip=node_id)
+         output_unit.node_draw(node_coords[node_id], text=str(int(node_id) % 256), lq=lq, node_ip=node_id)
       except ValueError:
          _log.log(30, 'Failed to add node %r at %r. Error:' % (node_id, node_coords[node_id]), exc_info=True)
 
