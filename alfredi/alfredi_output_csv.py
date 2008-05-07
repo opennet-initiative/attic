@@ -20,7 +20,7 @@ from alfredi_color import LQColorMap
 class CSVFileWriter(LQColorMap):
    def __init__(self, color_mask='hsl(%(hue)d,100%%,50%%)', hsv_map_constant=240):
       self.color_mask = color_mask
-      self.hsv_map_constant = 240
+      self.hsv_map_constant = hsv_map_constant
       self.outdata = []
    
    def color_calculate(self, *args, **kwargs):
