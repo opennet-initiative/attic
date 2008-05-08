@@ -164,7 +164,8 @@ class KMLFileWriter:
 
    def markup_generate(self):
       color_set = set()
-      ne_tags = [x.markup_generate(color_set) for x in (self.nodetags + self.edgetags)]
+      ne_tags = ['<Folder id="nodes"><name>nodes</name>'] + [e.markup_generate(color_set) for e in self.nodetags] + ['</Folder>',
+      '<Folder id="edges"><name>edges</name>'] + [e.markup_generate(color_set) for e in self.edgetags] + ['</Folder>']
       
       color_style_tags = []
       for clq in color_set:
