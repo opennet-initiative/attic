@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Copyright 2006, 2007 Sebastian Hagen
+#Copyright 2006, 2007, 2008 Sebastian Hagen
 # This file is part of alfredi.
 
 # alfredi is free software; you can redistribute it and/or modify
