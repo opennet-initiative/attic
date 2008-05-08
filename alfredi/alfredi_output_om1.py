@@ -20,7 +20,7 @@ from alfredi_color import LQColorMap
 class OM1FileWriter(LQColorMap):
    fieldsep = '\t'
    linesep = '\n'
-   nf_header = fieldsep.join(('lat','lon','title','desc','icon','iconsize'))
+   nf_header = fieldsep.join(('lat','lon','title','desc','icon','iconSize'))
    ef_header = fieldsep.join(('lat1','lon1','lat2','lon2','ip1','ip2','lq','color'))
    
    def __init__(self, node_icon_urlmask, node_iconsize, color_mask='hsl(%(hue)d,100%%,50%%)', hsv_map_constant=240):
