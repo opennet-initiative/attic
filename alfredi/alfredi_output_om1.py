@@ -22,14 +22,14 @@ class OM1FileWriter(LQColorMap):
    linesep = '\n'
    nf_header = fieldsep.join(('lat','lon','title','desc','icon','iconsize'))
    ef_header = fieldsep.join(('lat1','lon1','lat2','lon2','ip1','ip2','lq','color'))
-   iconsize = 1
    
-   def __init__(self, node_icon_urlmask, color_mask='hsl(%(hue)d,100%%,50%%)', hsv_map_constant=240):
+   def __init__(self, node_icon_urlmask, node_iconsize, color_mask='hsl(%(hue)d,100%%,50%%)', hsv_map_constant=240):
       self.color_mask = color_mask
       self.hsv_map_constant = hsv_map_constant
       # syntax test
       node_icon_urlmask % {'name':'','color':''}
       self.node_icon_urlmask = node_icon_urlmask
+      self.node_iconsize = node_iconsize
       self.od_nodes = [self.nf_header]
       self.od_edges = [self.ef_header]
    
@@ -49,7 +49,7 @@ class OM1FileWriter(LQColorMap):
       else:
          o_lq = lq
 
-      self.od_nodes.append(self.fieldsep.join([str(e) for e in (coord.latitude, coord.longitude, node_ip, o_lq, self.node_icon_url_get(text,lq), self.iconsize)]))
+      self.od_nodes.append(self.fieldsep.join([str(e) for e in (coord.latitude, coord.longitude, node_ip, o_lq, self.node_icon_url_get(text,lq), self.node_iconsize)]))
    
    def edge_draw(self, coord1, coord2, lq, node1_ip, node2_ip):
       self.od_edges.append(self.fieldsep.join([str(e) for e in (coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude, node1_ip, node2_ip, lq, self.color_calculate(lq))]))

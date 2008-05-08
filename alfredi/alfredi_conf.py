@@ -98,7 +98,7 @@ output_unit_csv = (
 )
 
 output_unit_om1 = (
-   OM1FileWriter('http://www.opennet-initiative.de/marker/%(name)s/%(color)s.png'),
+   OM1FileWriter('http://www.opennet-initiative.de/marker/%(name)s/%(color)s.png', '20,35'),
    (
       (('output/alfredi_output_om1n.tsv','output/alfredi_output_om1e.tsv'),{}),
    )
