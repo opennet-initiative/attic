@@ -1,5 +1,5 @@
 # The olsr.org Optimized Link-State Routing daemon(olsrd)
-# Copyright (c) 2004, Andreas Tønnesen(andreto@olsr.org)
+# Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -35,18 +35,17 @@
 # to the project. For more information see the website or contact
 # the copyright holders.
 #
-# $Id: Makefile,v 1.15 2005/05/25 13:50:22 br1 Exp $
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_dd_ti
-PLUGIN_VER =	0.02
+PLUGIN_VER =	0.03
 
 TOPDIR =	../..
 include $(TOPDIR)/Makefile.inc
 
 default_target: $(PLUGIN_FULLNAME)
 
-$(PLUGIN_FULLNAME): $(OBJS)
+$(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 		$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 install:	$(PLUGIN_FULLNAME)
