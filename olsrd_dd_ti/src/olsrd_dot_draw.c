@@ -175,7 +175,7 @@ ipc_print_neigh_link(const struct neighbor_entry *neighbor)
          linkentrytext = get_link_entry_text(link, '\t', &lqbuffer1);
       }
   }
-  ipc_send_fmt("LL\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n", adr1, adr, (linkentrytext||"0\t0"), neighbor->status, neighbor->willingness, neighbor->is_mpr, neighbor->linkcount);
+  ipc_send_fmt("LL\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n", adr1, adr, (linkentrytext?linkentrytext:"0\t0"), neighbor->status, neighbor->willingness, neighbor->is_mpr, neighbor->linkcount);
 }
 
 static int
