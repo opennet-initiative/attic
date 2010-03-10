@@ -117,6 +117,7 @@ cat<<EOF
 <a id="switch2" href="#" onclick="document.getElementById('vpn_genkey_form').style.display='inline';this.style.display='none';" style="display:none;">anzeigen</a>
 EOF
 	fi
+base_aps_name="$(nvram get wifi_ipaddr | cut -d'.' -f3)-$(nvram get wifi_ipaddr | cut -d'.' -f4)"
 cat<<EOF
 
 <FORM ID="vpn_genkey_form" ACTION="on_vpn.html" CLASS="form" METHOD="POST">
@@ -138,10 +139,10 @@ cat<<EOF
 <TD><INPUT NAME="openssl_organizationalUnitName" SIZE="48" TYPE="TEXT" VALUE="$openssl_organizationalUnitName" $(if [ -n "$openssl_organizationalUnitName" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <TR TITLE="accesspunkt-name"><TD>Accesspoint-Name:</TD>
-<TD><INPUT NAME="openssl_commonName" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr | cut -d'.' -f4).aps.on" $(if [ -n "$openssl_commonName" ];then echo ' disabled="disabled"';fi)></TD>
+<TD><INPUT NAME="openssl_commonName" SIZE="48" TYPE="TEXT" VALUE="$base_aps_name.aps.on" $(if [ -n "$openssl_commonName" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <TR TITLE="email adresse"><TD>email-adresse:</TD>
-<TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="ap$(nvram get wifi_ipaddr | cut -d'.' -f4)@opennet-initiative.de" $(if [ -n "$openssl_EmailAddress" ];then echo ' disabled="disabled"';fi)></TD>
+<TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="ap$base_aps_name@opennet-initiative.de" $(if [ -n "$openssl_EmailAddress" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <tr><td></td></tr>
 <TR

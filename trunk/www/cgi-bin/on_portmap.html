@@ -67,10 +67,16 @@ EOF
 	echo -n "($on_gw"
 	case $on_gw in
 		192.168.0.254)
-		echo -n " = opennet.dnsalias.org"
+		echo -n " = titan.opennet-initiative.de"
 		;;
 		192.168.0.250)
-		#echo -n " = unbekannt"
+		echo -n " = nagare.opennet-initiative.de"
+		;;
+		192.168.0.247)
+		echo -n " = erina.opennet-initiative.de"
+		;;
+		192.168.0.244)
+		echo -n " = lohro.opennet-initiative.de"
 		;;
 		*)
 		;;
@@ -85,7 +91,12 @@ cat<<EOF
 </script>
 <!-- ************************************************************ -->
 EOF
-	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\."} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
+	base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\.|-"} /CN=/ && /aps.on/ {print $3}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
+	if [ "$base_addr" = "aps" ]; then
+		base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\.|-"} /CN=/ && /aps.on/ {print $2}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
+	else
+		base_addr=$(awk 'BEGIN {RS=" |/";FS="=|\\.|-"} /CN=/ && /aps.on/ {print $2*255+$3}' /etc/openvpn/opennet_user/on_aps.crt 2>/dev/null)
+	fi
 	if [ -z "$base_addr" ]; then base_addr=$(nvram get wifi_ipaddr | cut -d'.' -f4); fi
 	base_addr=$((10000+10*($base_addr-1)))
 cat<<EOF
