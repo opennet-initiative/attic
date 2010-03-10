@@ -11,7 +11,7 @@ write_config()
 {
 	cat>/var/etc/dnsmasq.conf<<EOF
 # filter what we send upstream
-bogus-priv
+#bogus-priv
 filterwin2k
 
 # allow /etc/hosts and dhcp lookups via *.lan

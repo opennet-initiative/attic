@@ -16,7 +16,7 @@ recent=$(ipkg list_installed opennet-firmware | awk 'BEGIN {FS="-|\\."} /opennet
 
 awk '
 	BEGIN {RS="href=\"|\">";FS="_|-|\\."}
-	/opennet-firmware/ && /ipkg/ && $0 !~ "info|md5|pre|se505" {
+	/opennet-firmware/ && /ipkg/ && $0 !~ "info|md5|pre|se505|</a>" {
 		printf("%03d%03d%03d%03d:%s\n", $3, $4, $5, $6, $0)
 	}' /tmp/firmware-packages.html | \
 		sort -nr >/tmp/firmware-packages
@@ -30,3 +30,4 @@ recent=$(ipkg list_installed opennet-firmware | awk 'BEGIN {FS="-|\\."} /opennet
 if [ $best -gt $recent ]; then
 	echo "firmware_update available" >/tmp/firmware-update-available
 else rm -f /tmp/firmware-update-available; fi
+
