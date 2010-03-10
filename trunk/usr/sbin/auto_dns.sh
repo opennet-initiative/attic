@@ -15,12 +15,12 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 
 	lan_dns=$(nvram get $DNS_VAR)
 	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
-	# usual gateways are 192.168.0.X, reachable over batman they have 192.168.43.X
+	# usual gateways are 192.168.0.X
 	new_dns=$(
 		ip route show table all type unicast \
 		| awk '
 			BEGIN { max = -1; }
-			$1 ~ "^'"$ip_classB"'\\.(0|43)\\.[1-9][0-9]*$" {
+			$1 ~ "^'"$ip_classB"'\\.0\\.[1-9][0-9]*$" {
 			if ($0 ~ "metric") metric=$NF; else metric=10;
 				if ("'$ip_odd'" == "0") a[metric] = a[metric] " " $1;
 				else a[metric] = $1 " " a[metric];

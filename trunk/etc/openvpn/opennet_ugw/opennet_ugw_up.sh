@@ -16,6 +16,3 @@ ip route add throw $TAPNET_PRE table 4 2>/dev/null
 filename=${config#/etc/openvpn/}
 filename=/tmp/${filename%.conf}_$dev.txt
 echo $remote_1 > $filename	# a short message for the web frontend
-
-# restart batmand to get the new interface recognized
-/etc/init.d/S54batmand restart

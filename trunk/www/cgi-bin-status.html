@@ -127,162 +127,13 @@ document.onkeypress = help;
 EOF
 
 WLDEV=$(nvram get wl0_ifname)
-BATDEV=$(nvram get wifi_ifname):1
-BATMAN="$(ps | grep batmand | grep -v grep)"
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
 if [ -n "$QUERY_STRING" ]; then
-eval $(echo "${QUERY_STRING%%[^%&=+-:@-_a-z~]*}"|awk -F'&' '{for(i=1;i<=NF;i++)if($i~/^(post_overview|post_route|post_scan|post_olsr|post_batman)=/){print $i}}')
+eval $(echo "${QUERY_STRING%%[^%&=+-:@-_a-z~]*}"|awk -F'&' '{for(i=1;i<=NF;i++)if($i~/^(post_overview|post_route|post_scan|post_olsr)=/){print $i}}')
 fi
-if [ -n "$post_batman" ]; then
-
-cat<<EOF
-<H1>Status: B.A.T.M.A.N.</H1>
-
-<FORM ACTION="cgi-bin-status.html" METHOD="POST">
-<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="form">
-<TBODY>
-<TR class="selector">
-<TD><INPUT NAME="post_overview" TITLE="Allgemeine Eigenschaften des Gerätes in einer Übersicht anzeigen" TYPE="SUBMIT" VALUE="Übersicht">   <INPUT NAME="post_route" TITLE="Die aktuelle Routingtabelle des Gerätes anzeigen" TYPE="SUBMIT" VALUE="Routen">
-EOF
-
-if [ "$(nvram get wl0_mode)" != "ap" ];then
-
-cat<<EOF
- 
-<INPUT NAME="post_scan" TITLE="Scan nach empfangbaren WLAN-Stationen ausführen" TYPE="SUBMIT" VALUE="WLAN Suche">
-EOF
-
-fi
-if [ "$(nvram get ff_httpinfo)" != "0" ];then
-
-cat<<EOF
- 
-<INPUT NAME="post_olsr" TITLE="OLSR Statusseite anzeigen" TYPE="SUBMIT" VALUE="OLSR-Info">
-EOF
-fi
-
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-
-<INPUT NAME="post_batman" TITLE="B.A.T.M.A.N. Statusseite anzeigen" TYPE="SUBMIT" VALUE="B.A.T.M.A.N.-Info">
-EOF
-
-fi
-
-cat<<EOF
-</TD>
-</TR>
-<TR>
-<TD>
-<h2>Version</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD>$(batmand -c -b -d1 | awk '{sub("^.*\\[",""); sub("].*$",""); print; exit}')
-</TD></TR>
-<TR>
-<TD>commandline: $(batmand -c)
-</TD></TR>
-</table>
-
-<h2>Interfaces</h2>
-EOF
-	for iface in $(batmand -c | awk '{gsub("-"," "); print}'); do
-		if [ -n "$(ifconfig $iface 2>/dev/null)" ]; then
-cat<<EOF
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<tr><th colspan=3>$iface</th></tr>
-<tr>
-<td>IP: $(ifconfig $iface|awk 'sub("inet addr:","") {print $1}')</td>
-<td>MASK: $(ifconfig $iface|awk 'sub("Mask:","") {print $4}')</td>
-<td>BCAST: $(ifconfig $iface|awk 'sub("Bcast:","") {print $3}')</td>
-</tr>
-</table>
-EOF
-		fi;
-	done;
-cat<<EOF
-
-<h2>Originator-Table</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-batmand -c -b -d1 | awk '{sub("\\[B\\.A\\.T\\.M\\.A\\.N\\..*",""); print}'
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-<h2>Gateway-Table</h2>
-(sollte leer sein, Opennet-Gateways werden nicht über B.A.T.M.A.N. ausgewählt)
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-batmand -c -b -d2 | awk '{sub("\\[B\\.A\\.T\\.M\\.A\\.N\\..*",""); print}'
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-<h2>Routing-Table Networks</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-ip route show table $(batmand -c -b -i | awk 'BEGIN{FS="="} /rt_table_networks/ {print $2}')
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-<h2>Routing-Table Hosts</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-ip route show table $(batmand -c -b -i | awk 'BEGIN{FS="="} /rt_table_hosts/ {print $2}')
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-<h2>Routing-Table Unreachable</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-ip route show table $(batmand -c -b -i | awk 'BEGIN{FS="="} /rt_table_unreach/ {print $2}')
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-<h2>Routing-Table Tunnel</h2>
-<table width="100%" border=1 cellspacing=0 cellpadding=0>
-<TR>
-<TD><pre>
-EOF
-ip route show table $(batmand -c -b -i | awk 'BEGIN{FS="="} /rt_table_tunnel/ {print $2}')
-cat<<EOF
-</pre>
-</td>
-</TR>
-</table>
-
-</TD>
-</TR>
-</TBODY>
-</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
-EOF
-elif [ -n "$post_olsr" ]; then
+if [ -n "$post_olsr" ]; then
 
 cat<<EOF
 <H1>Status: OLSR</H1>
@@ -307,13 +158,6 @@ if [ "$(nvram get ff_httpinfo)" != "0" ];then
 cat<<EOF
  
 <INPUT NAME="post_olsr" TITLE="OLSR Statusseite anzeigen" TYPE="SUBMIT" VALUE="OLSR-Info">
-EOF
-
-fi
-
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-<INPUT NAME="post_batman" TITLE="B.A.T.M.A.N. Statusseite anzeigen" TYPE="SUBMIT" VALUE="B.A.T.M.A.N.-Info">
 EOF
 
 fi
@@ -368,12 +212,6 @@ if [ "$(nvram get ff_httpinfo)" != "0" ];then
 cat<<EOF
  
 <INPUT NAME="post_olsr" TITLE="OLSR Statusseite anzeigen" TYPE="SUBMIT" VALUE="OLSR-Info">
-EOF
-fi
-
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-<INPUT NAME="post_batman" TITLE="B.A.T.M.A.N. Statusseite anzeigen" TYPE="SUBMIT" VALUE="B.A.T.M.A.N.-Info">
 EOF
 
 fi
@@ -450,12 +288,6 @@ if [ "$(nvram get ff_httpinfo)" != "0" ];then
 cat<<EOF
  
 <INPUT NAME="post_olsr" TITLE="OLSR Statusseite anzeigen" TYPE="SUBMIT" VALUE="OLSR-Info">
-EOF
-fi
-
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-<INPUT NAME="post_batman" TITLE="B.A.T.M.A.N. Statusseite anzeigen" TYPE="SUBMIT" VALUE="B.A.T.M.A.N.-Info">
 EOF
 
 fi
@@ -565,13 +397,6 @@ cat<<EOF
  
 <INPUT NAME="post_olsr" TITLE="OLSR Statusseite anzeigen" TYPE="SUBMIT" VALUE="OLSR-Info">
 EOF
-fi
-
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-
-<INPUT NAME="post_batman" TITLE="B.A.T.M.A.N. Statusseite anzeigen" TYPE="SUBMIT" VALUE="B.A.T.M.A.N.-Info">
-EOF
 
 fi
 
@@ -580,29 +405,11 @@ cat<<EOF
 </TR>
 
 <TR>
-<TD>
-EOF
-if [ -n "$BATMAN" ]; then echo "IP Adresse (OLSR):";
-else echo "IP Adresse:"
-fi
-cat<<EOF
-</TD>
+<TD>IP Adresse:</TD>
 <TD>IP: $(ifconfig $WLDEV|awk 'sub("inet addr:","") {print $1}'),
 Maske: $(ifconfig $WLDEV|awk 'sub("Mask:","") {print $4}'),
 MAC: $(ifconfig $WLDEV|awk 'sub("HWaddr","") {print $4}')</TD>
 </TR>
-
-EOF
-if [ -n "$BATMAN" ]; then
-cat<<EOF
-<TR>
-<TD>IP Adresse (B.A.T.M.A.N.):</TD>
-<TD>IP: $(ifconfig $BATDEV|awk 'sub("inet addr:","") {print $1}'),
-Maske: $(ifconfig $BATDEV|awk 'sub("Mask:","") {print $4}')</TD>
-</TR>
-EOF
-fi
-cat<<EOF
 
 <TR>
 <TD>WLAN-Status:</TD>
@@ -657,13 +464,7 @@ cat<<EOF
 
 <TR>
 
-<TD>
-EOF
-if [ -n "$BATMAN" ]; then echo "Nachbarn (OLSR):";
-else echo "Nachbarn:"
-fi
-cat<<EOF
-</TD>
+<TD>Nachbarn:</TD>
 <TD>
 EOF
 
@@ -690,28 +491,9 @@ cat<<EOF
 EOF
 
 fi
-if [ -n "$BATMAN" ]; then
+
 cat<<EOF
-<TR>
-<TD>Nachbarn (B.A.T.M.A.N.):</TD>
-<TD>
-<table frame=void border=0 cellspacing=0 cellpadding=1>
-<TR>
-<TH>IP</TH><TH>LinkQuality (TQ)</TH>
-</TR>
-EOF
-batmand -c -b -d 1 | awk 'BEGIN{FS="\\)? +\\(?";tq=0}
-		!/WARNING/ {
-		if (tq==0) {sub("#/",""); tq=$3;
-		}
-		if ($1 == $3) printf("<TR><TD><a href=\"http://%s/cgi-bin-status.html\">%s</a></TD><TD>%.2f</TD></TR>",$1,$1,$2/tq);}'
-cat<<EOF
-</table>
-</TD>
-</TR>
-EOF
-fi
-cat<<EOF
+
 <TR>
 <TD>OpenVPN:</TD>
 <TD>

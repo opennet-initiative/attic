@@ -15,9 +15,9 @@ while [ "$gw_addrs" = "" ]; do
 		on_gwaddrs=$(nvram get on_gwaddrs)
 	else
 		ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
-		# usual gateways are 192.168.0.X, reachable over batman they have 192.168.43.X
+		# usual gateways are 192.168.0.X
 		on_gwaddrs=$(ip route show table all type unicast \
-			| awk '$1 ~ "^'"$ip_classB"'\\.(0|43)\\.[1-9][0-9]*$" { print $1 }')
+			| awk '$1 ~ "^'"$ip_classB"'\\.0\\.[1-9][0-9]*$" { print $1 }')
 		gw_addrs="$(nvram get on_gw)";
 	fi;
 	

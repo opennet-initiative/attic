@@ -286,6 +286,8 @@ fi
 ###############################################################################
 ###############################################################################
 ### bugfixes/adaptions (overall relevance) 
+# obsolete vars since release-0.14ipkg-pre2
+nvram unset on_batman
 
 # obsolete vars since release-0.11ipkg-3
 nvram unset on_wldhcp_num
