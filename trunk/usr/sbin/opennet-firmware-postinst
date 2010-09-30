@@ -59,13 +59,13 @@ if [ -z $(nvram show 2>/dev/null | grep wl0_on_init_override) ] ; then
 		nvram set wl0_ssid=olsr.opennet-initiative.de
 		nvram set wl0_channel=1
 		$logit "  - changed ssid => olsr.opennet-initiative.de, channel 1"
-		nvram unset ff_bssid  # set default later...
+		nvram unset wl0_bssid  # set default later...
 	fi	
 
 	# set bssid (if not set yet)
-	bssid=$(nvram get ff_bssid)
+	bssid=$(nvram get wl0_bssid)
 	if [ -z "$bssid" ]; then
-		nvram set ff_bssid="02:ca:ff:ee:ba:be"
+		nvram set wl0_bssid="02:ca:ff:ee:ba:be"
 		$logit "  - changed bssid => 02:ca:ff:ee:ba:be"
 	fi
 fi

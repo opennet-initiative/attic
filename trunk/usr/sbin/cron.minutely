@@ -25,7 +25,7 @@ ostat=$(cat /var/run/status.$wdev 2>&-)
 echo $wstat>/var/run/status.$wdev
 eval $(/usr/sbin/wl -i $wdev status|sed -e"s/^Supported //;s/: \+\([^	]*\)/='\1';/g")
 rand=$(dd if=/dev/urandom bs=2 count=1 2>&-|hexdump|if read line;then echo 0x${line#* };fi)
-ff_bssid=$(nvram get ff_bssid|sed -e "y/abcdef/ABCDEF/")
+wl0_bssid=$(nvram get wl0_bssid|sed -e "y/abcdef/ABCDEF/")
 BSSID=$(echo $BSSID|sed -e "y/abcdef/ABCDEF/")
 ff_ping=$(nvram get ff_ping)
 
@@ -34,7 +34,7 @@ if [ 1 -eq $(( $rand % 1234 )) ] || [ -z "$(pidof -s olsrd)" ] || [ -f /tmp/rest
 	logger -t cron.minutely "restarting olsrd"
 	rm -rf /tmp/restart_olsrd
 	/etc/init.d/*olsrd restart
-elif [ "" != "$ostat" ] && [ "$ostat" = "$wstat" ] || [ "Ad Hoc" = "$Mode" ] && [ "$Channel" != "$(nvram get wl0_channel)" ] || [ "Ad Hoc" = "$Mode" ] && [ -n "$ff_bssid" ] && [ "$BSSID" != "$ff_bssid" ];then
+elif [ "" != "$ostat" ] && [ "$ostat" = "$wstat" ] || [ "Ad Hoc" = "$Mode" ] && [ "$Channel" != "$(nvram get wl0_channel)" ] || [ "Ad Hoc" = "$Mode" ] && [ -n "$wl0_bssid" ] && [ "$BSSID" != "$wl0_bssid" ];then
 	# Wifi dead or configuration wrong? Try restart
 	logger -t cron.minutely "restarting wifi"
 	wifi up

@@ -92,7 +92,7 @@ TITLE="Die ESSID bestimmt, in welchem Funknetz der Access Point teilnimmt. Alle 
 <TR                                                                             
 TITLE="Gib eine gültige BSSID ein. Diese Einstellung nie ändern, es sei denn, Du weisst, was Du tust."> 
 <TD>BSSID:</TD>                                                                 
-<TD><INPUT NAME="ff_bssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_bssid)"></TD> 
+<TD><INPUT NAME="wl0_bssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_bssid)"></TD> 
 </TR>
 <TR
 TITLE="Gib eine Kanalnummer von 1 bis 13 ein. In einigen Ländern sind die Kanäle 12 und 13 nicht erlaubt. In Japan darf man den Kanal 14 benutzen.">
@@ -255,7 +255,7 @@ else
 eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
 DIRTY=
 if [ -n "$post_wifi" ]; then
-for V in wifi_proto wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns on_pppoe_keepdns lan_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu ff_bssid; do
+for V in wifi_proto wl0_ssid wl0_channel wifi_ipaddr wifi_netmask on_autodns on_pppoe_keepdns lan_dns wl0_antdiv wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts ff_txant ff_txpwr ff_mtu wl0_bssid; do
 eval "C=\$$V"
 C=$(unescape $C)
 if [ "$V" = "lan_dns" ]; then
