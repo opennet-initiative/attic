@@ -4,25 +4,31 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Entity
-public class DummyEntity {
+public class DummyEntity
+{
 
 	@Id
 	protected long id;
-	public void setId(long id) {
+
+	public void setId(long id)
+	{
 		this.id = id;
 	}
 
 	protected String payload;
 
-    public String getPayload() {
+	public String getPayload()
+	{
 		return payload;
 	}
 
-	public void setPayload(String payload) {
+	public void setPayload(String payload)
+	{
 		this.payload = payload;
 	}
 
-	public long getId() {
+	public long getId()
+	{
 		return id;
 	}
 
