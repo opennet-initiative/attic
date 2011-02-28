@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 import javax.faces.bean.ManagedBean;
 import javax.faces.event.ActionEvent;
 
-import de.oni.portal.configuration.Config;
 import de.oni.portal.persistence.PersistenceProvider;
 
 @ManagedBean
@@ -16,7 +15,6 @@ public class DDLTest {
 		System.out.println("xxxx");
 		try
 		{
-			Config.getString("");
 			Method m = PersistenceProvider.class.getDeclaredMethod("generateSqlScripts", new Class[] {});
 			m.setAccessible(true);
 			m.invoke(null, new Object[] {});

@@ -3,10 +3,10 @@
 	<persistence-unit name="oni_management_portal" transaction-type="RESOURCE_LOCAL">
 		<class>de.oni.portal.entities.DummyEntity</class>
 		<properties>
-			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://kuechenkiste.home.xx/oni_portal_test"/>
+			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost/dummy"/>
 			<property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
-			<property name="javax.persistence.jdbc.user" value="moh"/>
-			<property name="javax.persistence.jdbc.password" value="moh"/>
+			<property name="javax.persistence.jdbc.user" value="user"/>
+			<property name="javax.persistence.jdbc.password" value="pwd"/>
 		</properties>
 	</persistence-unit>
 </persistence>

@@ -53,11 +53,11 @@ public class Config
 		}
 	}
 	
-	public static String getString(String key)
+	public static String getString(String key, String defaultValue)
 	{
 		synchronized (props)
 		{
-			return props.getProperty(key);
+			return props.getProperty(key, defaultValue);
 		}
 	}
 

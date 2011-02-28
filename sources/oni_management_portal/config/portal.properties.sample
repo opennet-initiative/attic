@@ -1,6 +1,16 @@
 ### put this file into your ${catalina_home}/conf directory ###
 
+# logging configuration
 log4j.rootLogger=debug, stdout
 log4j.appender.stdout=org.apache.log4j.ConsoleAppender
 log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 log4j.appender.stdout.layout.ConversionPattern=%5p [%t] (%F:%L) - %m%n
+
+# where to put the generated sql files
+portal.persistence.sqlscripts.targetfolder=e:/temp
+
+# portal database configuration
+portal.persistence.jdbc.url=jdbc:mysql://kuechenkiste.home.xx/oni_portal_test
+portal.persistence.jdbc.driver=com.mysql.jdbc.Driver
+portal.persistence.jdbc.user=moh
+portal.persistence.jdbc.password=moh
