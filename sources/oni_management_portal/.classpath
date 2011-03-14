@@ -25,5 +25,6 @@
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/richfaces-components-ui-4.0.0.20110227-CR1.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/richfaces-core-api-4.0.0.20110227-CR1.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/richfaces-core-impl-4.0.0.20110227-CR1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/validation-api-1.0.0.GA.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -10,9 +10,9 @@ import javax.persistence.Id;
 public class Person
 {
 
-	enum PersonStatus { Interested, Normal, Active }
+	public enum PersonStatus { Interested, Normal, Active }
 	
-	enum PersonRole
+	public enum PersonRole
 	{
 		Admin(1), Crew(2), Csr(4), Executive(8);
 	

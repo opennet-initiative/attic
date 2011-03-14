@@ -10,10 +10,96 @@
 
 <ui:composition template="/WEB-INF/template/template.xhtml">
 	<ui:define name="body">
-	<h:form>
-		<rich:calendar />
-		<h:commandButton actionListener="#{dDLTest.listen}"></h:commandButton>
+		<h:form>
+			<rich:calendar />
+			<h:commandButton value="generate sql scripts" actionListener="#{testBean.createScripts}"></h:commandButton>
+			<h:commandButton value="create dummy person entity" actionListener="#{testBean.createPerson}"></h:commandButton>
 		</h:form>
+		<br/>
+		<rich:extendedDataTable value="#{personController.allPersons}" var="person" id="personTable" selectionMode="single" frozenColumns="2">
+		   <f:facet name="header">
+		      <h:outputText value="oni members" />
+		   </f:facet>
+		   <rich:column sortBy="#{person.lastName}" id="colLastName">
+		      <f:facet name="header">
+		        <h:outputText value="lastname" />
+				<h:outputLink style="margin-left: 5px;" onclick="#{rich:component('personTable')}.sort('colLastName')" value="#"><h:graphicImage style="border: none;" library="images" name="hmenu-asc.gif" alt="sort ascending"/></h:outputLink>
+		      </f:facet>
+		      <h:outputText value="#{person.lastName}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="firstname" />
+		      </f:facet>
+		      <h:outputText value="#{person.firstName}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="alias" />
+		      </f:facet>
+		      <h:outputText value="#{person.pseudonym}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="address" />
+		      </f:facet>
+		      <h:outputText value="#{person.address}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="zip" />
+		      </f:facet>
+		      <h:outputText value="#{person.zipCode}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="city" />
+		      </f:facet>
+		      <h:outputText value="#{person.city}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="email" />
+		      </f:facet>
+		      <h:outputText value="#{person.EMail}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="acc" />
+		      </f:facet>
+		      <h:outputText value="#{person.accountNumber}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="bnk" />
+		      </f:facet>
+		      <h:outputText value="#{person.bankCode}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="holder" />
+		      </f:facet>
+		      <h:outputText value="#{person.accountHolder}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="status" />
+		      </f:facet>
+		      <h:outputText value="#{person.status}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="roles" />
+		      </f:facet>
+		      <h:outputText value="#{person.roles}" />
+		   </rich:column>
+		   <rich:column>
+		      <f:facet name="header">
+		         <h:outputText value="remark" />
+		      </f:facet>
+		      <h:outputText value="#{person.remark}" />
+		   </rich:column>
+		</rich:extendedDataTable>
 	</ui:define>
 </ui:composition>
 </html>
