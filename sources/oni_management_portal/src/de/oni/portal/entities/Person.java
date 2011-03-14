@@ -1,5 +1,7 @@
 package de.oni.portal.entities;
 
+import java.util.EnumSet;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -9,7 +11,23 @@ public class Person
 {
 
 	enum PersonStatus { Interested, Normal, Active }
-	enum PersonRole { Admin, Crew, Csr, Executive }
+	
+	enum PersonRole
+	{
+		Admin(1), Crew(2), Csr(4), Executive(8);
+	
+		private final int internalValue;
+		
+		PersonRole(int internalValue)
+		{
+			this.internalValue = internalValue;
+		}
+		
+		int internalValue()
+		{
+			return this.internalValue;
+		}
+	}
 
 	@Id
 	@GeneratedValue
@@ -28,9 +46,10 @@ public class Person
 	protected String accountHolder;
 	
 	protected String remark;
-	protected String alias;
+	protected String pseudonym;
 	
 	protected PersonStatus status;
+	protected int roles;
 
 	public String getDistinguishedName()
 	{
@@ -142,14 +161,14 @@ public class Person
 		this.remark = remark;
 	}
 
-	public String getAlias()
+	public String getPseudonym()
 	{
-		return alias;
+		return pseudonym;
 	}
 
-	public void setAlias(String alias)
+	public void setPseudonym(String pseudonym)
 	{
-		this.alias = alias;
+		this.pseudonym = pseudonym;
 	}
 
 	public long getId()
@@ -166,4 +185,52 @@ public class Person
 	{
 		this.status = status;
 	}
+	
+	public void setRoles(EnumSet<PersonRole> roles)
+	{
+		this.roles = 0;
+		for (PersonRole r : roles)
+		{
+			this.roles |= r.internalValue();
+		}
+	}
+	
+	public EnumSet<PersonRole> getRoles()
+	{
+		EnumSet<PersonRole> r = EnumSet.noneOf(PersonRole.class);
+		for (PersonRole pr : PersonRole.values())
+		{
+			if ((this.roles & pr.internalValue()) == pr.internalValue())
+			{
+				r.add(pr);
+			}
+		}
+		return r;
+	}
+	
+	public boolean hasRole(PersonRole role)
+	{
+		return (this.roles & role.internalValue()) == role.internalValue();
+	}
+	
+	public void addRole(PersonRole role)
+	{
+		EnumSet<PersonRole> roles = getRoles();
+		if (!roles.contains(role))
+		{
+			roles.add(role);
+			setRoles(roles);
+		}
+	}
+	
+	public void removeRole(PersonRole role)
+	{
+		EnumSet<PersonRole> roles = getRoles();
+		if (roles.contains(role))
+		{
+			roles.remove(role);
+			setRoles(roles);
+		}
+	}
+	
 }
