@@ -27,4 +27,34 @@ public class PersonStorageService
 		}
 	}
 
+	public void deletePerson(long personId) {
+		EntityManager em = PersistenceProvider.getEntityManager();
+		try
+		{
+			em.getTransaction().begin();
+			Person person = em.find(Person.class, personId);
+			em.remove(person);
+			em.getTransaction().commit();
+			log.info(String.format("removed person %s", person));
+		} finally 
+		{
+			em.close();
+		}
+	}
+
+	public void deletePerson(Person p)
+	{
+		EntityManager em = PersistenceProvider.getEntityManager();
+		try
+		{
+			em.getTransaction().begin();
+			em.remove(p);
+			em.getTransaction().commit();
+			log.info(String.format("removed person %s", p));
+		} finally 
+		{
+			em.close();
+		}
+	}
+
 }

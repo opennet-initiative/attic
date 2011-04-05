@@ -20,6 +20,14 @@
 		   <f:facet name="header">
 		      <h:outputText value="oni members" />
 		   </f:facet>
+		   <rich:column>
+ 				<a4j:commandLink styleClass="no-decor" execute="@this"
+                    render="@none" oncomplete="#{rich:component('confirmPane')}.show()">
+                    <h:graphicImage library="images" name="icons/delete.gif" alt="delete" />
+                    <a4j:param value="#{person.id}"
+                        assignTo="#{personController.currentPersonIndex}" />
+                </a4j:commandLink>
+		   </rich:column>
 		   <rich:column sortBy="#{person.lastName}" id="colLastName">
 		      <f:facet name="header">
 		        <h:outputText value="lastname" />
@@ -100,6 +108,17 @@
 		      <h:outputText value="#{person.remark}" />
 		   </rich:column>
 		</rich:extendedDataTable>
+
+		<a4j:jsFunction name="remove" action="#{personController.remove}"
+            render="personTable" execute="@this"
+            oncomplete="#{rich:component('confirmPane')}.hide();" />
+
+		<rich:popupPanel id="confirmPane" autosized="true">
+        	Are you sure you want to delete the row?
+        	<a4j:commandButton value="Cancel" onclick="#{rich:component('confirmPane')}.hide(); return false;" />
+        	<a4j:commandButton value="Delete" onclick="remove(); return false;" />
+	    </rich:popupPanel>
+
 	</ui:define>
 </ui:composition>
 </html>
