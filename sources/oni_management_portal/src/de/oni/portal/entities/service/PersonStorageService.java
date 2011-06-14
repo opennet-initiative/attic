@@ -18,7 +18,7 @@ public class PersonStorageService
 		try
 		{
 			em.getTransaction().begin();
-			em.persist(p);
+			em.merge(p);
 			em.getTransaction().commit();
 			log.info(String.format("stored person %s", p));
 		} finally 

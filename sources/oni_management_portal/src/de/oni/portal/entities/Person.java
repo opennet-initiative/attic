@@ -1,10 +1,14 @@
 package de.oni.portal.entities;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumSet;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 public class Person
@@ -23,7 +27,7 @@ public class Person
 			this.internalValue = internalValue;
 		}
 		
-		int internalValue()
+		public int getInternalValue()
 		{
 			return this.internalValue;
 		}
@@ -36,6 +40,10 @@ public class Person
 
 	protected String firstName;
 	protected String lastName;
+	
+	@Temporal(TemporalType.DATE)
+	protected Date dateOfJoining;
+
 	protected String address;
 	protected String zipCode;
 	protected String city;
@@ -43,6 +51,7 @@ public class Person
 	
 	protected String accountNumber;
 	protected String bankCode;
+	protected String bankName;
 	protected String accountHolder;
 	
 	protected String remark;
@@ -79,6 +88,14 @@ public class Person
 	public void setLastName(String lastName)
 	{
 		this.lastName = lastName;
+	}
+	
+	public Date getDateOfJoining() {
+		return dateOfJoining;
+	}
+
+	public void setDateOfJoining(Date dateOfJoining) {
+		this.dateOfJoining = dateOfJoining;
 	}
 
 	public String getAddress()
@@ -141,6 +158,14 @@ public class Person
 		this.bankCode = bankCode;
 	}
 
+	public String getBankName() {
+		return bankName;
+	}
+
+	public void setBankName(String bankName) {
+		this.bankName = bankName;
+	}
+
 	public String getAccountHolder()
 	{
 		return accountHolder;
@@ -185,34 +210,53 @@ public class Person
 	{
 		this.status = status;
 	}
-	
+
 	public void setRoles(EnumSet<PersonRole> roles)
 	{
 		this.roles = 0;
 		for (PersonRole r : roles)
 		{
-			this.roles |= r.internalValue();
+			this.roles |= r.getInternalValue();
 		}
 	}
-	
+
 	public EnumSet<PersonRole> getRoles()
 	{
 		EnumSet<PersonRole> r = EnumSet.noneOf(PersonRole.class);
 		for (PersonRole pr : PersonRole.values())
 		{
-			if ((this.roles & pr.internalValue()) == pr.internalValue())
+			if ((this.roles & pr.getInternalValue()) == pr.getInternalValue())
 			{
 				r.add(pr);
 			}
 		}
 		return r;
 	}
-	
+
+	public void setRolesStrings(String[] roles)
+	{
+		EnumSet<PersonRole> rolesSet = EnumSet.noneOf(PersonRole.class);
+		for (String role : roles)
+		{
+			rolesSet.add(PersonRole.valueOf(role));
+		}
+		setRoles(rolesSet);
+	}
+
+	public String[] getRolesStrings()
+	{
+		ArrayList<String> rolesList = new ArrayList<String>();
+		for (PersonRole role : getRoles()) {
+			rolesList.add(role.name());
+		}
+		return rolesList.toArray(new String[]{});
+	}
+
 	public boolean hasRole(PersonRole role)
 	{
-		return (this.roles & role.internalValue()) == role.internalValue();
+		return (this.roles & role.getInternalValue()) == role.getInternalValue();
 	}
-	
+
 	public void addRole(PersonRole role)
 	{
 		EnumSet<PersonRole> roles = getRoles();
@@ -232,5 +276,4 @@ public class Person
 			setRoles(roles);
 		}
 	}
-	
 }
