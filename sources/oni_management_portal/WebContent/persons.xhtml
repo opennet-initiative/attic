@@ -70,6 +70,12 @@
 			</rich:column>
 			<rich:column>
 				<f:facet name="header">
+					<h:outputText value="date of joining" />
+				</f:facet>
+				<h:outputText value="#{person.dateOfJoining}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
 					<h:outputText value="address" />
 				</f:facet>
 				<h:outputText value="#{person.address}" />
@@ -103,6 +109,12 @@
 					<h:outputText value="bnk" />
 				</f:facet>
 				<h:outputText value="#{person.bankCode}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="bnkName" />
+				</f:facet>
+				<h:outputText value="#{person.bankName}" />
 			</rich:column>
 			<rich:column>
 				<f:facet name="header">
@@ -155,6 +167,9 @@
 					<h:outputText value="distinguishedName" />
 					<h:inputText value="#{personController.editedPerson.distinguishedName}" />
 					<h:panelGroup />
+					<h:outputText value="dateOfJoining" />
+					<rich:calendar value="#{personController.editedPerson.dateOfJoining}" />
+					<h:panelGroup />
 					<h:outputText value="address" />
 					<h:inputText value="#{personController.editedPerson.address}" />
 					<h:panelGroup />
@@ -172,6 +187,9 @@
 					<h:panelGroup />
 					<h:outputText value="bankCode" />
 					<h:inputText value="#{personController.editedPerson.bankCode}" />
+					<h:panelGroup />
+					<h:outputText value="bankName" />
+					<h:inputText value="#{personController.editedPerson.bankName}" />
 					<h:panelGroup />
 					<h:outputText value="accountholder" />
 					<h:inputText value="#{personController.editedPerson.accountHolder}" />
