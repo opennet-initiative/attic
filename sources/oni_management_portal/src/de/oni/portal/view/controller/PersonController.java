@@ -15,6 +15,7 @@ public class PersonController
 {
 
 	private long currentPersonIndex;
+	private Person editedPerson;
 	
 	public Collection<Person> getAllPersons()
 	{
@@ -31,5 +32,13 @@ public class PersonController
 	
 	public void remove() {
 		new PersonStorageService().deletePerson(currentPersonIndex);
+	}
+
+	public void setEditedPerson(Person editedPerson) {
+		this.editedPerson = editedPerson;
+	}
+
+	public Person getEditedPerson() {
+		return editedPerson;
 	}
 }

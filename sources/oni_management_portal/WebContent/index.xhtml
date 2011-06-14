@@ -27,6 +27,13 @@
                     <a4j:param value="#{person.id}"
                         assignTo="#{personController.currentPersonIndex}" />
                 </a4j:commandLink>
+                 <a4j:commandLink styleClass="no-decor" render="editGridd"
+                    execute="@this" oncomplete="#{rich:component('editPane')}.show()">
+                    <h:graphicImage library="images" name="icons/edit.gif" alt="edit"/>
+                    <a4j:param value="#{person.id}"
+                        assignTo="#{personController.currentPersonIndex}" />
+                    <f:setPropertyActionListener target="#{personController.editedPerson}" value="#{person}" />
+                </a4j:commandLink>
 		   </rich:column>
 		   <rich:column sortBy="#{person.lastName}" id="colLastName">
 		      <f:facet name="header">
@@ -118,6 +125,58 @@
         	<a4j:commandButton value="Cancel" onclick="#{rich:component('confirmPane')}.hide(); return false;" />
         	<a4j:commandButton value="Delete" onclick="remove(); return false;" />
 	    </rich:popupPanel>
+	    
+	    <rich:popupPanel header="Edit Person" id="editPane" domElementAttachment="parent" width="500" height="600">
+            <h:panelGrid columns="3" id="editGridd">
+                <h:outputText value="id" />
+                <h:outputText value="#{personController.editedPerson.id}" />
+                <h:panelGroup />
+                <h:outputText value="firstName" />
+                <h:inputText value="#{personController.editedPerson.firstName}" />
+                <h:panelGroup />
+                <h:outputText value="lastName" />
+                <h:inputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="distinguishedName" />
+                <h:inputText value="#{personController.editedPerson.distinguishedName}" />
+                <h:panelGroup />
+                <h:outputText value="address" />
+                <h:inputText value="#{personController.editedPerson.address}" />
+                <h:panelGroup />
+                <h:outputText value="zipcode" />
+                <h:inputText value="#{personController.editedPerson.zipCode}" />
+                <h:panelGroup />
+                <h:outputText value="city" />
+                <h:inputText value="#{personController.editedPerson.city}" />
+                <h:panelGroup />
+                <h:outputText value="email" />
+                <h:inputText value="#{personController.editedPerson.EMail}" />
+                <h:panelGroup />
+                <h:outputText value="accountNumber" />
+                <h:inputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="bankCode" />
+                <h:inputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="accountholder" />
+                <h:inputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="remark" />
+                <h:inputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="pseudonym" />
+                <h:outputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="status" />
+                <h:outputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+                <h:outputText value="role" />
+                <h:outputText value="#{personController.editedPerson.lastName}" />
+                <h:panelGroup />
+            </h:panelGrid>
+            <a4j:commandButton value="Cancel"
+                onclick="#{rich:component('editPane')}.hide(); return false;" />
+    </rich:popupPanel>
 
 	</ui:define>
 </ui:composition>
