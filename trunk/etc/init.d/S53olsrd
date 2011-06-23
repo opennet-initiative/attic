@@ -11,20 +11,29 @@ set_wireless()
 	if [ -z "$WIFIDEV" ]; then WIFIDEV=$(nvram get wl0_ifname); fi
 	if [ -z "$WIFIADR" ]; then WIFIADR=$(nvram get wifi_ipaddr); fi
 	
-	OLSRDEV=$WIFIDEV
-	OLSRDEVLIST=$WIFIDEV
-
-	if [ -n "$WIFIADR" ] && [ "$LANADR" != "$WIFIADR" ]; then
-		if [ -n "$LANOLSR" ]; then
-			OLSRDEVLIST="$OLSRDEVLIST $LANDEV"
-		fi
+	if [ "$(nvram get wl0_mode)" = "ap" ]; then
+		# assume Opennet in 192.168.0.0/16 network - just straightforward
+		OPENNET_PRE="192.168.0.0/16"
+		OLSRDEVLIST=""
+		. /usr/sbin/helper_functions.sh
+		if [ "$(get_NETPRE_dev $LANDEV)" = "$OPENNET_PRE" ]; then OLSRDEVLIST="$OLSRDEVLIST $LANDEV"; fi
+		if [ "$(get_NETPRE_dev $WANDEV)" = "$OPENNET_PRE" ]; then OLSRDEVLIST="$OLSRDEVLIST $WANDEV"; fi
 	else
-		OLSRDEV=$LANDEV
-		OLSRDEVLIST=$LANDEV
-	fi
+		OLSRDEV=$WIFIDEV
+		OLSRDEVLIST=$WIFIDEV
 
-	if [ -n "$WANOLSR" ]; then
-		OLSRDEVLIST="$OLSRDEVLIST $WANDEV"
+		if [ -n "$WIFIADR" ] && [ "$LANADR" != "$WIFIADR" ]; then
+			if [ -n "$LANOLSR" ]; then
+				OLSRDEVLIST="$OLSRDEVLIST $LANDEV"
+			fi
+		else
+			OLSRDEV=$LANDEV
+			OLSRDEVLIST=$LANDEV
+		fi
+
+		if [ -n "$WANOLSR" ]; then
+			OLSRDEVLIST="$OLSRDEVLIST $WANDEV"
+		fi
 	fi
 	
 	OLSRDEVLIST="$OLSRDEVLIST tap0 tap1"
@@ -72,8 +81,7 @@ write_config()
 LoadPlugin "olsrd_httpinfo.so.0.1"
 {
 	PlParam	"port"	"8080"
-	PlParam	"Host"	"127.0.0.1"
-	$HTTPINFO_PARA
+	PlParam	"Net"	"0.0.0.0 0.0.0.0"
 }
 EOM
 	fi

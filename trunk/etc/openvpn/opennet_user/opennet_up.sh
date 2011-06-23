@@ -17,3 +17,7 @@ iptables -t nat -A POSTROUTING -o $dev -s $LANNET/$LANPRE -j SNAT --to-source $i
 [ -n "$DHCPWIFIPRE" ] && iptables -t nat -A POSTROUTING -o $dev -s $DHCPWIFINET/$DHCPWIFIPRE -j SNAT --to-source $ifconfig_local
 
 echo "vpn-tunnel active" >/tmp/openvpn_msg.txt	# a short message for the web frontend
+if [ -f "/etc/init.d/dhcp-fwd" ]; then
+	/etc/init.d/dhcp-fwd start
+	iptables -A PREROUTING -t nat -p udp --dport 67 --sport 67 -j DNAT --to-destination $WIFIADR
+fi

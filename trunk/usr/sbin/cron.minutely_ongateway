@@ -111,7 +111,9 @@ if [ "$(nvram get on_gwauto)" = "on" ]; then
 	
 	on_gwaddrs=
 	ip_odd=$(($(nvram get wifi_ipaddr | cut -d'.' -f4) % 2))
-	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+# 	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+	ip_classB="192.168"		#	it only works in current Opennet. Who cares...
+
 	# usual gateways are 192.168.0.X
 	for gw in $(
 		ip route show table all type unicast \

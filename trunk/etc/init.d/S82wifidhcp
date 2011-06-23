@@ -57,15 +57,35 @@ if [ -n "$wifi_ipaddr" ]; then WIFINET_PRE=$(ipcalc $wifi_ipaddr $(nvram get wif
 
 WIFIDEV=$(nvram get wifi_ifname)
 LANDEV=$(nvram get lan_ifname)
+WANDEV=$(nvram get wan_ifname)
 
 case $1 in
         start)
-        if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$wifi_ipaddr" ] && [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then
-		echo "enabling access to tunnel/wan (if selected)"
-		mac_access "create"
-	else
-		echo "wifidhcp disabled"
-	fi
+        if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$wifi_ipaddr" ]; then
+			if [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then
+				echo "enabling access to tunnel/wan (if selected)"
+				mac_access "create"
+			elif [ "$(nvram get wl0_mode)" = "ap" ]; then
+				echo "enabling access to tunnel/wan for wifidog traffic (if selected)"
+				mac_access "create"
+				if [ "$(nvram get on_wifidhcp=)" != "on" ]; then
+					nvram set on_wifidhcp="on"; nvram commit;
+				fi
+				cp /etc/dhcp-fwd.conf_preset /etc/dhcp-fwd.conf
+				echo "if $WIFIDEV true false true" >>/etc/dhcp-fwd.conf
+				# assume Opennet in 192.168.0.0/16 network - just straightforward
+				OPENNET_PRE="192.168.0.0/16"
+				. /usr/sbin/helper_functions.sh
+				if [ "$(get_NETPRE_dev $LANDEV)" = "$OPENNET_PRE" ]; then
+					echo "if $LANDEV false true true" >>/etc/dhcp-fwd.conf
+				fi
+				if [ "$(get_NETPRE_dev $WANDEV)" = "$OPENNET_PRE" ]; then
+					echo "if $WANDEV false true true" >>/etc/dhcp-fwd.conf
+				fi
+			fi
+		else
+			echo "wifidhcp disabled"
+		fi
         ;;
         stop)
         if [ -n "$on_wifidhcp_ipaddr" ] && [ -n "$wifi_ipaddr" ] && [ -n "$(lsmod | grep ipt_mac)" ] && [ -e /usr/lib/iptables/libipt_mac.so ]; then

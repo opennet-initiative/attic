@@ -14,7 +14,8 @@ if [ "$(nvram get on_autodns)" = "on" ]; then
 	fi
 
 	lan_dns=$(nvram get $DNS_VAR)
-	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+# 	ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+	ip_classB="192.168"		#	it only works in current Opennet. Who cares...
 	# usual gateways are 192.168.0.X
 	new_dns=$(
 		ip route show table all type unicast \

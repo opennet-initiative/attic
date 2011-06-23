@@ -14,7 +14,8 @@ while [ "$gw_addrs" = "" ]; do
 	if [ -z "$accept_nonworking" ]; then
 		on_gwaddrs=$(nvram get on_gwaddrs)
 	else
-		ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+# 		ip_classB=$(nvram get wifi_ipaddr | awk 'BEGIN{FS="."} {print $1"\\\\."$2}')
+		ip_classB="192.168"		#	it only works in current Opennet. Who cares...
 		# usual gateways are 192.168.0.X
 		on_gwaddrs=$(ip route show table all type unicast \
 			| awk '$1 ~ "^'"$ip_classB"'\\.0\\.[1-9][0-9]*$" { print $1 }')
