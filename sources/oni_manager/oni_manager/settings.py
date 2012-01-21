@@ -103,7 +103,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'oni_manager.urls'
 
 TEMPLATE_DIRS = (
-    'D:\Home\Projekte\aptana\projekt_cap\oni_manager\oni_manager\templates'
+    'D:/Home/Projekte/aptana/projekt_cap/oni_manager/oni_manager/templates'
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
