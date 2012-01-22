@@ -10,7 +10,6 @@ from django.views.generic import list_detail
 from oni_manager_app.models import Mitglied 
 from django.contrib.auth.decorators import login_required
 
-
 member_detail_info = {
     'queryset': Mitglied.objects.all(),
     'template_name': 'members/all_members.html',
@@ -26,6 +25,8 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+    
+    url(r'^signup/', views.signup),
     
     (r'^members/$', login_required(list_detail.object_list), member_detail_info),
     (r'^members/(?P<member_id>\d+)/$', views.viewMember),

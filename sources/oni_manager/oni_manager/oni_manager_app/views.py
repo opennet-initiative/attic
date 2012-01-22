@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.template import Context, loader
 from django.http import HttpResponse
 
-from forms import MemberForm
+from forms import SignupForm
 from models import Mitglied
         
 
@@ -19,6 +19,15 @@ def viewMember(request, member_id):
         'fullname': member.user.get_full_name(),
         'member': member,
         #'form': form,
+    })
+    return HttpResponse(t.render(c))
+
+
+def signup(request):
+    form = SignupForm()
+    t = loader.get_template('registration/signup.html')
+    c = Context({
+        'form': form,
     })
     return HttpResponse(t.render(c))
    
