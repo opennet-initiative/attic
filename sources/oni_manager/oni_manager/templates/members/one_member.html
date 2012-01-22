@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}
+Hallo {{ user.first_name }}
+{% endblock %}
+
+{% block content %}
+<form class="ym-form">
+	<div class="ym-fbox-text">
+		<label for="email">Email</label>
+		<input type="text" name="email" id="email" value="{{ member.user.email }}" readonly="" />
+	</div>
+	<div class="ym-fbox-text">
+		<label for="fullname">Fullname</label>
+		<input type="text" name="fullname" id="fullname" value="{{ fullname }}" readonly="" />
+	</div>
+	<div class="ym-fbox-text">
+		<label for="telefon">Telefon</label>
+		<input type="text" name="telefon" id="telefon" value="{{ member.telefon }}" readonly="" />
+	</div>
+	<div class="ym-fbox-text">
+		<label for="status">Status</label>
+		<input type="text" name="status" id="status" value="{{ member.status }}" readonly="" />
+	</div>
+</form>
+<!--
+<h2>{{ fullname }}</h2>
+<table>
+<tbody>
+{{ form.as_table }}
+</tbody>
+</table>
+-->
+{% endblock %} 

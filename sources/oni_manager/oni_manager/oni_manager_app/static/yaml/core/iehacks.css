@@ -12,13 +12,13 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 656 $
- * @lastmodified    $Date: 2012-01-11 21:27:54 +0100 (Mi, 11 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  * @appdef yaml
  */
 
-@media all
-{
+@media all {
+
 	/**
 	* (en) Debugging:When you see a green background, IE is getting this stylesheet
 	* (de) Fehlersuche:Hintergrund leuchtet grün, wenn das Stylesheet korrekt geladen wurde
@@ -302,8 +302,8 @@
 
 }
 
-@media screen, projection
-{
+@media screen, projection {
+
 	/**
 	* (en) IE-Adjustments for content columns and subtemplates
 	* (de) IE-Anpassung für Spaltencontainer und Subtemplates
@@ -366,8 +366,8 @@
 	* html .ym-gbox-right { word-wrap:break-word; o\verflow:hidden; }
 }
 
-@media print
-{
+@media print {
+
 	/**
 	* (en) Avoid unneeded page breaks of .ym-col3 content in print layout and containing floats.
 	* (de) Vermeiden von unnötigen Seitenumbrüchen beim Ausdruck der Spalte .ym-col3 und Einschluss von Floats.

@@ -10,8 +10,8 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         4.0
- * @revision        $Revision: 677 $
- * @lastmodified    $Date: 2012-01-18 23:36:59 +0100 (Mi, 18 Jan 2012) $
+ * @revision        $Revision: 687 $
+ * @lastmodified    $Date: 2012-01-22 13:27:22 +0100 (So, 22 Jan 2012) $
  * @appdef yaml
  */
 
@@ -329,7 +329,7 @@
 		letter-spacing: normal;
 		white-space:nowrap;
 		-webkit-border-radius: 3px;
-		-moz-radius: 3px;
+		-moz-border-radius: 3px;
 		border-radius: 3px;
 		background: #06C;
 		color: #fff;

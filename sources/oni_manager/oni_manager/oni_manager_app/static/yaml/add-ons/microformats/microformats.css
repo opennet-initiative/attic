@@ -13,7 +13,7 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 656 $
+ * @revision        $Revision: 686 $
  * @lastmodified    $Date:2009-07-05 12:18:40 +0200 (So, 05. Jul 2009) $
  */
 
@@ -168,5 +168,4 @@
 		border:none;
 		cursor:default;
 	}
-
 }

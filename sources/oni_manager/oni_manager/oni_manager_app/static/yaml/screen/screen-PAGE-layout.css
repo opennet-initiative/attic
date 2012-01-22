@@ -9,8 +9,8 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         4.0
- * @revision        $Revision: 672 $
- * @lastmodified    $Date: 2012-01-18 10:30:19 +0100 (Mi, 18 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
 @media screen {
@@ -94,7 +94,7 @@
 	}
 }
 
-@media screen and ( max-width: 740px )  {
+@media screen and ( max-width: 740px ) {
 
 	/* Linearisation for Grid- and Column-Module, based on CSS class .linearize-level-1 */
 	.linearize-level-1,
@@ -129,7 +129,7 @@
 	}
 }
 
-@media screen and ( max-width: 480px)  {
+@media screen and ( max-width: 480px) {
 
 	.ym-wbox {
 		padding: 0;

@@ -9,8 +9,8 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         4.0
- * @revision        $Revision: 672 $
- * @lastmodified    $Date: 2012-01-18 10:30:19 +0100 (Mi, 18 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
 @media screen {
@@ -121,7 +121,7 @@
 
 }
 
-@media screen and ( max-width: 760px )  {
+@media screen and ( max-width: 760px ) {
 
 	.secondary {
 		border-top: 1px #888 solid;
@@ -160,7 +160,7 @@
 	}
 }
 
-@media screen and ( max-width: 480px)  {
+@media screen and ( max-width: 480px) {
 
 	header .ym-wbox {
 		padding: 0.75em 10px;

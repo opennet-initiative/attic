@@ -12,8 +12,8 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 659 $
- * @lastmodified    $Date: 2012-01-12 00:26:56 +0100 (Do, 12 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
 @media all
@@ -29,7 +29,8 @@
 	*/
 
 	.ym-hlist * { direction:ltr !important; }
-	.ym-hlist a, .hlist strong { direction:rtl !important; }
+	.ym-hlist a,
+	.ym-hlist strong { direction:rtl !important; }
 
   	.ym-hlist ul {
 		position:relative;

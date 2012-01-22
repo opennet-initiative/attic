@@ -9,10 +9,10 @@
 @import url("../yaml/navigation/hlist.css");
 @import url("../yaml/forms/gray-theme.css");
 
-@import url("../yaml/screen/screen-FULLPAGE-layout.css");
+@import url("../yaml/screen/screen-PAGE-layout.css");
  
-@import url("../yaml/screen/screen.css");
 @import url("../yaml/screen/typography.css");
  
 /* import print layout */
 @import url("../yaml/print.css");
+

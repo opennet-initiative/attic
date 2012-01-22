@@ -12,13 +12,13 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 656 $
- * @lastmodified    $Date: 2012-01-11 21:27:54 +0100 (Mi, 11 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
-@media all
-{
-	/* Menu Title */
+@media all {
+
+	/* menu title */
 	h6.ym-vlist {
 		padding-left: 0px;
 		padding-right: 10%;

@@ -117,6 +117,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'oni_manager_app',
+    'django.contrib.databrowse',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -145,3 +146,6 @@ LOGGING = {
         },
     }
 }
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'

@@ -13,12 +13,12 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 656 $
- * @lastmodified    $Date: 2012-01-11 21:27:54 +0100 (Mi, 11 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
-@media all
-{
+@media all {
+
 	/**
 	* @section CSS-Normalisation Module
 	*/
@@ -84,6 +84,15 @@
 	/* (de) HTML5 - Eigenschaften für das hidden-Attribut in älteren IEs und FF nachrüsten */
 	[hidden] {
 		display: none;
+	}
+
+	/* (en) force consistant appearance of input[type="search"] elements in all browser  */
+	/* (de) Einheitliches Erscheinungsbild für input[type="search"] Elemente erzwingen  */
+	input[type="search"] {
+		-webkit-appearance: textfield;
+	}
+	input[type="search"]::-webkit-search-decoration {
+		-webkit-appearance: none;
 	}
 
 	/* (en) Clear borders for <fieldset> and <img> elements */
@@ -184,8 +193,8 @@
 	}
 }
 
-@media screen, projection
-{
+@media screen, projection {
+
 	/**
 	* @section Column Module
 	*
@@ -232,10 +241,6 @@
 		margin-right:0;
 	}
 
-	/* (en) alternative class for optional support of old Mozilla/Netscape browers */
-	/* (de) Alternative Klasse zur optionalen Unterstützung alter Mozilla/Netscape-Brower */
-	.ym-grid-alt { float:left; width:100%; }
-
 	.ym-gl { float:left; margin: 0; }
 	.ym-gr { float:right; margin: 0 0 0 -5px; }
 
@@ -273,8 +278,8 @@
 	}
 }
 
-@media all
-{
+@media all {
+
    /**
 	* @section Form Module
 	*
@@ -320,14 +325,6 @@
 
 	/* Hiding of hidden fields (otherwise ugly spaces in Firefox) | Versteckte Felder wirklich verstecken (sonst ggf. häßliche Lücken im Firefox) */
 	.ym-form input[type=hidden] { display:none !important; }
-
-	/* force consistant appearance of input[type="search"] elements in all browser  */
-	input[type="search"] {
-		-webkit-appearance: textfield;
-	}
-	input[type="search"]::-webkit-search-decoration {
-		-webkit-appearance: none;
-	}
 
 	/* styling containing DIV elements | Gestaltung der kapselnden DIV-Elemente */
 	.ym-form .ym-fbox-text:before,
@@ -451,8 +448,8 @@
 	.ym-columnar .ym-fbox-select select { width:68.8%; }
 }
 
-@media print
-{
+@media print {
+
 	/**
 	* @section print adjustments for core modules
 	*

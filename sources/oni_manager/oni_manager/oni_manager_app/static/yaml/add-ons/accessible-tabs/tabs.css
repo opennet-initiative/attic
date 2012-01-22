@@ -10,25 +10,24 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 637 $
- * @lastmodified    $Date: 2012-01-08 13:55:21 +0100 (So, 08 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
-@media screen, projection
-{
+@media screen, projection {
+
 	.jquery_tabs {
 		margin:1.5em 0 0;
 	}
 
 	.jquery_tabs ul.tabs-list {
-		display:block;
+		display:table;
 		font-size:1em;
 		line-height:1.5em;
 		list-style-type:none;
 		margin: 0;
 		position:relative;
 		z-index:1;
-		display:table;
 	}
 
 	.jquery_tabs ul.tabs-list li a {
@@ -41,6 +40,7 @@
 		position:absolute;
 		left:-32768px; /* LTR */
 	}
+
 	.jquery_tabs .content {
 		border-top:1px #ccc solid;
 		clear:both;
@@ -92,7 +92,7 @@
 	}
 
 	.js .jquery_tabs .current-info,
-	.js .jquery_tabs .accessibletabsanchor{
+	.js .jquery_tabs .accessibletabsanchor {
 		left:-999em;
 		position:absolute;
 	}

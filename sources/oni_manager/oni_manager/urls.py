@@ -4,6 +4,18 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
+from oni_manager_app import views
+from django.conf.urls.defaults import *
+from django.views.generic import list_detail
+from oni_manager_app.models import Mitglied 
+from django.contrib.auth.decorators import login_required
+
+
+member_detail_info = {
+    'queryset': Mitglied.objects.all(),
+    'template_name': 'members/all_members.html',
+}
+
 urlpatterns = patterns('',
     # Examples:
     url(r'^login/$', 'django.contrib.auth.views.login'),
@@ -15,6 +27,9 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     
-
+    (r'^members/$', login_required(list_detail.object_list), member_detail_info),
+    (r'^members/(?P<member_id>\d+)/$', views.viewMember),
+    
+    #url(r'', views.viewMember)
     
 )

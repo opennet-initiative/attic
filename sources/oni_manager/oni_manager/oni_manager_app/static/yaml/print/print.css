@@ -9,13 +9,13 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 657 $
- * @lastmodified    $Date: 2012-01-11 21:36:23 +0100 (Mi, 11 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
 
-@media print
-{
+@media print {
+
 	/**
 	* @section basic layout preparation
 	*/
@@ -29,7 +29,8 @@
 
 	/* (en) Hide unneeded container of the screenlayout in print layout */
 	/* (de) Für den Druck nicht benötigte Container des Layouts abschalten */
-	nav, .ym-searchform {
+	nav,
+	.ym-searchform {
 		display:none;
 	}
 

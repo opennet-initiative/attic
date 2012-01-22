@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+
+{% block title %}
+Login
+{% endblock %}
+
 {% block content %}
 
 {% if form.errors %}
@@ -19,11 +24,7 @@
 	<div class="ym-fbox-button">
 		<input type="submit" class="ym-button" value="login" />
 	</div>
-	{% if next %}
 	<input type="hidden" name="next" value="{{ next }}" />
-	{% else %}
-	<input type="hidden" name="next" value="../" />
-	{% endif %}
 </form>
 
 {% endblock %} 

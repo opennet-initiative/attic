@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -20,10 +21,7 @@ class Anschrift(models.Model):
     ort = models.CharField(max_length=100)
     
 class Mitglied(models.Model):
-    vorname = models.CharField(max_length=100)
-    nachname = models.CharField(max_length=100)
-    email = models.CharField(max_length=300)
-    passwordHash = models.CharField(max_length=100)
+    user = models.OneToOneField(User)
     telefon = models.CharField(max_length=100)
     geburtsdatum = models.DateField()
     mitgliedseit = models.DateField()
@@ -34,3 +32,9 @@ class Mitglied(models.Model):
     bemerkung = models.TextField()
     nickname = models.CharField(max_length=100)
     foto = models.ImageField(upload_to='avatars')
+    
+    def __unicode__(self):
+        return self.nickname
+
+    class Meta:
+        ordering = ['status']

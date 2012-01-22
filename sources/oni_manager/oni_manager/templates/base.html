@@ -19,10 +19,15 @@
 		<div class="ym-wrapper">
 			<div class="ym-wbox">
 				<header>
-					{{ object.title }}
+					<h1>{% block title %}{% endblock %}</h1>
 				</header>
-				{% block content %}
-				{% endblock %}
+				<div class="main">
+					{% block content %}
+					{% endblock %}
+				</div>
+				<footer>
+					<p>Matthias Meißer & Jonas Vetterick, 2012</p>
+				</footer>
 			</div>
 		</div>
 	</body>

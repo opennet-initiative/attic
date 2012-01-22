@@ -10,12 +10,12 @@
  * @link            http://www.yaml.de
  * @package         yaml
  * @version         v4.0
- * @revision        $Revision: 657 $
- * @lastmodified    $Date: 2012-01-11 21:36:23 +0100 (Mi, 11 Jan 2012) $
+ * @revision        $Revision: 686 $
+ * @lastmodified    $Date: 2012-01-22 13:09:37 +0100 (So, 22 Jan 2012) $
  */
 
-@media all
-{
+@media all {
+
 	.ym-hlist {
 		/* (en) containing floats in IE */
 		/* (de) Einfassen der Floats im IE */
@@ -96,8 +96,7 @@
 	}
 
 
-	/* search form
-	-------------------------------------- */
+	/* search form -------------------------------------- */
 	.ym-searchform {
 		float:right;
 		display: inline;
@@ -121,7 +120,10 @@
 
 	.ym-searchform .ym-searchbutton {
 		color: #fff;
-		line-height: 1em;
+		cursor: pointer;
+		display: inline-block;
+		font-size: 1em;
+		line-height: 1.3571em;
 		padding: 0.25em;
 		border: solid 1px transparent;
 		text-shadow: 0 1px 1px rgba(0,0,0,.5);
