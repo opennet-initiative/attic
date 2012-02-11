@@ -4,11 +4,11 @@ Created on 22.01.2012
 @author: Jonas
 '''
 
-from django import forms 
+from django import forms
+from django.forms import ModelForm
 from oni_manager.oni_manager_app.models import Mitglied
 
 class MemberForm(forms.ModelForm):
-    
     class Meta():
         model = Mitglied
         
@@ -28,3 +28,7 @@ class SignupForm(forms.Form):
     anschrift = forms.CharField( label="Anschrift" )
     nickname = forms.CharField( label="Nicknames" )
     #foto = forms.ImageField( label="Foto", upload_to='avatars')
+    
+class ownDataForm(ModelForm):
+    class Meta:
+         model = Mitglied

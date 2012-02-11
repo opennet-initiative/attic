@@ -9,28 +9,29 @@ from django.contrib.auth import logout
 
 from forms import SignupForm
 from models import Mitglied
+from oni_manager.oni_manager_app.forms import ownDataForm
         
 
 @login_required
-def viewMember(request, member_id):
-    if request.user.is_authenticated():
-        return redirect('/')
-    
-    member = Mitglied.objects.get(pk=member_id)
-    #form = MemberForm(instance=member)    
+def viewMember(request, member_id):    
+    member = Mitglied.objects.get(pk=member_id)  
+    form = ownDataForm()
     t = loader.get_template('members/one_member.html')
     c = Context({
         'user': request.user,
         'fullname': member.user.get_full_name(),
         'member': member,
-        #'form': form,
+        'form': form,
     })
     return HttpResponse(t.render(c))
 
+
 def home_view(request):
     if request.user.is_authenticated():
-        return HttpResponse("logged int")
-    return HttpResponse("not logged in")
+        mitglied=Mitglied.objects.get(user=request.user.id)
+        return viewMember(request,mitglied.id)
+    else:
+        return redirect('/login/')
 
 def logout_view(request):
     logout(request)
@@ -39,7 +40,6 @@ def logout_view(request):
 def signup(request):
     if request.user.is_authenticated():
         return redirect('/')
-    
     form = SignupForm()
     t = loader.get_template('registration/signup.html')
     c = Context({
