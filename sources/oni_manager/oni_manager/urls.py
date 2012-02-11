@@ -27,10 +27,12 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     url(r'^signup/', views.signup),
+    url(r'^logout', views.logout_view),
+    url(r'^register/', views.register),
     
     (r'^members/$', login_required(list_detail.object_list), member_detail_info),
     (r'^members/(?P<member_id>\d+)/$', views.viewMember),
     
-    #url(r'', views.viewMember)
+    url('', views.home_view)
     
 )

@@ -12,9 +12,19 @@ class MemberForm(forms.ModelForm):
     class Meta():
         model = Mitglied
         
+class LoginForm(forms.Form):
+    username = forms.CharField( label="Benutzername" )
+    password = forms.CharField( widget=forms.PasswordInput, label="Passwort" )
+        
 class SignupForm(forms.Form):
-    username = forms.CharField()
-    firstname = forms.CharField()
-    lastname = forms.TextInput()
-    email = forms.EmailField()
-    password = forms.PasswordInput()
+    username = forms.CharField( label="Benutzername" )
+    firstname = forms.CharField( label="Vorname" )
+    lastname = forms.CharField( label="Nachname" )
+    email = forms.EmailField( label="Email" )
+    password = forms.CharField( widget=forms.PasswordInput, label="Passwort" )
+    telefon = forms.CharField( label="Telefon", max_length=100)
+    geburtsdatum = forms.DateField( label="Geburtstdatum" )
+    bankkonto = forms.CharField( label="Bankkonto" )
+    anschrift = forms.CharField( label="Anschrift" )
+    nickname = forms.CharField( label="Nicknames" )
+    #foto = forms.ImageField( label="Foto", upload_to='avatars')

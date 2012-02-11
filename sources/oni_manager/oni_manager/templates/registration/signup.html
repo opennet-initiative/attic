@@ -12,27 +12,10 @@ Registrieren
 </p>
 {% endif %}
 
-<form class="ym-form" method="post" action="{% url django.contrib.auth.views.login %}">
+<form class="ym-form" enctype="multipart/form-data" method="post" action="{% url django.contrib.auth.views.register %}">
 {% csrf_token %}
-{{ form.as_p }}
+	{% include "generic/generic_form.html" %}
+    <div class="ym-fbox-button"><input type="submit" value="Signup" /></div>
 </form>
-
-<!--
-<form class="ym-form" method="post" action="{% url django.contrib.auth.views.login %}">
-	{% csrf_token %}
-	<div class="ym-fbox-text">
-		{{ form.username.label_tag }}
-		{{ form.username }}
-	</div>
-	<div class="ym-fbox-text">
-		{{ form.password.label_tag }}
-		{{ form.password }}
-	</div>
-	<div class="ym-fbox-button">
-		<input type="submit" class="ym-button" value="login" />
-	</div>
-	<input type="hidden" name="next" value="{{ next }}" />
-</form>
--->
 
 {% endblock %} 

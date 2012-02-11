@@ -13,14 +13,9 @@ Login
 {% endif %}
 <form class="ym-form" method="post" action="{% url django.contrib.auth.views.login %}">
 	{% csrf_token %}
-	<div class="ym-fbox-text">
-		{{ form.username.label_tag }}
-		{{ form.username }}
-	</div>
-	<div class="ym-fbox-text">
-		{{ form.password.label_tag }}
-		{{ form.password }}
-	</div>
+	
+	{% include "generic/generic_form.html" %}
+	
 	<div class="ym-fbox-button">
 		<input type="submit" class="ym-button" value="login" />
 	</div>
