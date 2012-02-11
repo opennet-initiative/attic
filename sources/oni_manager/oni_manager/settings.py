@@ -1,3 +1,4 @@
+import os
 # Django settings for oni_manager project.
 
 DEBUG = True
@@ -9,16 +10,35 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'D:\\Home\\Projekte\\aptana\\projekt_cap\\oni_manager\\sqlite.db',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+if os.environ['COMPUTERNAME'] == "CROW":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'C:\\django\\onimanager\\sqlite.db',                      # Or path to database file if using sqlite3.
+            'USER': '',                      # Not used with sqlite3.
+            'PASSWORD': '',                  # Not used with sqlite3.
+            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }    
     }
-}
+    STATIC_ROOT = 'C:/django/onimanager/sources/oni_manager/oni_manager/media'    
+    TEMPLATE_DIRS = (
+    'C:/django/onimanager/sources/oni_manager/oni_manager/templates')
+    
+    
+if os.environ['COMPUTERNAME'] == "JONAS-PC":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'D:\\Home\\Projekte\\aptana\\projekt_cap\\oni_manager\\sqlite.db',                      # Or path to database file if using sqlite3.
+            'USER': '',                      # Not used with sqlite3.
+            'PASSWORD': '',                  # Not used with sqlite3.
+            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }    
+    }
+    STATIC_ROOT = 'D:/Home/Projekte/aptana/projekt_cap/oni_manager/oni_manager/media'    
+    TEMPLATE_DIRS = ('D:/Home/Projekte/aptana/projekt_cap/oni_manager/oni_manager/templates')
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -56,7 +76,7 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = 'D:/Home/Projekte/aptana/projekt_cap/oni_manager/oni_manager/media'
+
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -98,16 +118,12 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 )
 
 ROOT_URLCONF = 'oni_manager.urls'
 
-TEMPLATE_DIRS = (
-    'D:/Home/Projekte/aptana/projekt_cap/oni_manager/oni_manager/templates'
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+
 
 INSTALLED_APPS = (
     'django.contrib.auth',
