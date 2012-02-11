@@ -17,9 +17,12 @@ Login
 	{% include "generic/generic_form.html" %}
 	
 	<div class="ym-fbox-button">
-		<input type="submit" class="ym-button" value="login" />
+		<input type="submit" class="ym-button" value="Login" />
+		<p>Du hast keinen Account? Registriere dich <a href="/signup/">hier</a>!</p>
 	</div>
 	<input type="hidden" name="next" value="{{ next }}" />
 </form>
+
+
 
 {% endblock %} 

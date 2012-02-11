@@ -11,11 +11,11 @@ Registrieren
 	Sie haben etwas falsch eingegeben.
 </p>
 {% endif %}
-
-<form class="ym-form" enctype="multipart/form-data" method="post" action="{% url django.contrib.auth.views.register %}">
-{% csrf_token %}
+<form class="ym-form ym-full" enctype="multipart/form-data" method="post" action="/signup/">
+	{% csrf_token %}
 	{% include "generic/generic_form.html" %}
-    <div class="ym-fbox-button"><input type="submit" value="Signup" /></div>
+	<div class="ym-fbox-button">
+		<input type="submit" value="Signup" />
+	</div>
 </form>
-
 {% endblock %} 
