@@ -6,6 +6,8 @@ from django.template import Context, loader
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+from django.template import RequestContext
+from django.core.mail import send_mail
 
 from forms import SignupForm
 from models import Mitglied
@@ -37,19 +39,25 @@ def logout_view(request):
     logout(request)
     return redirect('/')
 
+def signup_thanks_view(request):
+    t = loader.get_template('registration/signup.html')
+    c = RequestContext(request, {
+    })
+    return HttpResponse(t.render(c))
+
 def signup(request):
     if request.user.is_authenticated():
         return redirect('/')
     form = SignupForm()
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            send_mail(username, 'Here is the message.', 'gimbar@gmail.com',['gimbar@gmail.com'], fail_silently=False)
+            return HttpResponse("Mail for signup sent")
+ 
     t = loader.get_template('registration/signup.html')
-    c = Context({
+    c = RequestContext(request, {
         'form': form,
     })
     return HttpResponse(t.render(c))
-   
-def register(request):
-    if request.user.is_authenticated():
-        return redirect('/')
-    
-    
-    print request.POST
