@@ -3,11 +3,12 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
-SATUS_CHOICES = ((1, 'nicht freigeschaltet'),
-                 (2, 'normal'),
-                 (3, 'aktiv'),
-                 (4, 'Vorstand'),
-                 (5, 'ausgeschieden')
+SATUS_CHOICES = ((10, 'nicht freigeschaltet'),
+                 (20, 'normal'),
+                 (30, 'aktiv'),
+                 (40, 'Vorstand'),
+                 (50, 'ausgeschieden'),
+                 (60, 'nicht freigeschaltet')
                  )
 
 class Bankkonto(models.Model):
@@ -19,6 +20,11 @@ class Anschrift(models.Model):
     hausnummer = models.CharField(max_length=100)
     plz = models.CharField(max_length=10)
     ort = models.CharField(max_length=100)
+    
+class RegistrationSession(models.Model):
+    key = models.CharField(max_length=40)
+    user = models.OneToOneField(User)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
 class Mitglied(models.Model):
     user = models.OneToOneField(User)
