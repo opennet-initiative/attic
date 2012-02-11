@@ -24,8 +24,8 @@ class SignupForm(forms.Form):
     password = forms.CharField( widget=forms.PasswordInput, label="Passwort" )
     telefon = forms.CharField( label="Telefon", max_length=100)
     geburtsdatum = forms.DateField( label="Geburtstdatum" )
-    bankkonto = forms.CharField( label="Bankkonto" )
-    anschrift = forms.CharField( label="Anschrift" )
+    bankkonto = forms.CharField( label="Bankkonto", widget=forms.Textarea() )
+    anschrift = forms.CharField( label="Anschrift", widget=forms.Textarea() )
     nickname = forms.CharField( label="Nicknames" )
     #foto = forms.ImageField( label="Foto", upload_to='avatars')
     
