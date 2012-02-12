@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -14,12 +15,18 @@ SATUS_CHOICES = ((10, 'nicht freigeschaltet'),
 class Bankkonto(models.Model):
     kontonummer = models.IntegerField()
     blz = models.IntegerField()
+    class Meta:
+        verbose_name_plural="Bankkonten"
     
 class Anschrift(models.Model):
     strasse = models.CharField(max_length=100)
     hausnummer = models.CharField(max_length=100)
     plz = models.CharField(max_length=10)
     ort = models.CharField(max_length=100)
+    class Admin:
+        list_display = ('ort','strasse')
+    class Meta:
+        verbose_name_plural="Anschriften"
     
 class RegistrationSession(models.Model):
     key = models.CharField(max_length=40)
@@ -31,8 +38,8 @@ class Mitglied(models.Model):
     telefon = models.CharField(max_length=100)
     geburtsdatum = models.DateField()
     mitgliedseit = models.DateField()
-    status = models.IntegerField(choices=SATUS_CHOICES, default=1)
-    foerdermitglied = models.BooleanField()
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    foerdermitglied = models.BooleanField("Fördermitglied")
     bankkonto = models.OneToOneField(Bankkonto)
     anschrift = models.OneToOneField(Anschrift)
     bemerkung = models.TextField()
@@ -44,3 +51,4 @@ class Mitglied(models.Model):
 
     class Meta:
         ordering = ['status']
+        verbose_name_plural="Mitglieder"
