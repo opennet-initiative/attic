@@ -1,0 +1,6 @@
+#!/bin/ash
+# $Id: hotplug,v 1.2.4.1 2005/07/14 07:24:15 mbm Exp $
+[ "${INTERFACE%%[0-9]*}" = "wds" ] && { 
+	ifconfig $INTERFACE 0.0.0.0 up
+	/usr/sbin/brctl addif br0 $INTERFACE
+}

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+test -n "$FAILSAFE" && exit
+
+# takes one argument: 'create' or ('remove' or anything else - doesn't actually matter)
+mac_access() {
+        mac_addrs=$(nvram get on_wifi_access)
+	if [ -n "$mac_addrs" ]; then
+		if [ $1 = "create" ]; then
+			echo "enabling tunnel access for specified mac-adresses"
+			ACT_INSERT="I";
+		else
+			echo "removing tunnel access for specified mac-adresses"
+			ACT_INSERT="D";
+		fi
+	
+		# frames vom wifi/dhcp zum tunnel
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWOUT:"
+		for mac_addr in $mac_addrs; do
+			iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -s $DHCPWIFINET/$DHCPWIFIPRE -d ! $WIFINET/$WIFIPRE -m mac --mac-source $mac_addr -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+		done;
+		iptables -$ACT_INSERT FORWARD $rulenum -i $WIFIDEV -o $TUNDEV -m state --state INVALID -j DROP
+
+		# frames vom tunnel zum wifi/dhcp
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -j DROP
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -j LOG --log-prefix "FRAMEDROP-WIFIDHCP-FWIN:"
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -s ! $DHCPWIFINET/$DHCPWIFIPRE -d $DHCPWIFINET/$DHCPWIFIPRE -m state --state ESTABLISHED,RELATED -j ACCEPT
+		iptables -$ACT_INSERT FORWARD $rulenum -i $TUNDEV -o $WIFIDEV -m state --state INVALID -j DROP
+		
+
+fi;
+}
+
+TUNDEV=tun+
+eval $(/usr/bin/netparam)
+
+case $1 in
+        start)
+        echo "enabling access to tunnel"
+        mac_access "create"
+        ;;
+        stop)
+        echo "removing access to tunnel"
+        mac_access "remove"
+        ;;
+        restart)
+                $0 stop
+                $0 start
+        ;;
+        *)
+                echo "Usage: $0 start|stop|restart"
+        ;;
+esac

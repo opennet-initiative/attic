@@ -1,0 +1,39 @@
+#!/bin/sh
+
+test -n "$FAILSAFE" && exit
+#test -z "$(awk 'sub(":","") {print $1}' /proc/net/wireless)" && exit
+
+write_config() {
+	if [ ! -d /var/spool/cron/crontabs ]; then
+	  mkdir -p /var/spool/cron/crontabs
+	fi
+	
+	# hourly check-time is now dependend on IP-address (~(last part of IP-address/4.25))
+	check_time=$((($(nvram get wifi_ipaddr | cut -d'.' -f4)-1)*4/17))
+	
+	cat>/var/spool/cron/crontabs/root<<EOF
+0-59/1 * * * *	/usr/sbin/cron.minutely
+$check_time * * * *	/usr/sbin/cron.hourly
+0 0 * * *	/usr/sbin/cron.daily
+EOF
+}
+
+case $1 in
+	start)
+		echo "Starting crond..."
+		write_config
+		/usr/sbin/crond -L /dev/null
+	;;
+	stop)
+		echo "Stopping crond..."
+		killall crond>/dev/null 2>&1
+		rm -rf /var/spool/cron/crontabs/root
+	;;
+	restart)
+		$0 stop
+		$0 start
+	;;
+	*)
+		echo "Usage: $0 start|stop|restart"
+	;;
+esac

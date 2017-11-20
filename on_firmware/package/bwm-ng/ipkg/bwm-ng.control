@@ -1,0 +1,6 @@
+Package: bwm-ng
+Priority: optional
+Section: net
+Maintainer: Sebastian Hagen (on-firmware)
+Source: http://www.gropp.org/
+Description: A feature-rich real-time bandwith monitor

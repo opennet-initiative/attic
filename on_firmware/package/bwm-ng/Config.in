@@ -1,0 +1,9 @@
+config BR2_PACKAGE_BWM-NG
+        tristate "bwm-ng - A feature-rich BandWith Monitor"
+        default n
+        help
+             bwm-ng can be used to monitor the current Bandwidth of all or some specific Interfaces. 
+             It shows total of in and out as well as total of all Interfaces. Several different output 
+             methods are supported (curses, plain, csv and html).
+
+

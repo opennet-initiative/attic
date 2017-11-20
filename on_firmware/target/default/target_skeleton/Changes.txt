@@ -1,0 +1,93 @@
+since 0.9.1:
+* change openvpn-version to 2.0.5 ; bugfix for client-vulnerability CVE-2005-3393
+
+since 0.8:
+* /usr/bin/netparam doesn't set wl0_ifname anymore - it's better to keep it side-effect less
+* /bin/firstboot now sets wl0_ifname to WIFIDEV output of netparam, if the string evaluated as zero before - what does that nvram-var do, anyway?
+* /usr/sbin/cron.minutely doesn't do *randomized* olsrd restarts anymore
+* added bwm-ng packaging code
+* added wl0_on_init_override nvram-var check in firstboot; should probably develop a more general approach
+* several webinterface adjustments
+* made time-sync more reliable
+* added on-specific DNAT support
+
+since 0.6:
+
+*in firstboot initialisierung*
+if [ ssid != "olsr.opennet-forum.de" ] ; then
+	nvram set wl0_mode=sta
+	nvram set wl0_infra=0
+	nvram set wl0_channel=1
+	nvram set wl0_ssid=olsr.opennet-forum.de
+	nvram set wl0_wds=
+	nvram set wl0_lazywds=0
+	nvram set wl0_wep=on
+	nvram set wl0_wep_bit=128
+	nvram set wl0_key=0
+	nvram set wl0_frag=512
+	nvram set wl0_rts=250
+	nvram set wl0_gmode_protection=auto
+fi
+lan_ip=$(nvram get lan_ipaddr)
+if [ lan_ip = "192.168.1.1" ] ; then
+	nvram set lan_ipaddr=172.16.0.1
+	nvram set lan_netmask=255.240.0.0
+fi
+/usr/bin/netparam >/dev/null
+
+*in netparam wird jetzt wl0_ifname aus iwconfig gesetzt, allerdings nicht gespeichert.
+
+
+
+since 0.5:
+
+added
+ip route add throw $WIFINET/$WIFIPRE table 3
+to local.fw to enable access top other opennet accesspoints
+
+install package http://openwrt.org/downloads/experimental/bin/packages/openssl-util_0.9.7g-1_mipsel.ipk
+usr/bin/openssl
+/etc/ssl/certs/
+/etc/ssl/openssl.cnf   ## angepasst, variablen hinzugefügt, option prompt=no gesetzt
+/etc/ssl/private/
+
+
+on_XX in on_aps umbenannt.
+
+
+
+
+Added / Replaced following files:
+
+./www/...
+./usr/sbin/ntpclient
+./usr/sbin/wl
+./usr/sbin/cron.daily
+./usr/sbin/cron.hourly
+./usr/sbin/cron.minutely
+./usr/sbin/wlconf
+./usr/sbin/olsrd-clearroutes
+./usr/bin/netparam
+./etc/init.d/S60ntpclient
+./etc/init.d/S50httpd
+./etc/init.d/S53olsrd
+./etc/init.d/S80openvpn
+./etc/init.d/S45firewall
+./etc/init.d/51crond
+./etc/olsrd.conf                ########## symbolischen link anlegen /var/etc/olsrd.conf
+./etc/banner
+./etc/openvpn/opennet.conf
+./etc/openvpn/opennet_down.sh
+./etc/openvpn/opennet_up.sh
+./etc/openvpn/opennet-ca.crt
+./etc/local.fw
+./tmp/run			########## Verzeichnis anlegen, wird bspw. für cron.minutely beötigt
+./bin/firstboot			########## Passwort-Code von Freifunk übernommen
+
+
+rm link and save new file
+./etc/resolv.conf
+
+Removed following files (not needed anymore)
+./etc/firewall.user 
+./etc/init.d/olsrd	#### sonst startet /usr/sbin/cron.minutely nicht

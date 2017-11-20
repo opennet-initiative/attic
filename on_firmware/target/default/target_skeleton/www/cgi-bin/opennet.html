@@ -1,0 +1,184 @@
+#!/bin/sh
+
+export DATE="5.9.2005"
+export TITLE="Verwaltung: Opennet"
+. ${0%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Verwaltung: Opennet</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="opennet.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TBODY>
+<TR
+TITLE="Gib eine gültige IP-Adresse ein. In einem Netzwerk darf diese Adresse nur einmal verwendet werden. Beispiele: 172.16.1.1 oder 104.255.255.254">
+<TD>IP-Adresse:</TD>
+<TD><INPUT NAME="wifi_ipaddr" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wifi_ipaddr)"$(if [ "$(nvram get wifi_proto)" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="WEP-Key">
+<TD>WEP-Key:</TD>
+<TD><INPUT NAME="wl0_key1" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_key1)"$(if [ "$(nvram get wifi_proto)" != "static" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_ip_key" TITLE="Die Einstellungen übernehmen. Diese werden erst nach einem Neustart wirksam." TYPE="SUBMIT" VALUE="Übernehmen">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+
+<H2>VPN-Key Management</H2>
+EOF
+if [ -f /tmp/ap_XX.csr ]; then
+cat<<EOF
+Zertifikate Signing Request downloaden um ihn per email zu versenden...
+<FORM ACTION="opennet.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Wähle ein *.tar, *.tgz oder *.tar.gz-Archiv mit den neuen Webseiten.">
+<TBODY>
+<TR>
+<TD>Secret-Key hochladen</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="webfile" SIZE="32" TYPE="FILE" VALUE="Durchsuchen..."></TD>
+</TR>
+<TR>
+<TD> </TD>
+</TR>
+<TR>
+<TD><INPUT NAME="post_web" TITLE="Der ausgewählte Key wird übertragen und im Verzeichnis /etc/openvpn gespeichert" TYPE="SUBMIT" VALUE="Webseiten laden">   <INPUT NAME="post_abort" TITLE="Abbruch dieser Dialogseite" TYPE="SUBMIT" VALUE="Abbruch"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+else
+cat<<EOF
+<FORM ACTION="opennet.html" CLASS="form" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TBODY>
+<TR TITLE="Staat"><TD>Staat:</TD>
+<TD><INPUT NAME="openssl_countryName" SIZE="48" TYPE="TEXT" VALUE="de"></TD>
+</TR>
+<TR TITLE="Bundesland"><TD>Landesname:</TD>
+<TD><INPUT NAME="openssl_provinceName" SIZE="48" TYPE="TEXT" VALUE="Mecklenburg-Vorpommern"></TD>
+</TR>
+<TR TITLE="Ort"><TD>Ort:</TD>
+<TD><INPUT NAME="openssl_localityName" SIZE="48" TYPE="TEXT" VALUE="Rostock"></TD>
+</TR>
+<TR TITLE="pers. Name"><TD>eigener Name:</TD>
+<TD><INPUT NAME="openssl_organizationName" SIZE="48" TYPE="TEXT" VALUE="KarinMusterfrau"></TD>
+</TR>
+<TR TITLE="Nutzergruppe"><TD>Nutzergruppe:</TD>
+<TD><INPUT NAME="openssl_organizationalUnitName" SIZE="48" TYPE="TEXT" VALUE="Users"></TD>
+</TR>
+<TR TITLE="accesspunkt-name"><TD>Accesspoint-Name:</TD>
+<TD><INPUT NAME="openssl_commonName" SIZE="48" TYPE="TEXT" VALUE="36.ap.on"></TD>
+</TR>
+<TR TITLE="email adresse"><TD>email-adresse:</TD>
+<TD><INPUT NAME="openssl_EmailAddress" SIZE="48" TYPE="TEXT" VALUE="bla@home.de"></TD>
+</TR>
+<TR
+TITLE="Bestimmt die Betriebsart der 4 Ethernet-Anschlüsse. Falls noch nicht konfiguriert, wird die Vorgabe 'Statisch' verwendet.">
+<TD>Certifikate Signing Request generieren:</TD>
+<TD><INPUT NAME="gen_csr" TITLE="Secret Key und Request jetzt generieren" TYPE="SUBMIT" VALUE="generieren"></TD>
+</TR>
+<TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+fi
+cat<<EOF
+
+EOF
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+DIRTY=
+if [ -n "$gen_csr" ]; then
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Erzeuge geheimen Schlüssel und Anfrage für Unterzeichnung (CSR). Bitte warten...</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+echo "<pre>"
+openssl_countryName=$(unescape $openssl_countryName); export openssl_countryName
+openssl_provinceName=$(unescape $openssl_provinceName); export openssl_provinceName
+openssl_localityName=$(unescape $openssl_localityName); export openssl_localityName
+openssl_organizationName=$(unescape $openssl_organizationName); export openssl_organizationName
+openssl_organizationalUnitName=$(unescape $openssl_organizationalUnitName); export openssl_organizationalUnitName
+openssl_commonName=$(unescape $openssl_commonName); export openssl_commonName
+openssl_EmailAddress=$(unescape $openssl_EmailAddress); export openssl_EmailAddress
+openssl req -days 3650 -nodes -new -keyout /tmp/ap_XX.key -out /tmp/ap_XX.csr
+openssl req -noout -text -in /tmp/ap_XX.csr
+echo "</pre>"
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Schlüssel und CSR-Erstellung erfolgreich abgeschlossen.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+
+#elif [ -n "$post_ip_key" ]; then
+
+#for V in wifi_ipaddr wl0_key1; do
+#	eval "C=\$$V"
+#	C=$(unescape $C)
+#if [ "$C" != "$(nvram get $V)" ]; then
+#	DIRTY=1
+#	nvram set $V="$C"
+#fi
+#done
+#if checkbridge; then
+#	DIRTY=1
+#fi
+#fi
+
+#if [ -n "$DIRTY" ]; then
+#nvram commit>/dev/null 2>&1
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>$ffout</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Vorgang wurde abgebrochen.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+
+cat<<EOF
+<P>Der Ladevorgang wurde ausgef&uuml;hrt.</P>
+EOF
+
+echo "<PRE>"
+mv "$ffout" /tmp/test
+echo "</PRE>"
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Keine Datei empfangen.</TD>
+</TR></TBODY>
+</TABLE>
+
+<P>Der Ladevorgang wurde nicht ausgef&uuml;hrt.</P>
+EOF
+
+fi
+fi
+. ${0%/*}/cgi-bin-post.sh

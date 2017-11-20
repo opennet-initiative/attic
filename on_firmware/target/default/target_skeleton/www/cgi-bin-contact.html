@@ -1,0 +1,185 @@
+#!/bin/sh
+echo Content-type: text/html
+echo
+
+cat<<EOF
+<HTML>
+
+<HEAD>
+<TITLE>opennet.firmware - Kontakt</TITLE>
+<META CONTENT="text/html; charset=iso-8559-1" HTTP-EQUIV="Content-Type">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache" />
+<LINK HREF="ff.css" REL="StyleSheet" TYPE="text/css">
+<LINK HREF="sven-ola*ät*gmx*de" REV="made" TITLE="Sven-Ola">
+<LINK HREF="opennet-firmware*ät*absobr*it" REV="adapted" TITLE="Rene+Sebastian">
+
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function navarr(){}
+navset=new navarr();
+navres=new navarr();
+function set(idx){
+if(!!navset[idx]){
+document.images[idx].src=navset[idx].src;
+}
+}
+function res(idx){
+if(!!navres[idx]){
+document.images[idx].src=navres[idx];
+}
+}
+function ini() {
+if (!!document.images){
+for(var idx=0; idx<document.images.length; idx++){
+var src=document.images[idx].src;
+var pos=src.indexOf('_white.gif');
+if (0<pos) {
+navres[idx]=src;
+src=src.substring(0, src.indexOf('_white.gif'))+'_red.gif';
+navset[idx]=new Image(document.images[idx].width, document.images[idx].height);
+navset[idx].src=src;
+document.images[idx].onmouseover=new Function("if(!!window.set)set("+idx+");");
+document.images[idx].onmouseout=new Function("if(!!window.res)res("+idx+");");
+}
+else if (!document.images[idx].mozbug && !!src.search &&
+0<=src.search(new RegExp('progress[0-9]+\\.gif$')))
+{
+document.images[idx].mozbug=1;
+document.images[idx].src='';
+document.images[idx].src=src;
+}
+}
+}
+}
+//--></SCRIPT>
+</HEAD>
+
+<BODY ONLOAD="if(null!=window.ini)window.ini()">
+<DIV id="wrapper">
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" CLASS="body">
+<TBODY>
+<TR>
+<TD HEIGHT="33" WIDTH="150"></TD>
+<TD HEIGHT="33" WIDTH="5"></TD>
+<TD ALIGN="right" HEIGHT="33"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1l.gif" WIDTH="106"></A></TD>
+<TD ALIGN="right" HEIGHT="33" WIDTH="5"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1m.gif" WIDTH="5"></A></TD>
+<TD HEIGHT="33" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="33" SRC="images/lgo_ffn_1r.gif" WIDTH="150"></A></TD>
+</TR>
+<TR>
+<TD CLASS="magenta" COLSPAN="3" HEIGHT="19"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="index.html">Home</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="images/vertbar.gif" WIDTH="1"><SPAN CLASS="magenta"><A CLASS="magenta" HREF="cgi-bin-contact.html">Kontakt</A></SPAN></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD CLASS="magenta" HEIGHT="19" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="19" SRC="images/lgo_ffn_2.gif" WIDTH="150"></A></TD>
+</TR>
+<TR>
+<TD HEIGHT="5" WIDTH="150"></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD HEIGHT="5"></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD CLASS="color" HEIGHT="5" ROWSPAN="2" VALIGN="top" WIDTH="150"><A HREF="http://www.opennet-initiative.de/"><IMG ALT="" BORDER="0" HEIGHT="94" SRC="images/lgo_ffn_3.gif" WIDTH="150"></A></TD>
+</TR>
+<TR>
+<TD VALIGN="top" WIDTH="150">
+<TABLE CLASS="idx color" WIDTH="150">
+<TBODY>
+<TR>
+<TD>
+
+<H1 CLASS="idx color">Inhalt</H1></TD>
+</TR>
+
+<TR CLASS="idx">
+<TD>
+<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin-status.html">Status</A></DIV></TD>
+</TR>
+<TR CLASS="idx">
+<TD>
+<DIV CLASS="color"><A CLASS="color" HREF="cgi-bin/index.html">Verwalten</A></DIV></TD>
+</TR></TBODY>
+</TABLE>
+<DIV CLASS="white"></DIV></TD>
+<TD VALIGN="top" WIDTH="5"></TD>
+<TD CLASS="content" VALIGN="top" ROWSPAN="2">
+
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function help(e) {
+if (!e) e = event;
+// (virt)KeyVal is Konqueror, charCode is Moz/Firefox, else MSIE, Netscape, Opera
+if (26 == e.virtKeyVal || !e.keyVal && !e.charCode && 112 == (e.which || e.keyCode)) {
+var o = null;
+if (e.preventDefault) {
+if (e.cancelable) e.preventDefault();
+o = e.target;
+}
+else {
+e.cancelBubble = true;
+o = e.srcElement;
+}
+while(!!o && '' == o.title) o = o.parentNode;
+if (!!o) alert(o.title);
+}
+}
+if (document.all) {
+document.onkeydown = help;
+document.onhelp = function(){return false;}
+}
+else {
+document.onkeypress = help;
+}
+//--></SCRIPT>
+
+<H1>Kontakt</H1>
+
+<P>Der Administrator dieses Access-Points hat die
+folgenden Kontakt-Daten eingetragen:</P>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="1" CELLPADDING="1" CELLSPACING="0" CLASS="form"
+RULES="rows" WIDTH="448">
+<TBODY>
+<TR>
+<TD>Spitzname: </TD>
+<TD>$(nvram get ff_adm_nick)</TD>
+</TR>
+<TR>
+<TD>Name: </TD>
+<TD>$(nvram get ff_adm_name)</TD>
+</TR>
+<TR>
+<TD>E-Mail: </TD>
+<TD>$(nvram get ff_adm_mail)</TD>
+</TR>
+<TR>
+<TD>Telefon: </TD>
+<TD>$(nvram get ff_adm_tel)</TD>
+</TR>
+<TR>
+<TD>Standort: </TD>
+<TD>$(nvram get ff_adm_loc)</TD>
+</TR>
+<TR>
+<TD>Notiz: </TD>
+<TD>$(nvram get ff_adm_note)</TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+</TD>
+<TD VALIGN="top" WIDTH="5"></TD>
+</TR>
+<TR>
+<TD HEIGHT="38" WIDTH="150"></TD>
+<TD HEIGHT="38" WIDTH="5"></TD>
+<TD HEIGHT="38" WIDTH="5"></TD>
+<TD ALIGN="right" CLASS="color" HEIGHT="38" WIDTH="150"><A HREF="http://add-on-it.de/opennet"><IMG ALT="" HEIGHT="31" BORDER="0" SRC="../images/addonit_blue.png"></TD>
+<TR>
+<TR>
+<TD HEIGHT="5" WIDTH="150"></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD HEIGHT="5"></TD>
+<TD HEIGHT="5" WIDTH="5"></TD>
+<TD HEIGHT="5" WIDTH="150"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2" HEIGHT="19"></TD>
+<TD CLASS="magenta" COLSPAN="3" HEIGHT="19"></TD>
+</TR></TBODY>
+</TABLE>
+</DIV>
+</BODY>
+</HTML>
+EOF

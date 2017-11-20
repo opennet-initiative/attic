@@ -1,0 +1,274 @@
+diff -u -r olsrd-0.4.10_vanilla/src/hysteresis.c olsrd-0.4.10/src/hysteresis.c
+--- olsrd-0.4.10_vanilla/src/hysteresis.c	2005-02-27 11:43:38.000000000 +0100
++++ olsrd-0.4.10/src/hysteresis.c	2006-02-10 01:29:47.000000000 +0100
+@@ -162,7 +162,7 @@
+ 
+ 
+ void
+-update_hysteresis_incoming(union olsr_ip_addr *remote, union olsr_ip_addr *local, olsr_u16_t seqno)
++update_hysteresis_incoming(union olsr_ip_addr *remote, struct interface *local, olsr_u16_t seqno)
+ {
+   struct link_entry *link;
+ 
+diff -u -r olsrd-0.4.10_vanilla/src/hysteresis.h olsrd-0.4.10/src/hysteresis.h
+--- olsrd-0.4.10_vanilla/src/hysteresis.h	2005-03-06 20:33:35.000000000 +0100
++++ olsrd-0.4.10/src/hysteresis.h	2006-02-10 01:30:29.000000000 +0100
+@@ -60,6 +60,6 @@
+ olsr_update_hysteresis_hello(struct link_entry *, double);
+ 
+ void
+-update_hysteresis_incoming(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
++update_hysteresis_incoming(union olsr_ip_addr *, struct interface *, olsr_u16_t);
+ 
+ #endif
+diff -u -r olsrd-0.4.10_vanilla/src/link_set.c olsrd-0.4.10/src/link_set.c
+--- olsrd-0.4.10_vanilla/src/link_set.c	2005-11-17 05:25:44.000000000 +0100
++++ olsrd-0.4.10/src/link_set.c	2006-02-10 05:24:31.000000000 +0100
+@@ -69,7 +69,7 @@
+ static void olsr_time_out_packet_loss(void);
+ 
+ static struct link_entry *
+-add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double);
++add_new_entry(union olsr_ip_addr *, union olsr_ip_addr *, union olsr_ip_addr *, double, double, struct interface *);
+ 
+ static void
+ olsr_time_out_link_set(void);
+@@ -202,7 +202,7 @@
+ 
+       //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
+       //printf("%s : ", olsr_ip_to_string(main_addr)); 
+-      if((link = lookup_link_entry(main_addr, &ifs->ip_addr)) != NULL)
++      if((link = lookup_link_entry(main_addr, ifs)) != NULL)
+ 	{
+ 	  //printf("%d\n", lookup_link_status(link));
+ 	  if(lookup_link_status(link) == SYM_LINK)
+@@ -215,7 +215,7 @@
+ 	{
+ 	  //printf("\tChecking %s->", olsr_ip_to_string(&ifs->ip_addr));
+ 	  //printf("%s : ", olsr_ip_to_string(&aliases->address)); 
+-	  if((link = lookup_link_entry(&aliases->alias, &ifs->ip_addr)) != NULL)
++	  if((link = lookup_link_entry(&aliases->alias, ifs)) != NULL)
+ 	    {
+ 	      //printf("%d\n", lookup_link_status(link));
+ 
+@@ -271,7 +271,8 @@
+ 
+       // find the interface for the link - we select the link with the
+       // best local interface metric
+-      tmp_if = if_ifwithaddr(&walker->local_iface_addr);
++      tmp_if = walker->if_name ? if_ifwithname(walker->if_name) :
++              if_ifwithaddr(&walker->local_iface_addr);
+ 
+       if(!tmp_if)
+ 	continue;
+@@ -386,26 +387,19 @@
+  *
+  *@param local the local IP address
+  *@param remote the remote IP address
+- *@param remote_main teh remote nodes main address
++ *@param remote_main the remote nodes main address
+  *@param vtime the validity time of the entry
+  *@param htime the HELLO interval of the remote node
++ *@param local_if the local interface
+  */
+ 
+ static struct link_entry *
+-add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, double vtime, double htime)
++add_new_entry(union olsr_ip_addr *local, union olsr_ip_addr *remote, union olsr_ip_addr *remote_main, double vtime, double htime, struct interface *local_if)
+ {
+   struct link_entry *tmp_link_set, *new_link;
+   struct neighbor_entry *neighbor;
+ 
+-  tmp_link_set = link_set;
+-
+-  while(tmp_link_set)
+-    {
+-      if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr) &&
+-	 COMP_IP(local, &tmp_link_set->local_iface_addr))
+-	return tmp_link_set;
+-      tmp_link_set = tmp_link_set->next;
+-    }
++  if((tmp_link_set = lookup_link_entry(remote, local_if))) return tmp_link_set;
+ 
+   /*
+    * if there exists no link tuple with
+@@ -421,6 +415,15 @@
+   new_link = olsr_malloc(sizeof(struct link_entry), "new link entry");
+ 
+   memset(new_link, 0 , sizeof(struct link_entry));
++  
++  /* copy if_name, if it is defined */
++  if (local_if->int_name)
++    {
++      new_link->if_name = olsr_malloc(strlen(local_if->int_name)+1, "target of if_name in new link entry");
++      strcpy(new_link->if_name, local_if->int_name);
++    } else 
++      new_link->if_name = NULL;
++
+   /*
+    * L_local_iface_addr = Address of the interface
+    * which received the HELLO message
+@@ -559,7 +562,7 @@
+  *@return the link entry if found, NULL if not
+  */
+ struct link_entry *
+-lookup_link_entry(union olsr_ip_addr *remote, union olsr_ip_addr *local)
++lookup_link_entry(union olsr_ip_addr *remote, struct interface *local)
+ {
+   struct link_entry *tmp_link_set;
+ 
+@@ -568,7 +571,10 @@
+   while(tmp_link_set)
+     {
+       if(COMP_IP(remote, &tmp_link_set->neighbor_iface_addr) &&
+-	 COMP_IP(local, &tmp_link_set->local_iface_addr))
++	 (tmp_link_set->if_name ?
++	  !strcmp(tmp_link_set->if_name, local->int_name) :
++	  COMP_IP(&local->ip_addr, &tmp_link_set->local_iface_addr)
++	 ))
+ 	return tmp_link_set;
+       tmp_link_set = tmp_link_set->next;
+     }
+@@ -604,7 +610,7 @@
+   struct link_entry *entry;
+ 
+   /* Add if not registered */
+-  entry = add_new_entry(local, remote, &message->source_addr, message->vtime, message->htime);
++  entry = add_new_entry(local, remote, &message->source_addr, message->vtime, message->htime, in_if);
+ 
+   /* Update ASYM_time */
+   //printf("Vtime is %f\n", message->vtime);
+@@ -764,7 +770,7 @@
+ 
+ 	      //olsr_delete_neighbor_if_no_link(&tmp_link_set->neighbor->neighbor_main_addr);
+ 	      changes_neighborhood = OLSR_TRUE;
+-
++	      free(tmp_link_set->if_name);
+ 	      free(tmp_link_set);
+ 	      tmp_link_set = last_link_entry;
+ 	    }
+@@ -780,6 +786,7 @@
+ 
+ 	      changes_neighborhood = OLSR_TRUE;
+ 
++	      free(tmp_link_set->if_name);
+ 	      free(tmp_link_set);
+ 	      tmp_link_set = link_set;
+ 	      continue;
+@@ -994,7 +1001,7 @@
+   entry->loss_hello_int = loss_hello_int;
+ }
+ 
+-void olsr_update_packet_loss(union olsr_ip_addr *rem, union olsr_ip_addr *loc,
++void olsr_update_packet_loss(union olsr_ip_addr *rem, struct interface *loc,
+                              olsr_u16_t seqno)
+ {
+   struct link_entry *entry;
+diff -u -r olsrd-0.4.10_vanilla/src/link_set.h olsrd-0.4.10/src/link_set.h
+--- olsrd-0.4.10_vanilla/src/link_set.h	2005-10-23 22:58:14.000000000 +0200
++++ olsrd-0.4.10/src/link_set.h	2006-02-10 01:37:48.000000000 +0100
+@@ -55,6 +55,7 @@
+ {
+   union olsr_ip_addr local_iface_addr;
+   union olsr_ip_addr neighbor_iface_addr;
++  char *if_name;
+   clock_t SYM_time;
+   clock_t ASYM_time;
+   clock_t time;
+@@ -120,7 +121,7 @@
+ get_best_link_to_neighbor(union olsr_ip_addr *);
+ 
+ struct link_entry *
+-lookup_link_entry(union olsr_ip_addr *, union olsr_ip_addr *);
++lookup_link_entry(union olsr_ip_addr *, struct interface *);
+ 
+ struct link_entry *
+ update_link_entry(union olsr_ip_addr *, union olsr_ip_addr *, struct hello_message *, struct interface *);
+@@ -139,7 +140,7 @@
+ olsr_update_packet_loss_hello_int(struct link_entry *, double);
+ 
+ void 
+-olsr_update_packet_loss(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u16_t);
++olsr_update_packet_loss(union olsr_ip_addr *, struct interface *, olsr_u16_t);
+ 
+ void 
+ olsr_print_link_set(void);
+diff -u -r olsrd-0.4.10_vanilla/src/lq_route.c olsrd-0.4.10/src/lq_route.c
+--- olsrd-0.4.10_vanilla/src/lq_route.c	2005-11-29 19:37:58.000000000 +0100
++++ olsrd-0.4.10/src/lq_route.c	2006-02-10 05:22:04.000000000 +0100
+@@ -562,8 +562,8 @@
+     if (link != NULL)
+     {
+       // find the interface for the found link
+-
+-      inter = if_ifwithaddr(&link->local_iface_addr);
++      inter = link->if_name ? if_ifwithname(link->if_name) : 
++              if_ifwithaddr(&link->local_iface_addr);
+ 
+       // we may see NULL here if the interface is down, but we have
+       // links that haven't timed out, yet
+diff -u -r olsrd-0.4.10_vanilla/src/parser.c olsrd-0.4.10/src/parser.c
+--- olsrd-0.4.10_vanilla/src/parser.c	2005-11-19 09:49:44.000000000 +0100
++++ olsrd-0.4.10/src/parser.c	2006-02-10 01:38:14.000000000 +0100
+@@ -193,21 +193,21 @@
+ 	{
+ 	  /* IPv4 */
+ 	  update_hysteresis_incoming(from_addr, 
+-				     &in_if->ip_addr,
++				     in_if,
+ 				     ntohs(olsr->olsr_seqno));
+ 	}
+       else
+ 	{
+ 	  /* IPv6 */
+ 	  update_hysteresis_incoming(from_addr, 
+-				     &in_if->ip_addr, 
++				     in_if, 
+ 				     ntohs(olsr->olsr_seqno));
+ 	}
+     }
+ 
+   if (olsr_cnf->lq_level > 0)
+     {
+-      olsr_update_packet_loss(from_addr, &in_if->ip_addr,
++      olsr_update_packet_loss(from_addr, in_if,
+                               ntohs(olsr->olsr_seqno));
+     }
+   
+diff -u -r olsrd-0.4.10_vanilla/src/process_routes.c olsrd-0.4.10/src/process_routes.c
+--- olsrd-0.4.10_vanilla/src/process_routes.c	2005-05-30 15:13:38.000000000 +0200
++++ olsrd-0.4.10/src/process_routes.c	2006-02-09 22:57:28.000000000 +0100
+@@ -116,8 +116,8 @@
+ 
+ 
+ /**
+- *Create a list containing the entries in in_table
+- *that does not exist in from_table
++ *Create a list containing the entries in from_table
++ *that do not exist in in_table
+  *
+  *@param from_table the table to use
+  *@param in_table the routes already added
+diff -u -r olsrd-0.4.10_vanilla/src/routing_table.c olsrd-0.4.10/src/routing_table.c
+--- olsrd-0.4.10_vanilla/src/routing_table.c	2005-11-17 00:55:54.000000000 +0100
++++ olsrd-0.4.10/src/routing_table.c	2006-02-10 05:20:20.000000000 +0100
+@@ -282,7 +282,8 @@
+ #endif
+ 		  if(link)
+ 		    {
+-		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
++		      struct interface *iface = link->if_name ? if_ifwithname(link->if_name) :
++		                                if_ifwithaddr(&link->local_iface_addr);
+ 		      if(iface)
+ 			{
+ 			  olsr_insert_routing_table(&addrs2->alias, 
+@@ -396,7 +397,8 @@
+ #endif
+ 		  if(link)
+ 		    {
+-		      struct interface *iface = if_ifwithaddr(&link->local_iface_addr);
++		    struct interface *iface = link->if_name ? if_ifwithname(link->if_name) :
++		                                if_ifwithaddr(&link->local_iface_addr);
+ 		      if(iface)
+ 			{
+ 			  struct rt_entry *new_route_entry = 
