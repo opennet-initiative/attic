@@ -1,0 +1,155 @@
+diff -ruN old/iptables_profectio/extensions/libip6t_NFQUEUE.man new/iptables_profectio/extensions/libip6t_NFQUEUE.man
+--- old/iptables_profectio/extensions/libip6t_NFQUEUE.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libip6t_NFQUEUE.man	2007-07-22 19:38:25.800949736 -0400
+@@ -3,7 +3,7 @@
+ number.  
+ .TP
+ .BR "--queue-num " "\fIvalue"
+-This specifies the QUEUE number to use. Valud queue numbers are 0 to 65535. The default value is 0.
++This specifies the QUEUE number to use. Valid queue numbers are 0 to 65535. The default value is 0.
+ .TP
+ It can only be used with Kernel versions 2.6.14 or later, since it requires
+ the
+diff -ruN old/iptables_profectio/extensions/libip6t_eui64.man new/iptables_profectio/extensions/libip6t_eui64.man
+--- old/iptables_profectio/extensions/libip6t_eui64.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libip6t_eui64.man	2007-07-22 19:38:25.800949736 -0400
+@@ -1,7 +1,7 @@
+-This module matches the EUI-64 part of a stateless autoconfigured IPv6 address.
++This module matches the EUI-64 part of a stateless auto-configured IPv6 address.
+ It compares the EUI-64 derived from the source MAC address in Ethernet frame
+-with the lower 64 bits of the IPv6 source address. But "Universal/Local"
+-bit is not compared. This module doesn't match other link layer frame, and
++with the lower 64 bits of the IPv6 source address. But the "Universal/Local"
++bit is not compared. This module doesn't match other link layer frames, and
+ is only valid in the
+ .BR PREROUTING ,
+ .BR INPUT
+diff -ruN old/iptables_profectio/extensions/libip6t_frag.man new/iptables_profectio/extensions/libip6t_frag.man
+--- old/iptables_profectio/extensions/libip6t_frag.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libip6t_frag.man	2007-07-22 19:38:25.800949736 -0400
+@@ -17,4 +17,4 @@
+ Matches if there are more fragments.
+ .TP
+ .BR "[--fraglast]"
+-Matches if this is the last fragement.
++Matches if this is the last fragment.
+diff -ruN old/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man new/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man
+--- old/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man	2007-07-22 19:36:42.606482000 -0400
++++ new/iptables_profectio/extensions/libipt_IPV4OPTSSTRIP.man	2007-07-22 19:43:29.380672895 -0400
+@@ -7,6 +7,6 @@
+ specific Linux kernel source version, that support might 
+ not be enabled in the current Linux kernel binary.)
+ 
+-The target doesn't take any option, and therefore is extremly easy to use :
++The target doesn't take any option, and therefore is extremely easy to use :
+ 
+ # iptables -t mangle -A PREROUTING -j IPV4OPTSSTRIP
+diff -ruN old/iptables_profectio/extensions/libipt_NFQUEUE.man new/iptables_profectio/extensions/libipt_NFQUEUE.man
+--- old/iptables_profectio/extensions/libipt_NFQUEUE.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libipt_NFQUEUE.man	2007-07-22 19:38:44.723935184 -0400
+@@ -3,7 +3,7 @@
+ number.  
+ .TP
+ .BR "--queue-num " "\fIvalue"
+-This specifies the QUEUE number to use. Valud queue numbers are 0 to 65535. The default value is 0.
++This specifies the QUEUE number to use. Valid queue numbers are 0 to 65535. The default value is 0.
+ .TP
+ It can only be used with Kernel versions 2.6.14 or later, since it requires
+ the
+diff -ruN old/iptables_profectio/extensions/libipt_SAME.man new/iptables_profectio/extensions/libipt_SAME.man
+--- old/iptables_profectio/extensions/libipt_SAME.man	2007-03-21 20:04:36.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_SAME.man	2007-07-22 19:38:44.735934541 -0400
+@@ -11,5 +11,5 @@
+ new source-ip
+ .TP
+ .B "--random"
+-Port mapping will be forcely randomized to avoid attacks based on 
++Port mapping will be forcibly randomized to avoid attacks based on 
+ port prediction (kernel >= 2.6.21).
+diff -ruN old/iptables_profectio/extensions/libipt_connbytes.man new/iptables_profectio/extensions/libipt_connbytes.man
+--- old/iptables_profectio/extensions/libipt_connbytes.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libipt_connbytes.man	2007-07-22 19:38:46.635832678 -0400
+@@ -1,5 +1,5 @@
+ Match by how many bytes or packets a connection (or one of the two
+-flows constituting the connection) have tranferred so far, or by
++flows constituting the connection) have transferred so far, or by
+ average bytes per packet.
+ 
+ The counters are 64bit and are thus not expected to overflow ;)
+@@ -7,7 +7,7 @@
+ The primary use is to detect long-lived downloads and mark them to be
+ scheduled using a lower priority band in traffic control.
+ 
+-The transfered bytes per connection can also be viewed through
++The transferred bytes per connection can also be viewed through
+ /proc/net/ip_conntrack and accessed via ctnetlink
+ .TP
+ [\fB!\fR]\fB --connbytes \fIfrom\fB:\fR[\fIto\fR]
+diff -ruN old/iptables_profectio/extensions/libipt_dscp.man new/iptables_profectio/extensions/libipt_dscp.man
+--- old/iptables_profectio/extensions/libipt_dscp.man	2007-01-23 07:50:00.000000000 -0500
++++ new/iptables_profectio/extensions/libipt_dscp.man	2007-07-22 19:38:46.671830749 -0400
+@@ -7,4 +7,4 @@
+ .BI "--dscp-class " "\fIDiffServ Class\fP"
+ Match the DiffServ class. This value may be any of the
+ BE, EF, AFxx or CSx classes.  It will then be converted
+-into it's according numeric value.
++into its according numeric value.
+diff -ruN old/iptables_profectio/extensions/libipt_hashlimit.man new/iptables_profectio/extensions/libipt_hashlimit.man
+--- old/iptables_profectio/extensions/libipt_hashlimit.man	2007-06-24 19:26:35.000000000 -0400
++++ new/iptables_profectio/extensions/libipt_hashlimit.man	2007-07-22 19:38:46.671830749 -0400
+@@ -29,7 +29,7 @@
+ Maximum entries in the hash
+ .TP
+ .BI "--hashlimit-htable-expire " "num"
+-After how many miliseconds do hash entries expire
++After how many milliseconds do hash entries expire
+ .TP
+ .BI "--hashlimit-htable-gcinterval " "num"
+-How many miliseconds between garbage collection intervals
++How many milliseconds between garbage collection intervals
+diff -ruN old/iptables_profectio/ip6tables.8.in new/iptables_profectio/ip6tables.8.in
+--- old/iptables_profectio/ip6tables.8.in	2007-03-21 20:04:36.000000000 -0400
++++ new/iptables_profectio/ip6tables.8.in	2007-07-22 19:38:56.223318647 -0400
+@@ -478,7 +478,7 @@
+ .PP
+ Jozsef Kadlecsik wrote the REJECT target.
+ .PP
+-Harald Welte wrote the ULOG and NFQUEUE target, the new libiptc, aswell as TTL match+target and libipulog.
++Harald Welte wrote the ULOG and NFQUEUE target, the new libiptc, as well as TTL match+target and libipulog.
+ .PP
+ The Netfilter Core Team is: Marc Boucher, Martin Josefsson, Yasuyuki Kozakai,
+ Jozsef Kadlecsik, Patrick McHardy, James Morris, Pablo Neira Ayuso,
+diff -ruN old/iptables_profectio/iptables.8.in new/iptables_profectio/iptables.8.in
+--- old/iptables_profectio/iptables.8.in	2007-03-21 20:04:36.000000000 -0400
++++ new/iptables_profectio/iptables.8.in	2007-07-22 19:38:56.243317575 -0400
+@@ -55,7 +55,7 @@
+ table.
+ 
+ .SH TARGETS
+-A firewall rule specifies criteria for a packet, and a target.  If the
++A firewall rule specifies criteria for a packet and a target.  If the
+ packet does not match, the next rule in the chain is the examined; if
+ it does match, then the next rule is specified by the value of the
+ target, which can be the name of a user-defined chain or one of the
+@@ -155,9 +155,9 @@
+ .B iptables
+ can be divided into several different groups.
+ .SS COMMANDS
+-These options specify the specific action to perform.  Only one of them
+-can be specified on the command line unless otherwise specified
+-below.  For all the long versions of the command and option names, you
++These options specify the action to perform.  Only one of them
++can be specified on the command line unless otherwise stated
++below.  For long versions of the command and option names, you
+ need to use only enough letters to ensure that
+ .B iptables
+ can differentiate it from all other options.
+@@ -188,7 +188,7 @@
+ .TP
+ .BR "-L, --list " "[\fIchain\fP]"
+ List all rules in the selected chain.  If no chain is selected, all
+-chains are listed.  As every other iptables command, it applies to the
++chains are listed.  Like every other iptables command, it applies to the
+ specified table (filter is the default), so NAT rules get listed by
+ .nf
+  iptables -t nat -n -L

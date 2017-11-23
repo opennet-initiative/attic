@@ -1,0 +1,83 @@
+- Fix build error of conntrack match
+	[Yasuyuki Kozakai]
+
+- Remove whitespace in ip6tables.c
+	[Yasuyuki Kozakai]
+
+- `-p all' and `-p 0' should be allowed in ip6tables
+	[Yasuyuki Kozakai]
+
+- hashlimit doc update
+	[Jan Engelhardt]
+
+- add --random option to DNAT and REDIRECT
+	[Patrick McHardy]
+
+- Makefile uses POSIX conform directory check
+	[Roy Marples]
+
+- Fix missing newlines in iptables-save/restore output
+	[Pavol Rusnak]
+
+- Update quota manpage for SMP
+	[Phil Oester]
+
+- Output for unspecified proto is `all' instead of `0'
+	[Phil Oester]
+
+- Fix iptables-save with --random option
+	[Patrick McHardy]
+
+- Remove unnecessary IP_NAT_RANGE_PROTO_RANDOM ifdefs
+	[Patrick McHardy]
+
+- Remove libnsl from LDLIBS
+	[Patrick McHardy]
+
+- Fix problem with iptables-restore and quotes
+	[Pablo Neira Ayuso]
+
+- Remove unnecessary includes
+	[Patrick McHardy]
+
+- Fix --modprobe parameter
+	[Maurice van der Pot]
+
+- ip6tables-restore should output error of modprobe after failed to load
+	[Yasuyuki Kozakai]
+
+- Add random option to SNAT
+	[Eric Leblond]
+
+- Fix missing space in error message
+	[Patrick McHardy]
+
+- Fixes for manpages of tcp, udp, and icmp{,6}
+	[Yasuyuki Kozakai]
+
+- Add ip6tables mh extension
+	[Masahide Nakamura]
+
+- Fix tcpmss manpage
+	[Patrick McHardy]
+
+- Add ip6tables TCPMSS extension
+	[Arnaud Ebalard]
+
+- Add UDPLITE multiport support
+	[Patrick McHardy]
+
+- Fix missing space in ruleset listing
+	[Patrick McHardy]
+
+- Remove extensions for unmaintained/obsolete patchlets
+	[Patrick McHardy]
+
+- Fix greedy debug grep
+	[Patrick McHardy]
+
+- Fix type in manpage
+	[Thomas Aktaia]
+
+- Fix compile/install error for iptables-xml with DO_MULTI=1
+	[Lutz Jaenicke]

@@ -1,0 +1,16 @@
+There used to be a horribly outdated version of the teucrium traffic grapher
+here. At the time of writing, current versions of teucrium are available
+from:
+ * http://git.memespace.net/git/teucrium.git/
+ * git://github.com/sh01/teucrium.git
+If you get one of those, you'll also want gonium, which newer teucrium versions
+depend on:
+ * http://git.memespace.net/git/gonium.git/
+ * git://github.com/sh01/gonium.git
+
+
+If you *really* want the ancient versions hosted here, the previous SVN
+revisions of this directory will provide them. However, I strongly discourage
+using them: They're less featureful, less documented and a lot more pain
+to deploy than newer versions of teucrium.
+-- Sebastian Hagen
