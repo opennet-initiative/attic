@@ -1,1 +1,14 @@
+<<<<<<< HEAD
 SVN Migration (2017)
+=======
+(ToDo...)
+
+Some statistic and analysis stuff to provide end-user informations
+about our wifi mesh network with some gateways. This code will
+run on one or many of these gateway routers.
+
+Read more at: http//opennet-initiative.de (sorry, german lang only)
+Contact the author: mathias@mycr.de
+
+2006/03/21
+>>>>>>> temp/master

@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+*/1 * * * * /home/on-webstat/openvpn-users-status.py
+*/5 * * * * /home/on-webstat/openvpn-gateways-status.py; /home/on-webstat/olsr-status.sh
+*/10 * * * * /home/on-webstat/traffic-status.sh; /home/on-webstat/traffic-graph.sh; /home/on-webstat/gateway-status.sh
+7 4 * * * /home/on-webstat/firmware-status.sh
