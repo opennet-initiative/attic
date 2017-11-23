@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich">
+
+<ui:composition template="/WEB-INF/template/template.xhtml">
+	<ui:define name="body">
+		<h:form>
+			<rich:calendar />
+			<h:commandButton value="generate sql scripts"
+				actionListener="#{testBean.createScripts}"></h:commandButton>
+			<h:commandButton value="create dummy person entity"
+				actionListener="#{testBean.createPerson}"></h:commandButton>
+		</h:form>
+		<br />
+		Index
+	</ui:define>
+</ui:composition>
+</html>

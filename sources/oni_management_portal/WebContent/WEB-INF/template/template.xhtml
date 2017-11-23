@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core">
+
+<h:head>
+	<title><ui:insert name="title">oni portal</ui:insert></title>
+	<h:outputStylesheet library="css" name="default.css" />
+</h:head>
+
+<h:body>
+	<h:link outcome="index" value="index" />
+	&nbsp;
+	<h:link outcome="persons" value="Personen" />
+
+	<br/><br/>
+
+	<ui:insert name="body">content tbd</ui:insert>
+
+	<br/><br/>
+
+	<h:graphicImage library="images" name="valid-xhtml11-small.png" alt="W3C XHTML 1.1 compliance"/>
+
+</h:body>
+
+</html>

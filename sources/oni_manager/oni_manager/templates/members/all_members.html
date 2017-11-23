@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %} 
+Mitglieder
+{% endblock %} 
+
+{% block content %} 
+<table>
+	<thead>
+		<tr>
+			<th>Email</th>
+			<th>Fullname</th>
+			<th>Telefon</th>
+			<th>Status</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for member in object_list %}
+		<tr>
+			<td>{{ member.user.email }}</td>
+			<td><a href="./{{ member.user.id }}">{{ member.user.get_full_name }}</a></td>
+			<td>{{ member.telefon }}</td>
+			<td>{{ member.status }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %} 

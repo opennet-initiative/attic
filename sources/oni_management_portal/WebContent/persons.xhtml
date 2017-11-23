@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich">
+
+<ui:composition template="/WEB-INF/template/template.xhtml">
+	<ui:define name="body">
+		<rich:extendedDataTable value="#{personController.allPersons}"
+			var="person" id="personTable" selectionMode="single"
+			frozenColumns="2">
+			<f:facet name="header">
+				<h:outputText value="oni members" />
+			</f:facet>
+			<rich:column width="50px">
+				<f:facet name="header">
+					<a4j:commandLink styleClass="no-decor" render="editGridd"
+						execute="@this" oncomplete="#{rich:component('editPane')}.show();">
+						<h:graphicImage library="images" name="icons/edit.gif" alt="edit" />
+						<a4j:param value="#{-1}"
+							assignTo="#{personController.currentPersonIndex}" />
+						<f:setPropertyActionListener
+							target="#{personController.editedPerson}" value="#{person}" />
+					</a4j:commandLink>
+				</f:facet>
+				<a4j:commandLink styleClass="no-decor" execute="@this"
+					render="@none"
+					oncomplete="#{rich:component('confirmPane')}.show()">
+					<h:graphicImage library="images" name="icons/delete.gif"
+						alt="delete" />
+					<a4j:param value="#{person.id}"
+						assignTo="#{personController.currentPersonIndex}" />
+				</a4j:commandLink>
+				<a4j:commandLink styleClass="no-decor" render="editGridd"
+					execute="@this" oncomplete="#{rich:component('editPane')}.show();">
+					<h:graphicImage library="images" name="icons/edit.gif" alt="edit" />
+					<a4j:param value="#{person.id}"
+						assignTo="#{personController.currentPersonIndex}" />
+					<f:setPropertyActionListener
+						target="#{personController.editedPerson}" value="#{person}" />
+				</a4j:commandLink>
+			</rich:column>
+			<rich:column sortBy="#{person.lastName}" id="colLastName">
+				<f:facet name="header">
+					<h:outputText value="lastname" />
+					<h:outputLink style="margin-left: 5px;"
+						onclick="#{rich:component('personTable')}.sort('colLastName')"
+						value="#">
+						<h:graphicImage style="border: none;" library="images"
+							name="hmenu-asc.gif" alt="sort ascending" />
+					</h:outputLink>
+				</f:facet>
+				<h:outputText value="#{person.lastName}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="firstname" />
+				</f:facet>
+				<h:outputText value="#{person.firstName}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="alias" />
+				</f:facet>
+				<h:outputText value="#{person.pseudonym}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="date of joining" />
+				</f:facet>
+				<h:outputText value="#{person.dateOfJoining}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="address" />
+				</f:facet>
+				<h:outputText value="#{person.address}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="zip" />
+				</f:facet>
+				<h:outputText value="#{person.zipCode}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="city" />
+				</f:facet>
+				<h:outputText value="#{person.city}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="email" />
+				</f:facet>
+				<h:outputText value="#{person.EMail}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="acc" />
+				</f:facet>
+				<h:outputText value="#{person.accountNumber}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="bnk" />
+				</f:facet>
+				<h:outputText value="#{person.bankCode}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="bnkName" />
+				</f:facet>
+				<h:outputText value="#{person.bankName}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="holder" />
+				</f:facet>
+				<h:outputText value="#{person.accountHolder}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="status" />
+				</f:facet>
+				<h:outputText value="#{person.status}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="roles" />
+				</f:facet>
+				<h:outputText value="#{person.roles}" />
+			</rich:column>
+			<rich:column>
+				<f:facet name="header">
+					<h:outputText value="remark" />
+				</f:facet>
+				<h:outputText value="#{person.remark}" />
+			</rich:column>
+		</rich:extendedDataTable>
+ 
+		<a4j:jsFunction name="remove" action="#{personController.remove}"
+			render="personTable" execute="@this"
+			oncomplete="#{rich:component('confirmPane')}.hide();" />
+
+		<rich:popupPanel id="confirmPane" autosized="true">
+       		Are you sure you want to delete the row?
+       		<a4j:commandButton value="Cancel" onclick="#{rich:component('confirmPane')}.hide(); return false;" />
+			<a4j:commandButton value="Delete" onclick="remove(); return false;" />
+		</rich:popupPanel>
+
+		<h:form>
+			<rich:popupPanel header="Edit Person" id="editPane" domElementAttachment="parent" autosized="true" resizeable="false" >
+				<h:panelGrid columns="3" id="editGridd">
+					<h:outputText value="id" />
+					<h:outputText value="#{personController.editedPerson.id}" />
+					<h:panelGroup />
+					<h:outputText value="firstName" />
+					<h:inputText value="#{personController.editedPerson.firstName}" />
+					<h:panelGroup />
+					<h:outputText value="lastName" />
+					<h:inputText value="#{personController.editedPerson.lastName}" />
+					<h:panelGroup />
+					<h:outputText value="distinguishedName" />
+					<h:inputText value="#{personController.editedPerson.distinguishedName}" />
+					<h:panelGroup />
+					<h:outputText value="dateOfJoining" />
+					<rich:calendar value="#{personController.editedPerson.dateOfJoining}" />
+					<h:panelGroup />
+					<h:outputText value="address" />
+					<h:inputText value="#{personController.editedPerson.address}" />
+					<h:panelGroup />
+					<h:outputText value="zipcode" />
+					<h:inputText value="#{personController.editedPerson.zipCode}" />
+					<h:panelGroup />
+					<h:outputText value="city" />
+					<h:inputText value="#{personController.editedPerson.city}" />
+					<h:panelGroup />
+					<h:outputText value="email" />
+					<h:inputText value="#{personController.editedPerson.EMail}" />
+					<h:panelGroup />
+					<h:outputText value="accountNumber" />
+					<h:inputText value="#{personController.editedPerson.accountNumber}" />
+					<h:panelGroup />
+					<h:outputText value="bankCode" />
+					<h:inputText value="#{personController.editedPerson.bankCode}" />
+					<h:panelGroup />
+					<h:outputText value="bankName" />
+					<h:inputText value="#{personController.editedPerson.bankName}" />
+					<h:panelGroup />
+					<h:outputText value="accountholder" />
+					<h:inputText value="#{personController.editedPerson.accountHolder}" />
+					<h:panelGroup />
+					<h:outputText value="remark" />
+					<h:inputText value="#{personController.editedPerson.remark}" />
+					<h:panelGroup />
+					<h:outputText value="pseudonym" />
+					<h:inputText value="#{personController.editedPerson.pseudonym}" />
+					<h:panelGroup />
+					<h:outputText value="status" />
+					<h:selectOneListbox value="#{personController.editedPerson.status}" size="1">
+						<f:selectItems value="#{personController.statusList}" />
+					</h:selectOneListbox>
+					<h:panelGroup />
+					<h:outputText value="role" />
+					<h:selectManyCheckbox value="#{personController.editedPerson.rolesStrings}">
+						<f:selectItems value="#{personController.rolesList}" />
+					</h:selectManyCheckbox>
+					<h:panelGroup />
+				</h:panelGrid>
+				<a4j:commandButton value="Store" action="#{personController.store}"
+					render="personTable" execute="editPane"
+					oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('editPane')}.hide();}" />
+				<a4j:commandButton value="Cancel"
+					onclick="#{rich:component('editPane')}.hide(); return false;" />
+			</rich:popupPanel>
+		</h:form>
+	</ui:define>
+</ui:composition>
+</html>
